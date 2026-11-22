@@ -966,7 +966,8 @@
     "loreBooks": "Lorebooks the draft reads",
     "loreBooksTip": "Pick any lorebook in SillyTavern for the draft. The character's and the chat's are ticked at first. Remembered per character.",
     "loreBooksFind": "Find by name",
-    "loreBooksNone": "No lorebooks"
+    "loreBooksNone": "No lorebooks",
+    "dayRange": "day {a}–{b}"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

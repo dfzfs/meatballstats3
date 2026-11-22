@@ -222,9 +222,12 @@ function calHtml(st, L, days, ui, big) {
     return `<div class="mb3-mon">${prevM != null ? `<span data-day="${prevM}">‹</span>` : '<span class="mb3-dim">‹</span>'}<b>${h(L.mon[m - 1])}</b>${nextM != null ? `<span data-day="${nextM}">›</span>` : '<span class="mb3-dim">›</span>'}</div>
       <div class="mb3-cal">${head}${pad}${cells}</div>`;
   }
-  const last = Math.max(...days.map((x) => x.n), st.cal.n || 0), from = Math.max(0, last - (big ? 34 : 13));
-  let cells = ''; for (let n = from; n <= last; n++) cells += cell(n, String(n + 1), n === from ? (R.ui2.dayCell || '일째') : '');
-  return `<div class="mb3-cal mb3-calN">${cells}</div>`;
+  // no date in the story: day 1, 2, 3 … in pages of 5 weeks (2 in the small card); ‹ › move between pages
+  const size = big ? 35 : 14, last = Math.max(...days.map((x) => x.n), st.cal.n || 0), from = Math.floor(Math.max(0, ui.day ?? last) / size) * size, to = Math.min(last, from + size - 1);
+  let cells = ''; for (let n = from; n <= to; n++) cells += cell(n, String(n + 1), n === from ? (R.ui2.dayCell || '일째') : '');
+  const ns = days.map((x) => x.n), prevP = ns.filter((n) => n < from).at(-1), nextP = ns.find((n) => n > to);
+  const nav = last >= size ? `<div class="mb3-mon">${prevP != null ? `<span data-day="${prevP}">‹</span>` : '<span class="mb3-dim">‹</span>'}<b>${h(fill(R.ui2.dayRange || '{a}~{b}일째', { a: from + 1, b: to + 1 }))}</b>${nextP != null ? `<span data-day="${nextP}">›</span>` : '<span class="mb3-dim">›</span>'}</div>` : '';
+  return `${nav}<div class="mb3-cal mb3-calN">${cells}</div>`;
 }
 function flowCard(st, L, chs, ui, M, big) {
   const U2 = R.ui2, days = dayList(chs);
