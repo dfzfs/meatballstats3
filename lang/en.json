@@ -455,7 +455,7 @@
       "human": "From harsh / fall lore lines and records (gave in · lead · aside · seed), rare \"may\" lines: \"need not go along\" after giving in too easily, \"this time first\" after a long stretch led by you, one remark warmer than the tie, old small things and offhand care, and the lines after a fall opens. Counting stays inside Meatball.",
       "fallAuto": "Off: when a fall is ready, 💗 appears in the status line and you decide.",
       "mascot": "The cat at the left of the status line. Off = text only.",
-      "director": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat. A separate extension.",
+      "director": "The 🎬 button left of the input: orders, secrets, direction and your rules, never kept in the chat. A separate extension.",
       "nameMap": "Only for the Korean screen: if a name is translated into a word (Grace → 은혜), write \"English name = shown name\", one per line. Aliases in the lore sheet are added on their own.",
       "theme": "Colours of the log, lore window, director panel and tips.",
       "font": "Font for Meatball windows only. Loaded once when picked (Ownglyph PDH ships inside the extension).",
@@ -946,8 +946,7 @@
     },
     "chatClear": "Clear talk",
     "chatClearTip": "Clears the talk only. Changes stay.",
-    "chatClearAsk": "Clear this talk? What was changed stays changed.",
-    "swapPause": "names swapped · not recording"
+    "chatClearAsk": "Clear this talk? What was changed stays changed."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

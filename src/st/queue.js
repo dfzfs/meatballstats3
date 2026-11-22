@@ -7,7 +7,6 @@ import { words } from '../core/ledger2.js';
 import { refresh } from './inject.js';
 import { afterSort, renderBar } from './bar.js';
 import { keepFixes } from './fix.js';
-import { swapOn } from './swap.js';
 
 const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 3000;   // thinking + answer; only what is used is paid
 export const Q = { rush: false, busy: false, generating: false, lastCall: 0, calls: [], coolUntil: 0, notBefore: 0, fails: 0, pushedKey: '', tries: {}, noEffort: false, timer: null, log: { status: '', dropped: [], lastReq: '', lastAnswer: '' } };
@@ -52,7 +51,6 @@ export async function idle(ms) {
 async function tick() {
   const s = settings(), chat = ctx().chat || [];
   if (!s.on || Q.busy || Q.generating || !chat.length || !R.V) return;
-  if (swapOn()) { Q.log.status = 'swap'; return; }   // director name swap on: Meatball rests, no sorting at all
   const S0 = store(), b = pending(chat, S0?.ev || {}, undefined, S0?.dir);
   if (!b || !(b.ready || Q.rush)) return;
   const key = b.fps.join('|');

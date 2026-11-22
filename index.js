@@ -6,7 +6,6 @@ import { refresh, lastPut } from './src/st/inject.js';
 import { mountUI } from './src/st/ui.js';
 import { openLedger } from './src/st/ledgerview.js';
 import { keepFixes } from './src/st/fix.js';
-import { swapOn } from './src/st/swap.js';
 import { store as store3 } from './src/st/store.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
@@ -19,20 +18,7 @@ const G = { type: '', dir: null, contFp: '', sent: null };
 const QUIET = new Set(['quiet', 'impersonate']);
 
 // v0.9 connection for 「미트볼 지시창」 (a separate extension). Version 1. Without it, everything runs as before.
-// Every spelling Meatball knows for a person: lore aliases, the "name spellings" list, names learned from the story.
-function namesFor(name) {
-  const k = String(name || '').trim(); if (!k) return [];
-  const parts = new Set([k, ...k.split(/\s+/).filter((w) => w.length >= 2)]), out = new Set();
-  try {
-    for (const p of R.bp?.persons || []) if (parts.has(p.name) || (p.alias || []).some((a) => parts.has(a))) [p.name, ...(p.alias || [])].forEach((x) => out.add(x));
-    for (const line of String(settings().nameMap || '').split(/\r?\n/)) { const [l, r] = line.split(/=|→/).map((x) => (x || '').trim()); if (l && r && (parts.has(r) || parts.has(l))) { l.split(/[,，]/).map((x) => x.trim()).filter(Boolean).forEach((x) => out.add(x)); out.add(r); } }
-  } catch (e) { /* optional */ }
-  return [...out].filter((x) => x && x !== k);
-}
 window.MeatballAPI = {
-  namesFor: (n) => namesFor(n),
-  // the director switched its name swap on/off: show it in the status line and notes right away
-  swapChanged: () => { try { refresh(); renderBar(); } catch (e) { /* */ } },
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
   pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
@@ -85,7 +71,6 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   eventSource.on(E.CHAT_CHANGED, () => { reset(); tidy(); fixesV2(); changed(); G.dir = null; loadBlueprint().then(refresh); });
   eventSource.on(E.GENERATION_STARTED, (type, opts, dryRun) => {
     if (dryRun) return;
-    G.swapGen = !opts?.quiet_prompt && swapOn();   // names swapped for this one: Meatball sits it out
     if (!Q.busy) Q.generating = true;
     G.type = opts?.quiet_prompt ? 'quiet' : type || 'normal'; G.dir = null;
     const last = [...(ctx().chat || [])].reverse().find((m) => !m.is_user && !m.is_system);
@@ -103,12 +88,6 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   });
   for (const ev of [E.GENERATION_ENDED, E.GENERATION_STOPPED]) eventSource.on(ev, () => { Q.generating = false; G.type = ''; R.pieces = null; kick(); });
   eventSource.on(E.MESSAGE_RECEIVED, (id) => {
-    if (G.swapGen) {   // made with swapped names: keep it out of the record (marked as read, nothing taken)
-      G.swapGen = false;
-      try { const chat = ctx().chat || [], m = chat[id] && !chat[id].is_user ? chat[id] : [...chat].reverse().find((x) => !x.is_user && !x.is_system);
-        if (m) { const S = store3(true); S.ev[fingerprint(m)] = [{ k: 'skip', v: 'name-swap' }]; } } catch (e) { /* */ }
-      G.dir = null; G.contFp = ''; G.sent = null; renderBar(); return;
-    }
     try {
       const chat = ctx().chat || [], m = chat[id] && !chat[id].is_user ? chat[id] : [...chat].reverse().find((x) => !x.is_user && !x.is_system);
       if (m && settings().on) {

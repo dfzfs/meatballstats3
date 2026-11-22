@@ -1,7 +1,6 @@
 // Screen translation (Google, through SillyTavern's own translate endpoint). Everything sent to AI stays English;
 // only what the person reads is turned into Korean. Many lines go in one request; results are cached in this browser.
 import { ctx, settings, R } from './store.js';
-import { swapName } from './swap.js';
 
 const KEY = 'mb3_tr_v1', MAX_CHARS = 3500, MAX_KEEP = 3000;
 let cache = null;
@@ -29,8 +28,7 @@ export function glossary() {
   gKey = key; gMap = m; return m;
 }
 // The name as it should be shown (glossary), or the name itself.
-const gloss = (n) => glossary().get(String(n || '').trim().toLowerCase()) || n;
-export const showName = (n) => { const s = swapName(n) || swapName(gloss(n)); return s ? gloss(s) : gloss(n); };
+export const showName = (n) => glossary().get(String(n || '').trim().toLowerCase()) || n;
 // For lists of people: one shown name per person. Glossary first; else an English name whose screen translation is
 // another name already in the list ("Will" shown as "윌" next to "윌") is the same person.
 const HAN = /^[가-힣\s]+$/;
