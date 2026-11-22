@@ -97,6 +97,8 @@ export async function send(text, info, redraw) {
   }
   save(); redraw();
 }
+// Clear the talk (what was already changed stays changed; undo is no longer offered for it).
+export function clearChat() { const S = store(true); if (S) { S.mbchat = []; save(); } }
 export function decide(m, yes) {
   if (!m?.prop || m.prop.state !== 'ask') return;
   if (!yes) { m.prop.state = 'kept'; save(); return; }
