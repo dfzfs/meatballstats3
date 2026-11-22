@@ -1,0 +1,792 @@
+{
+  "sp": {
+    "deepHead": "[STORY RECORD · BACKGROUND] What has been settled so far. Unless told otherwise, stay consistent with it. Do not copy or explain it. Characters know only what they know.",
+    "midHead": "[STATE AT THE END OF THE LAST REPLY · REFERENCE] The starting point for this reply. If the user asks to change the time, place or scene, follow that; otherwise continue from here. Props, numbers and dates already written: use only when needed, do not repeat them.",
+    "nowHead": "[THIS REPLY · LINES AND LEAK LEVEL] What changed after the last reply and the lines to keep in this one. The user's instruction comes first. How to write the scene is free. Do not turn this note into dialogue or explain it.",
+    "dead": "dead",
+    "left": "left the story",
+    "believed": "believed dead",
+    "promise": "Promise",
+    "knownTo": "known to",
+    "calls": "calls",
+    "asOf": "as of",
+    "arrived": "just arrived",
+    "outside": "outside those who know",
+    "passed": "Time moved: {s} passed since the previous scene",
+    "was": "was",
+    "correction": "Correction: {name} — {state}; not present",
+    "sinceStart": "since the story began",
+    "also": "Also present",
+    "nearby": "Nearby",
+    "holds": "holding",
+    "slipFix": "Correction: {name} — {what} is not part of the current state",
+    "notHere": "{name}: no {what} in this story so far",
+    "on": "put on",
+    "off": "off",
+    "lie": "{a} hides from {b}: {v}",
+    "owe": "{a} owes {b}: {v}",
+    "money": "money",
+    "dayUnknown": "exact day unknown",
+    "note": "Director's note",
+    "beat": "This reply",
+    "scene": "This scene",
+    "timeSkip": "Time skip: {s} since the last reply. Open this reply after that gap and let the passing of time show",
+    "style": "Style"
+  },
+  "wd": [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+  ],
+  "mon": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  "fmt": {
+    "md": "{mon} {d}",
+    "wd": "{wd}, {md}",
+    "y": "{x}, {y}",
+    "ago": "{s} ago",
+    "today": "today",
+    "yesterday": "yesterday",
+    "fuzzy": "{s} after {x} (exact day unknown)",
+    "fuzzyNoDate": "{s} later (exact day unknown)"
+  },
+  "span": {
+    "num": [
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve"
+    ],
+    "day": [
+      "{n} day",
+      "{n} days"
+    ],
+    "week": [
+      "about {n} week",
+      "about {n} weeks"
+    ],
+    "month": [
+      "about {n} month",
+      "about {n} months"
+    ],
+    "year": [
+      "over a year",
+      "about {n} years"
+    ],
+    "days": [],
+    "fuzzy": {
+      "d": "a few days",
+      "w": "a few weeks",
+      "mo": "a few months",
+      "y": "a few years"
+    }
+  },
+  "touch": [
+    "none",
+    "brush",
+    "hand",
+    "hug",
+    "kiss",
+    "more"
+  ],
+  "parse": {
+    "months": [
+      [
+        "january",
+        "jan"
+      ],
+      [
+        "february",
+        "feb"
+      ],
+      [
+        "march",
+        "mar"
+      ],
+      [
+        "april",
+        "apr"
+      ],
+      [
+        "may"
+      ],
+      [
+        "june",
+        "jun"
+      ],
+      [
+        "july",
+        "jul"
+      ],
+      [
+        "august",
+        "aug"
+      ],
+      [
+        "september",
+        "sept",
+        "sep"
+      ],
+      [
+        "october",
+        "oct"
+      ],
+      [
+        "november",
+        "nov"
+      ],
+      [
+        "december",
+        "dec"
+      ]
+    ],
+    "weekdays": [
+      [
+        "sunday"
+      ],
+      [
+        "monday"
+      ],
+      [
+        "tuesday"
+      ],
+      [
+        "wednesday"
+      ],
+      [
+        "thursday"
+      ],
+      [
+        "friday"
+      ],
+      [
+        "saturday"
+      ]
+    ],
+    "parts": {
+      "early": [
+        "early",
+        "beginning of",
+        "start of"
+      ],
+      "mid": [
+        "mid",
+        "middle of"
+      ],
+      "late": [
+        "late",
+        "end of"
+      ]
+    },
+    "monthNum": "",
+    "dayNum": "(?:^|[\\s,])(\\d{1,2})(?:st|nd|rd|th)?(?=$|[\\s,.])",
+    "yearNum": "(?:^|[\\s,])(\\d{4})(?=$|[\\s,.])",
+    "units": {
+      "d": [
+        "d",
+        "day",
+        "days"
+      ],
+      "w": [
+        "w",
+        "wk",
+        "wks",
+        "week",
+        "weeks"
+      ],
+      "mo": [
+        "mo",
+        "mos",
+        "month",
+        "months"
+      ],
+      "y": [
+        "y",
+        "yr",
+        "yrs",
+        "year",
+        "years"
+      ]
+    },
+    "next": [
+      "next day",
+      "next morning",
+      "tomorrow",
+      "following day"
+    ],
+    "gone": {
+      "believed": [
+        "believed dead",
+        "presumed dead",
+        "presumed"
+      ],
+      "dead": [
+        "dead",
+        "died",
+        "death",
+        "killed"
+      ],
+      "left": [
+        "left",
+        "gone",
+        "departed"
+      ]
+    },
+    "healed": [
+      "healed",
+      "recovered"
+    ],
+    "touch": [
+      [
+        "none"
+      ],
+      [
+        "brush"
+      ],
+      [
+        "hand"
+      ],
+      [
+        "hug"
+      ],
+      [
+        "kiss"
+      ],
+      [
+        "more"
+      ]
+    ],
+    "particles": [],
+    "transient": [
+      "drunk",
+      "exhausted",
+      "tired",
+      "sleepy",
+      "hungover"
+    ],
+    "loverTie": [
+      "lover",
+      "couple",
+      "dating",
+      "engaged",
+      "betroth",
+      "married",
+      "husband",
+      "wife",
+      "boyfriend",
+      "girlfriend",
+      "spouse",
+      "fianc"
+    ],
+    "fuzzy": {
+      "d": [
+        "a few days",
+        "several days",
+        "some days",
+        "few days"
+      ],
+      "w": [
+        "a few weeks",
+        "several weeks",
+        "few weeks"
+      ],
+      "mo": [
+        "a few months",
+        "several months",
+        "few months"
+      ],
+      "y": [
+        "a few years",
+        "several years"
+      ]
+    }
+  },
+  "ui": {
+    "title": "Meatball Status 3",
+    "on": "On (signpost for the AI)",
+    "profile": "Connection profile for sorting (empty = main connection)",
+    "view": "View signpost",
+    "date": "Set today's story date",
+    "dateHint": "Example: March 2 Tuesday",
+    "status": "Status",
+    "empty": "(nothing yet — appears after the first reply is sorted)",
+    "dropped": "Dropped lines",
+    "lastReq": "Last request",
+    "notes": "Date notes",
+    "learned": "people learned",
+    "cooling": "cooling down",
+    "pushed": "pushed to next batch",
+    "stopped": "sorting paused (5 failures in a row)",
+    "tokens": "tokens (estimate)",
+    "off": "Off — 0 characters are sent.",
+    "bar": "Show the status line and notices above the input",
+    "ledger": "Meatball log",
+    "now": "Now",
+    "people": "People",
+    "keep": "To keep",
+    "log": "Log",
+    "noDate": "The story date is not known yet. Use “Set today's story date” and the calendar appears.",
+    "dayN": "day {n} since the first record",
+    "allDays": "Show all",
+    "wear": "wearing",
+    "body": "body",
+    "knows": "learned",
+    "msg": "reply",
+    "passedToast": "⏩ {s} passed ({a} → {b})",
+    "hintToast": "A hidden instruction said “{t}”, but no time passed in the text. Click to count {s} as passed.",
+    "hintDone": "Applied: {s} passed",
+    "nothing": "—",
+    "today": "today",
+    "healed": "healed",
+    "byReply": "By reply",
+    "byDate": "By date",
+    "more": "More",
+    "apply": "Apply",
+    "noChange": "No change",
+    "passedLine": "{s} passed ({a} → {b})",
+    "dateSet": "Date: {d}",
+    "dateKept": "Date kept: {d}",
+    "deadFix": "{n}: gone or dead, so not put in the scene",
+    "hintCheck": "Check: a hidden instruction had a time skip",
+    "lg": {
+      "text": "story text",
+      "dir": "hidden instruction",
+      "user": "person",
+      "rule": "rule"
+    },
+    "why": {
+      "monthOnly": "Only a month, no day, in the text → the earliest day of that month",
+      "firstDate": "The first date in the text set the calendar",
+      "calibrated": "The first exact date fixed the calendar",
+      "older": "The story wrote an older date ({t}) → treated as a slip; the engine's date kept",
+      "noMark": "No sign of time passing in the text → press Apply to count it",
+      "userSkip": "A person pressed Apply",
+      "userDate": "Set by a person",
+      "deadStay": "Gone and dead stay so until a person undoes it",
+      "drop_name-not-in-text": "Dropped: this name is not in the reply",
+      "drop_gone-needs-quote": "Dropped: gone / dead needs a quote from the text",
+      "drop_form": "Dropped: wrong form",
+      "drop_key": "Dropped: unknown key",
+      "drop_date-unreadable": "Dropped: date unreadable",
+      "slip": "Not in the current state → corrected once in the next reply · from the second time, kept as a fact",
+      "drop_near-needs-quote": "Dropped: a nearby place needs a quote",
+      "drop_slip-needs-quote": "Dropped: a slip needs a quote",
+      "drop_off": "key switched off",
+      "drop_not-a-person": "not a person (title / director)",
+      "drop_lie-needs-quote": "a lie needs a quote",
+      "drop_touch-word": "touch word not in the list",
+      "drop_quote-not-in-text": "quote not in the text",
+      "drop_tie-needs-quote": "a tie change needs a quote",
+      "drop_open-needs-quote": "opening needs a quote",
+      "drop_hidden-leak": "hidden content leaked",
+      "drop_romance-off": "romance switched off for this person",
+      "fuzzy": "Vague time → no made-up date: kept as \"{s} later, day unknown\" until the text names a date or weekday",
+      "settled": "The vague skip was fixed by a date in the text",
+      "drop_tie-plain": "A relationship label, not an event (colleagues · friends · family) → the official tie is not overwritten"
+    },
+    "byPlace": "Places",
+    "noPlaces": "No places yet.",
+    "slipLine": "Slip: {n} — {w}",
+    "waitSort": "If I send while sorting runs, wait for it first",
+    "waitingSort": "Waiting for Meatball to finish sorting…",
+    "noteLabel": "Director's note (added to every reply in this chat · one per line)",
+    "notePh": "e.g. Nobody learns his real reason until he says it himself",
+    "noteSaved": "Director's note saved",
+    "noteBtn": "Director's note",
+    "edit": "Edit",
+    "editTip": "Edit the lines the classifier wrote for this reply. Edited lines go through the same checks (the quote must be in this reply).",
+    "editTitle": "Edit this reply's record",
+    "editHelp": "The classifier's answer for this reply. Inside <mb>: state lines (key: value); inside <rel>: relationship lines. Change or delete lines and confirm; the record is read back through the same checks. Lines whose quote is not in this reply are dropped.",
+    "editBroken": "The form is broken and could not be read. Nothing changed.",
+    "edited": "edited",
+    "redo": "Re-read",
+    "redoTip": "Remove this reply's record so the classifier reads it again on its next run (one AI call).",
+    "del": "Clear",
+    "delTip": "Empty this reply's record. It is not read again; the reply counts as changing nothing.",
+    "delAsk": "Empty Meatball's record for this reply? The chat text stays.",
+    "pickTip": "Tick to clear or re-read several at once",
+    "delSel": "Clear ticked",
+    "delSelTip": "Empty the records of the ticked replies (not read again).",
+    "delSelAsk": "Empty Meatball's record for {n} replies? The chat text stays.",
+    "redoSel": "Re-read ticked",
+    "redoSelTip": "Remove the ticked replies' records so they are read again (in one batch where possible).",
+    "delAll": "Clear this chat's record",
+    "delAllTip": "Remove everything Meatball recorded in this chat (state, relationships, instruction notes). The lore sheet, director's note and chat shape stay. Then the recent replies are read again.",
+    "delAllAsk": "Remove all of Meatball's records in this chat? The lore sheet and director's note stay. This cannot be undone.",
+    "trShow": "Show translation",
+    "d": {
+      "on": "Off: nothing is sent to the main model and sorting stops. On again: reading resumes from the first unread reply.",
+      "bar": "One line above the input: date · time of day · place · who is here. Click it to open the log. Notices such as \"⏩ three days passed\" follow this switch too. No effect on the main model.",
+      "profile": "The connection used for sorting after each reply: one call per reply, short replies batched 2–3 per call. A fast, cheap model is enough. Empty: the current main connection is used. The main settings are never changed.",
+      "translate": "Shows the English in the log, status line, relationship view and signpost view in Korean. What is sent to AI is always English; this is for the screen only. One view goes in one request through SillyTavern's Google route and results are remembered in this browser. Hover to see the English.",
+      "translateLabel": "Screen translation (Google · English → Korean)",
+      "wait": "Only when you send while a sorting call is running: waits for it (up to 20 s), then sends with the fresh note. No wait otherwise.",
+      "ledger": "Flow by date · by reply · relationship map · places · people's layers, each record with its evidence. In \"by reply\": ✏️ edit · 🔁 re-read · 🗑 clear per reply, clear ticked, clear all.",
+      "view": "Shows the three layers sent to the main model now, with a translation under each, plus the last sorting request and dropped lines (with reasons).",
+      "date": "Set today's story date yourself, e.g. March 2, Tuesday. A date you set always wins.",
+      "lore": "The lore sheet (the ground of people, ties and secrets, read only by the classifier) and the chat shape (1:1 · novel · multi). A full guide is at the top of the window.",
+      "note": "A standing instruction added to every reply in this chat. One per line, up to 6. It goes at the end of the \"this reply · lines and leak level\" layer as \"Director's note:\".",
+      "rel": "A table of each pair's official tie, texture and trend.",
+      "stage2": "Adds relationship reading to the same sorting call (same number of calls, longer prompt). Off: no relationship records and no \"lines and leak level\" rows.",
+      "burst": "When two people with a feeling held back a long time (7+ story days) are alone, adds permission: \"if the sore spot is scratched, the surface may crack; sharp and ugly is fine\". With others present: held tighter; with someone it is hidden from: calm surface; after a clash: three story days of rest. Off: always \"calm on the surface\".",
+      "groups": "What the classifier records. Switching fields off keeps the output form the same.",
+      "maker": "Shows locked deep layers and when they open in the people view. For bot makers only (spoilers).",
+      "delAllSet": "Clear Meatball's record for this chat",
+      "delAllSetDesc": "Removes state, relationship and instruction records. The lore sheet, director's note and chat shape stay. Recent replies are read again. Cannot be undone.",
+      "copy": "Copies this chat's Meatball state as one text: settings · the note as sent · the ledger now · relationship records · lore summary · director's note · the last 15 replies' records (events, relations, dropped lines, end of the hidden instruction, the classifier's raw answer) · the last sorting request. Locked deep layers are never included. Parts of the story text are included.",
+      "spark": "From the third reply two people share, once every 5 replies (or when the scene stands still), one \"may\" line: a trace of the old self slips (lore: self) · noticing one unsaid thing (channel) · this side moves first · turn a still scene once. It gives material, never plot.",
+      "guardAuto": "When a vault sign word or the guard catches a reply, it is rewritten once as a new swipe. Off: only a ⚠ warning in the status line.",
+      "threads": "What characters turned down, with a button to close each.",
+      "vaultLines": "While a vault person is here, the story gets something to do instead of the secret: cover (what others believe), viewpoint (told from outside that person), avoid (why the other stops asking when your message digs). The \"may show\" line goes only at scene start and every 4 replies.",
+      "refuseSteps": "A recorded refusal holds until something releases it. Asking again: shorter and cooler, no second explanation; pressing on: may end the topic or walk away. After you stop pressing for a while: one quiet easing.",
+      "rushCall": "When a new reply has a vault sign word, or digging words near a vault person's name, sorting (and the guard) runs at once instead of waiting for a batch. Only then are there more calls.",
+      "vaults": "Buttons to open or close vault entries by hand.",
+      "rarity": "Gap for special lines (sparks) and the vault \"may show\" line. Rarely = twice the gap, Often = a bit more often.",
+      "human": "From harsh / fall lore lines and records (gave in · lead · aside · seed), rare \"may\" lines: \"need not go along\" after giving in too easily, \"this time first\" after a long stretch led by you, one remark warmer than the tie, old small things and offhand care, and the lines after a fall opens. Counting stays inside Meatball.",
+      "fallAuto": "Off: when a fall is ready, 💗 appears in the status line and you decide.",
+      "mascot": "The cat at the left of the status line. Off = text only."
+    },
+    "btnHelp": "What the buttons do",
+    "copyBtn": "📋 Copy test report",
+    "copied": "Copied ({n} characters). Paste it into the conversation as is.",
+    "spark": "Sparks (now and then, allow a small surprising moment)",
+    "guardAuto": "Vault leaked: rewrite once by itself",
+    "guardChip": "vault",
+    "guardTip": "Something from the lore sheet vault seems to have leaked in this reply. Click to check",
+    "guardTitle": "The vault seems to have leaked",
+    "guardHelp": "\"Rewrite\" makes a new swipe (this reply stays one swipe back). \"Keep\" only closes the warning — if that reply stays and two more replies follow, the secret is treated as open (asking to keep hiding what the text already says makes the story contradict itself). \"False alarm\" = nothing actually leaked.",
+    "guardRedo": "Rewrite",
+    "guardKeep": "Keep",
+    "guardSign": "sign word",
+    "guardRevealed": "revealed",
+    "guardSettled": "settled",
+    "guardRushed": "rushed ahead",
+    "guardNoSwipe": "Could not find the swipe button. Swipe right on the last reply.",
+    "guardAutoToast": "The vault leaked: rewriting once.",
+    "guardFalse": "False alarm",
+    "threadsBtn": "Refusals",
+    "threadsTitle": "Open refusals",
+    "threadsHelp": "What a character turned down stays turned down until the story gives a reason (the line's release condition, becoming lovers, or closing it here). Asking again makes the answers shorter and colder.",
+    "threadsClose": "Close",
+    "threadsNone": "No open refusals.",
+    "vaultLines": "Vault cover · viewpoint · avoid lines",
+    "refuseSteps": "Refusals hold · colder when pressed",
+    "rushCall": "Sort at once when a leak looks likely",
+    "vaultWarn": "a vault sign word is inside a shows/cover/avoid value (that line will be blocked)",
+    "threadsPressed": "being pressed now",
+    "vaultsBtn": "Vault",
+    "vaultsTitle": "Open or close vault entries",
+    "vaultsHelp": "An open entry drops out of the note, the firewall and the guard (the secret may now be in the story). The decision sits on the last reply: deleting that reply undoes it. Hidden content is not shown here.",
+    "vaultOpen": "open",
+    "vaultClosed": "closed",
+    "vaultOpenBtn": "Open",
+    "vaultCloseBtn": "Close again",
+    "vaultsNone": "No vault lines in the lore sheet.",
+    "rarity": "How often special moments come",
+    "rarityLow": "Rarely",
+    "rarityMid": "Normal",
+    "rarityHigh": "Often",
+    "guardCrossed": "crossed a limit",
+    "guardReversal": "given up for nothing",
+    "guardGuess": "your character guessed it",
+    "guessTitle": "Your character guessed the secret",
+    "guessHelp": "It came from your own message (or hidden instruction), so it is your decision, not a leak. \"Open\" treats that vault as open.",
+    "reversalTitle": "A refusal gave way for no reason",
+    "reversalHelp": "\"Rewrite\" adds \"the version before gave way with nothing new; this time the no stands\". \"Keep\" accepts it — that refusal thread closes.",
+    "fallChip": "ready to fall",
+    "fallTip": "The lore sheet's fall condition was quoted in the text and enough story has built up. Click to decide",
+    "fallTitle": "{a} → {b}: open the fall?",
+    "fallHelp": "Opening swaps the leak line of that direction for the fallen line, and rare collapse / pull / receive lines may come. What stays (keeps) is guarded. The decision sits on the last reply.",
+    "fallOpen": "Open",
+    "fallNotYet": "Not yet",
+    "human": "Human touches (harsh · lead switch · one warmer remark · memory seeds · falling)",
+    "fallAuto": "Open the fall without asking when it is ready",
+    "mascot": "Meatball cat",
+    "mascotTip": "Poke it! Its face shows the state: thinking · surprised (⚠) · party (💗) · sad (sorting keeps failing)",
+    "otherMeatball": "Another Meatball status extension (Meatball Stats / Meatball Lite) is on too. If both add notes, the story gets the same things twice. Keep one per chat."
+  },
+  "rel": {
+    "moves": [
+      "closer",
+      "backing off",
+      "wavering",
+      "crack",
+      "clash",
+      "same"
+    ],
+    "tex": [
+      "attraction",
+      "desire",
+      "lingering",
+      "love-hate",
+      "forbidden pull",
+      "resentment",
+      "bond",
+      "none"
+    ],
+    "trend": {
+      "closer": "growing closer",
+      "back": "backing off",
+      "waver": "wavering"
+    },
+    "held": "{a} → {b}: {inner}, never said aloud",
+    "since": "since {d}, {s}",
+    "brk": " — if that is touched, they may break",
+    "sore": "sore spot: {v}",
+    "barrier": "barrier: {v}",
+    "hidePresent": "{c}: present; outside those who know: {a}–{b}",
+    "inner": "inner",
+    "trendWord": "trend",
+    "ordTie": "{a}–{b}: {v} — this tie changes when one says it plainly in the text and the other accepts",
+    "ordLeak": "{a} → {b}: {tex} — alone together: it may show in acts, tone or distance; the closer they get, the more they hesitate; the feeling itself stays unspoken",
+    "ordBurst": "{a} → {b}: what is held back (background) — never named or summed up, not even in thought; it presses on what is done. If the sore spot is scratched, the surface may crack; sharp and ugly is fine",
+    "ordBurstSore": "{a} → {b}: what is held back (background) — never named or summed up, not even in thought; it presses on what is done. If {sore} is touched, the surface may crack; sharp and ugly is fine",
+    "ordHeld": "{a} → {b}: what is held back (background) — calm on the surface; thoughts may circle it but never name or sum it up",
+    "ordHide": "With {c} present: {a} and {b} act as their surface relationship",
+    "ordLeakWatched": "{a} → {b}: {tex} — with others around: a glance or the edge of a word at most; the feeling stays unspoken",
+    "ordHeldWatched": "{a} → {b}: what is held back (background) — others are watching, so the surface holds tighter; if scratched, the words may turn sharp",
+    "innerDeep": "{a} → {b}, never said: {inner}",
+    "ordUnknown": "{who}: {v} — unknown, even to the story. Show only behavior; nobody, narration included, guesses, explains or settles it. A small question around it may be answered, never the main one",
+    "ordKeep": "{a} keeps {v} from {b}: it may come close to being seen; it is not seen or told",
+    "ordChannel": "Where feelings leak — {list}. Faces give least",
+    "unknownBase": "unknown — do not infer or record a cause",
+    "ordVault": "{who}: {v} — this may show; nobody explains why, and it stays closed",
+    "ordRefuse": "{who} may refuse or turn this away — a no that fits {who} (silence, a step back, a question back, a half-yes with a condition) is better than giving in; the refusal may tremble; it does not end what is between them",
+    "ordRefused": "{a} turned away {v} from {b} not long ago; it is not taken back unless the text gives a reason",
+    "sparkSelf": "{who}: once, a trace of who {who} used to be may slip ({v}) — covered at once or unnoticed; nobody names it",
+    "sparkNotice": "{a} may notice one thing {b} did not say and answer it without words, through {ch}",
+    "sparkLead": "This reply, {who} may move first — acting on what {who} wants, not in answer to {other}",
+    "sparkTurn": "The scene has held still for a while: someone may turn it once — small and in character, not a resolution",
+    "pushWords": [
+      "kiss",
+      "kissed",
+      "confess",
+      "i love you",
+      "marry",
+      "hold me",
+      "stay with me",
+      "touch me",
+      "키스",
+      "입맞",
+      "사랑해",
+      "좋아해",
+      "고백",
+      "안아",
+      "만져",
+      "같이 자",
+      "결혼"
+    ],
+    "vPov": "On this, the telling stays outside {who}: what {who} does and how it looks from where {other} stands",
+    "vCover": "{who}: to those around, {who} is {cover}. Keep that as quiet background: do not narrate it, comment on it, or hint that it may not be true",
+    "vAvoid": "When {other} gets close to asking why, {other} lets it drop — {motive} — and takes up something nearer at hand",
+    "redoVault": "The version before this settled something the writer keeps open. In this one the reason of {who} stays unsaid; the scene goes on around it",
+    "redoRefuse": "In the version before this {a} gave way on {v} with nothing new on the table. In this one the no stands; {a} may be tired of repeating it",
+    "refHold": "{a} turned down {v}. That stands: something new in the story could move it, asking again does not",
+    "refAgain": "{b} is asking again for what {a} already turned down. The answer of {a} gets shorter and cooler, not kinder; {a} does not explain twice",
+    "refPress": "{b} keeps pressing. {a} is done discussing it: {a} may end the topic, walk away, or say what happens if it comes up again. Warmth returns only once {b} lets it go",
+    "refEase": "{b} has let {v} rest. {a} eases a little, without a word about it",
+    "askWords": [
+      "why",
+      "who are you",
+      "remember",
+      "recognize",
+      "recognise",
+      "realize",
+      "truth",
+      "secret",
+      "hiding",
+      "what happened",
+      "tell me",
+      "왜",
+      "정체",
+      "기억",
+      "설마",
+      "눈치",
+      "숨기",
+      "숨긴",
+      "진짜",
+      "사실은",
+      "말해",
+      "무슨 일"
+    ],
+    "harshBg": "{a} toward {b}: {edge}. Warmth is not the starting point",
+    "harshA": "{a} has gone along with {b} more than {a} would lately. This reply {a} need not: {a} may be short, unimpressed or unhelpful in {a}'s own way, with no softening after",
+    "harshStart": "Anything warmer than the usual way of {a} with {b} has to be earned inside this scene",
+    "harshAfter": "{a} went further than {a}'s way last time. {a} goes no further and does not apologise; the edge returns to cold and brief",
+    "leadA": "For a long while {b} has set the pace and {a} has followed. This reply {a} may take it: {a} decides, starts or changes where this goes, on what {a} wants and in {a}'s own manner. Small is fine; {b} answers to it",
+    "leadB": "{a} has been waiting on the moves of {b}. Once here, {a} does not wait: {a} acts first and lets {b} catch up",
+    "asideA": "Once in this reply {a} may let slip one remark a shade warmer than {tie} allows — said flatly, like a plain fact — then go straight back to the matter. {a} does not explain it and nobody dwells on it",
+    "tieDefault": "their relationship",
+    "seedBg": "{b} once said: {seed}",
+    "seedC": "{a} may act on one old small thing about {b} from the background, without a word about it",
+    "care": "{a} may do one small practical thing about the {state} of {b} — while busy with something else, without looking for thanks",
+    "fallBg": "{a} has fallen for {b}, further than {a} would admit. {keeps} is intact",
+    "fallBase": "{a} is far gone on {b}: it shows where {a} cannot manage it — {how}. Everywhere else {a} is still {a}: {keeps}",
+    "fallCollapse": "This reply the composure of {a} may slip badly over {b}, once — {a} notices too late and recovers poorly. No speech about feelings; the slip is the tell",
+    "fallPull": "{b} has pulled back a little. {a}, who would not chase, finds a reason to be near; the reason is thin and {a} knows it",
+    "fallReceive": "{b} is handling {a}, and {a} half knows it. {a} may let it work — with a protest for form's sake",
+    "regroup": "{a} pulls back together: dry and brief on the surface again. The feeling has not gone anywhere",
+    "keepsDefault": "the way {a} talks",
+    "refFallen": "The no of {a} on {v} stands; it costs {a} more to say it now",
+    "vSuspect": "{other} has noticed more than {other} lets on. {other} asks nothing yet: watching, a small test, a question swallowed",
+    "goalHint": "{who}: whatever this is, it is moving slowly; nothing is settled yet",
+    "pressGive": "This reply {a} may give way on {v}; {a} finds {a}'s own reason for it",
+    "whatAsked": "what {b} asks",
+    "harmWords": [
+      "slapped",
+      "punched",
+      "choked",
+      "strangled",
+      "shoved her",
+      "shoved him",
+      "hit her",
+      "hit him",
+      "spat on"
+    ],
+    "harshLimit": ". One line {a} never crosses, however harsh: {limit}"
+  },
+  "ui2": {
+    "burst": "Allow a long-held feeling to break out",
+    "stage2": "Stage 2: relationships (same call, a little longer)",
+    "relBtn": "Relationships",
+    "pair": "Pair",
+    "tie": "Official tie",
+    "fwd": "→",
+    "back": "←",
+    "done": "So far",
+    "wall": "Barrier · hidden from",
+    "none": "(nothing yet — filled after the next reply is sorted)",
+    "bp": "Blueprint",
+    "bpOn": "The blueprint entry is switched ON: it is being sent to the main model. Switch it off.",
+    "bpLines": "lines read",
+    "bpDrop": "lines dropped",
+    "early": "⚠ acts as lovers without that tie",
+    "opened": "🔓 opened",
+    "logTex": "texture {a} → {b}: {t} (settles after two readings in a row)",
+    "logOpen": "{w}'s deep layer opened: {v}",
+    "logEarly": "{a}–{b}: official tie is \"{t}\" but claims ownership",
+    "noTie": "none set",
+    "whyEarly": "One or two events do not change the official tie. Reroll if it is too early. (Not sent to the main model)",
+    "whyTex": "Textures are not sent to the main model; log and relationship view only",
+    "loreBtn": "Lore sheet · chat shape",
+    "shapeTitle": "Chat shape",
+    "shape": {
+      "auto": "Auto",
+      "one": "1:1 roleplay (card and me are both people)",
+      "novel": "Novel · director (card = title, me = director)",
+      "multi": "Multi · sim (card = world, me = the player)"
+    },
+    "shapeNow": "Now",
+    "isPerson": "a person",
+    "isTitle": "a title or world (not a person)",
+    "isDirector": "a director (not a person)",
+    "loreTitle": "Lore sheet",
+    "loreHelp": "Only the classifier reads it; the main model never does. If the scene differs, the text wins. Format: one \"key: value\" per line.",
+    "loreSrcChat": "this chat",
+    "loreSrcChar": "character default",
+    "loreSrcBook": "lorebook \"meatball lore\"",
+    "loreSrcNone": "none",
+    "loreDraft": "Draft from card and lorebook (1 call)",
+    "loreDrafting": "Drafting…",
+    "loreSaveChat": "Save to this chat",
+    "loreSaveChar": "Save as character default",
+    "loreTemplate": "Insert example",
+    "loreReplace": "Replace the current text with the example?",
+    "loreSaved": "Lore sheet saved",
+    "loreRead": "Read",
+    "lorePeople": "people",
+    "loreNoSource": "The card has no text to read",
+    "loreFail": "Draft failed",
+    "loreTpl": "world: present-day Seoul, an ad agency\nperson: Hajun | alias: Jun | role: planning team lead | traits: wears glasses, does not smoke | personality: quiet, holds things in | background: six years at the firm\nperson: Minji | role: new hire | traits: hair tied back, left-handed\nplace: Office > planning room | near: emergency stairs\ntie: Hajun-Minji = coworkers\nbarrier: Minji-Person C = engaged\nhide: Hajun-Minji → Person C\nsore: Hajun>Minji = her calling that night a mistake\ndeep: Hajun = (a secret nobody knows yet) | opens: (when it opens)\ntexture: Minji>Hajun = lingering\ninner: Hajun>Minji = still cares, will not admit it\nnoromance: Person D",
+    "draftPrompt": "[SOURCE] below is a roleplay character card and lorebook. Write a Meatball lore sheet from it only.\nRules: only what the source states. Invent nothing. Leave a field empty if unknown. One line per person, short.\nLines you may use (only those needed):\nworld: one line\nperson: Name | alias: other names | role: position or status | traits: lasting looks or habits (glasses, does not smoke…) | personality: short | background: short\nplace: big place > smaller place | near: neighbouring place\ntie: A-B = official relationship\nbarrier: A-B = what stands between them\nhide: A-B → the person who must not find out\nhide: A>B = what A keeps from B\nunknown: Name = a mystery the source leaves open (why they act so, only if the source leaves it open)\nchannel: Name = where that person's feeling leaks (voice, hands, pauses… only if the source says so)\nself: Name = what that person is really like, old habits (only if the source says so)\nline: Name = what that person will not let pass (only if the source says so)\nsore: A>B = what hurts A when B touches it\ntexture: A>B = what A feels toward B (attraction · desire · lingering · love-hate · forbidden pull · resentment · bond — one)\ninner: A>B = the one-line feeling under the surface (only if the source says so)\nnoromance: name of a person never to be read romantically\ndeep: Name = what the source marks as secret | opens: when it comes out\nharsh: A>B = the rough attitude A shows B (only if the source says so) | limit: the line never crossed\nfall: A>B = how A acts once fallen for B (only if the source says so) | opens: condition | keeps: what stays even then\n[SOURCE]\n{{SRC}}\n[OUTPUT] <lore> lines </lore>",
+    "groupsTitle": "What to record",
+    "groups": {
+      "look": "Looks (clothes, body, position, items, traits)",
+      "space": "Space (what is next to what)",
+      "people": "People (gone, knows, promises, names, aliases)",
+      "role": "Position · status",
+      "lie": "Lies (who hides what from whom)",
+      "owe": "Debts · favours",
+      "rel1": "Touch · stated relationship",
+      "check": "Slips (glasses or cigarettes that are not there)",
+      "air": "Weather · mood",
+      "money": "Money (module)",
+      "stat": "Stats (HP, hunger…, module)",
+      "seed": "Memory seeds (likes, habits, wishes — small old things brought back later)"
+    },
+    "maker": "Creator view (show locked layers in the log)",
+    "byFlow": "Big flow",
+    "byRel": "Relationships",
+    "byMap": "Map",
+    "byPeople": "Layers",
+    "reason": "How it was judged",
+    "reasonNone": "No note was kept for this reply (sorted before this version).",
+    "reasonNote": "The classifier's note, as written",
+    "reasonDropped": "Lines the engine dropped, and why",
+    "reasonAllKept": "Nothing dropped — only lines that passed the checks went into the ledger",
+    "relNone": "No relationship records yet",
+    "relTap": "Tap a line for that pair's evidence, a person for their layers.",
+    "mapTap": "Tap a place for the replies set there.",
+    "mapNever": "no reply set here",
+    "layerFace": "Face · what shows (sheet + ledger)",
+    "layerInner": "Inner · what the text revealed (by date)",
+    "layerDeep": "Deep · opened only",
+    "layerNone": "Nothing revealed yet",
+    "layerNoDeep": "No deep layer opened",
+    "opensWhen": "opens",
+    "loreGuide": [
+      "<b>What the sheet is</b> — the story's ground (people, ties, secrets), one \"key: value\" per line. Only the classifier reads it; it is not passed to the main model as is. Meatball builds each reply's \"lines and leak level\" from the ties written here (tie · texture · inner · sore · hide).",
+      "<b>Where it is saved</b> — \"Save to this chat\" keeps it for this chat only; \"Save as character default\" for every chat with this character. This chat's wins. With neither, a lorebook entry titled \"meatball lore\" in the character's book is read (keep that entry switched off: Meatball still reads it and the main model does not).",
+      "<b>Draft</b> — one AI call, only when pressed (the classifier's connection profile). It reads the card's description, personality and scenario plus the character's lorebook entries (except ones mentioning Meatball), up to 24,000 characters, and is told to write only what the source states. The result is appended below and saved nowhere until you press a save button. The draft is always in English (both Korean and English keys are read). A Korean sheet is fine: the classifier reads it as is, and it is turned into English only where it goes into the main model's note (names kept).",
+      "<b>Lines that matter most</b> — tie · texture · inner · sore · hide · deep. With them, lines and leak level go in before any record builds up.",
+      "<b>New in v0.7</b> — <b>hide: A>B = what</b> (what A keeps from B; every reply while both are here: \"may come close, is not seen\") · <b>unknown: Name = what</b> (not decided by anyone yet, you included; every reply: \"behavior only, nobody guesses or explains\"; the classifier does not guess a cause either) · <b>channel: Name = voice, hands</b> (where that person's feeling leaks; added when an inner or texture line comes).",
+      "<b>v0.8 vault · sparks · lines</b> — <b>vault: Name (or A-B) = what stays hidden | signs: words that give it away (Korean and English) | shows: what may show | opens: when</b>. The hidden part never reaches the main model; only \"shows\" does. Note lines holding a sign are dropped by code; a new reply holding a sign, or the guard catching \"revealed / settled / rushed\" with a quote, puts ⚠ in the status line. Put where the story should end up (e.g. they fall in love) in the vault too: hidden = the destination, signs = confess, kiss…, shows = the stage now (e.g. only deniable moments). · <b>self: Name = hums while working, loves sweets</b> (sparks: the old self slips once) · <b>line: Name = coming into the back room</b> (when the person's message touches the line or runs ahead of the tie, a refusal is allowed in that reply).",
+      "<b>v0.9</b> — add <b>| cover: what those around believe</b> to a vault line so the story does not invent its own explanation. <b>avoid: who would notice>vault person = why they stop asking</b> (fear, pride, chose to believe). Add <b>| release: condition</b> to a line: the refusal lifts when that is quoted in the text. A vault with <b>| opens: condition</b> opens the same way. A leaked reply that stays while two more replies follow opens that vault.",
+      "<b>v0.9 harsh · fall · old things</b> — <b>harsh: A>B = A's attitude toward B</b> (blunt, mocking, pushing away) <b>| limit: the line never crossed</b>; crossing it raises ⚠. <b>fall: A>B = how A shows it once fallen | opens: condition | keeps: what stays even then</b>. Meatball counts the kinds of things the two went through, days and replies; when the condition is confirmed by a quote, 💗 shows in the bar. Pressing it (or auto in settings) lets the character come undone while keeping what is listed in keeps. Switch on the \"old things\" group to have small things from long ago resurface when they overlap the scene. Example: <i>harsh: A>B = pushes back at every word | limit: never hits</i> · <i>fall: A>B = cannot look away | opens: sees B hurt | keeps: the same curt voice</i>",
+      "<b>If it is wrong</b> — when the scene's text differs, the text wins. Lines that could not be read are listed under the box."
+    ],
+    "loreGuideTitle": "How this window works"
+  },
+  "lore": {
+    "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
+    "headDeep": "[USUAL SETTING · DETAIL] Background outside the story, for context only. If the text differs, the text wins.",
+    "world": "world",
+    "barrier": "barrier:",
+    "sore": "sore spot:",
+    "notPeople": "[NOT CHARACTERS] These names are a title, a world or an off-screen director. Never use them in with, wear or any key."
+  },
+  "guard": {
+    "head": "[GUARD] Kept by the writer. Do not use these in any other line of your answer. G = entry: who | what is kept | signs that give it away · H = the writer's rule: name | what to avoid",
+    "signs": "signs",
+    "rules": "Before <mb>, write <guard>…</guard>. One line per entry that the NEW replies touched, else \"none\":\nG1: revealed | \"quote\"   (the text states or plainly shows what is kept)\nG1: settled | \"quote\"    (the text decides an open question the entry keeps open)\nG1: rushed | \"quote\"     (the text jumps to where the entry says the story should only end up)\nG1: clue | \"quote\"       (the text adds a sign pointing to what is kept, where someone who does not know could see it)\nG1: near | \"quote\"       (someone in the text is reasoning their way toward what is kept)\nThe quote is copied from the text, 4-12 words. Plain hints with no new sign: \"none\".",
+    "rules2": "F1: crossed | \"quote\"   (the character went past this limit)\nK1: lost | \"quote\"      (the character is shown without this: it is gone from voice or manner)",
+    "limit": "limit",
+    "limitDefault": "no hitting or harm, no tearing the other down as a person",
+    "keeps": "keeps",
+    "rules3": "H1: broke | \"quote\"     (a NEW reply does what this rule asks to avoid; judge the meaning, not the words)"
+  }
+}

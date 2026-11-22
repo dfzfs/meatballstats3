@@ -1,0 +1,10 @@
+world: present-day Seoul, an ad agency
+person: Hajun | alias: Jun | role: planning team lead | traits: wears glasses, does not smoke | personality: quiet, holds things in | background: six years at the firm
+person: Minji | role: new hire | traits: hair tied back, left-handed
+place: Office > planning room | near: emergency stairs
+tie: Hajun-Minji = coworkers
+barrier: Minji-Person C = engaged
+hide: Hajun-Minji → Person C
+sore: Hajun>Minji = her calling that night a mistake
+deep: Hajun = (a secret nobody knows yet) | opens: (when it opens)
+noromance: Person D

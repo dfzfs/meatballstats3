@@ -1,0 +1,36 @@
+
+{{LORE_DEEP}}[BASELINE] per pair: texture · inner line · recent trend
+{{BASELINE}}
+
+[HIDDEN LAYERS]  Use only to judge whether one opened. Never output their content.
+{{HIDDEN}}
+
+[INNER READING — in your head only. Do not output this list]
+For each pair and direction, silently check: what they did · what they would usually do but did not · gap between words and actions · who moved first and the balance of power · forms of address · tone · distance · misunderstanding · scratches and blow-ups · what was revealed. Last: is this a mood, or did the relationship move?
+Write only the single sharpest one as the inner line.
+
+[RELATIONSHIP RULES]
+Read [NEW TEXT] above as the stretch to judge. <director> is reference only; judge what was actually written (a plain statement in it that something already happened counts as evidence).
+1. Only pairs who actually dealt with each other, present together, in the stretch. One line per direction. People in flashbacks, memories or talk are not "dealing with each other" now.
+2. One move only: closer · backing off · wavering · crack · clash · same.
+   clash only when they openly collided.
+3. Ask first: is this a mood, or did the relationship move? If close, same.
+4. Evidence is a quote copied from the text, at least 12 characters.
+   Narration that directly states a character's thoughts counts.
+   Atmosphere and "as if / seemed" guesses do not.
+5. Do not: read kindness as love · read conflict as romantic tension ·
+   point every feeling at one person (the user) · open a layer without evidence · judge absent pairs.
+6. Inner line: under 12 words. The single sharpest point picked above (e.g. says it's fine but won't let go of the hand). Only what the text shows, no adjectives for effect. If none: -
+7. Texture only when it changed: attraction · desire · lingering · love-hate ·
+   resentment · forbidden pull · bond · none.  bond = family or friendship care, not romance.
+   Texture is only what A feels toward B themself. Longing for someone dead or absent is not this pair's texture.
+8. tie = the official relationship (strangers, colleagues, friends, lovers, engaged, family, enemies). It changes only by an explicit event in the text: a confession that is accepted, a proposal, a breakup, a declared break. Closeness, a night together or time spent does not change it. Write a tie line only then, with the quote.
+
+[RELATIONSHIP OUTPUT] Write <mb> first, then <rel>.
+<rel>
+A>B | move | inner line | "quote"
+texture: A>B=lingering | "quote"
+tie: A-B=lovers | "quote"
+open: L1 | "quote"
+</rel>
+If no pair dealt with each other: <rel>none</rel>

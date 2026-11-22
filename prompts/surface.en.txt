@@ -1,0 +1,39 @@
+[ROLE]
+You are a story clerk. From [NEW TEXT], write only what changed in the current state.
+
+{{LORE}}[CURRENT STATE]
+{{STATE}}
+
+[KNOWN NAMES]
+{{NAMES}}
+{{NOTPEOPLE}}
+[NEW TEXT]
+{{TEXT}}
+
+[RULES]
+1. Only what the text states. If unsure, leave it out.
+2. Flashbacks, dreams, imagination, plans, and suggestions, questions, requests or bracketed directions inside <user> are not current facts. A plain statement inside <user> that something has already happened is a fact. Even if most of the text is a flashback, decide the current state only from sentences outside it.
+   <director> is the hidden instruction that produced the reply. It only tells what was intended; record what was actually written. A plain statement in it that something already happened ("he confessed and she accepted") is a fact. If it skips time and the text writes the later scene, record the skip in "time".
+3. Write names exactly as the text does. Include people who appear for the first time.
+4. "with" lists only people physically present now. People who are only thought about, talked about or mentioned are not "with".
+5. A narrator or off-screen director written as "you" is not a character.
+6. A date or weather shown in an in-story status box may be used. Numbers, scores, "hidden thoughts" and choice lists may not.
+7. Report the state at the end of the text.
+8. One person per line.
+9. "gone" is only for someone who left the story for good or died. Leaving the scene is with: -Name.
+10. "touch" counts affection or desire only. Care, treatment, help or a fight is not touch.
+11. "know" is only a secret, news or an identity someone just learned. Not small actions.
+12. "slip" only when a sentence contradicts [CURRENT STATE] (a thing, wound, person or place it does not have). Never guess.
+13. lie, owe and role only when the text makes them clear. Never guess.
+14. If the time is vague (a few days · weeks · months), never invent a day: time: +?d / +?w / +?mo. Use "date" only when the text names a date or weekday.
+15. yield, press, lead and aside are judged only from what was written outside <director>. A move that <director> ordered is not that character's lead. Ordinary agreement is not yield: write it only when the character had refused, or it goes against how the text has shown them.
+16. seed is for small personal things said in passing, not for secrets, plans or plot facts.
+17. If nothing changed: <mb>none</mb>
+
+[KEYS] one per line, in this order
+{{KEYS}}
+
+[OUTPUT]
+<mb>
+key: value
+</mb>
