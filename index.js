@@ -31,6 +31,8 @@ function namesFor(name) {
 }
 window.MeatballAPI = {
   namesFor: (n) => namesFor(n),
+  // the director switched its name swap on/off: show it in the status line and notes right away
+  swapChanged: () => { try { refresh(); renderBar(); } catch (e) { /* */ } },
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
   pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
