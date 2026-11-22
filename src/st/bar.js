@@ -1,5 +1,6 @@
 // The person's view: one status line above the input, and short notices. Never inside the chat text.
 import { showName } from './tr.js';
+import { swapOn } from './swap.js';
 import { ctx, settings, store, save, ledger, R, decide, fallState, bpLive } from './store.js';
 import { dateAt, fmtDate, span, nowDate } from '../core/time.js';
 import { refresh } from './inject.js';
@@ -33,6 +34,7 @@ function draw() {
   const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   const parts = [date || '📅 ?', st.cal.tod, st.loc && `📍 ${st.loc}`, who && `👥 ${who}`, passed].filter(Boolean);
+  if (swapOn()) parts.unshift(`⏸ ${R.ui2?.swapPause || '이름 바꾸는 중 · 기록 멈춤'}`);
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
   const face = R.sorting ? 'think' : g ? 'surprise' : fr.length ? 'party' : R.stalled ? 'sad' : 'idle';
   el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${parts.map(h).join('<span class="mb3-sep">·</span>').replace(/^📅 /, '')}`;

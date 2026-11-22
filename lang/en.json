@@ -971,7 +971,8 @@
     },
     "chatClear": "Clear talk",
     "chatClearTip": "Clears the talk only. Changes stay.",
-    "chatClearAsk": "Clear this talk? What was changed stays changed."
+    "chatClearAsk": "Clear this talk? What was changed stays changed.",
+    "swapPause": "names swapped · not recording"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

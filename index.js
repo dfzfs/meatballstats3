@@ -6,6 +6,7 @@ import { refresh, lastPut } from './src/st/inject.js';
 import { mountUI } from './src/st/ui.js';
 import { openLedger } from './src/st/ledgerview.js';
 import { keepFixes } from './src/st/fix.js';
+import { swapOn } from './src/st/swap.js';
 import { store as store3 } from './src/st/store.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
@@ -71,6 +72,7 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   eventSource.on(E.CHAT_CHANGED, () => { reset(); tidy(); fixesV2(); changed(); G.dir = null; loadBlueprint().then(refresh); });
   eventSource.on(E.GENERATION_STARTED, (type, opts, dryRun) => {
     if (dryRun) return;
+    G.swapGen = !opts?.quiet_prompt && swapOn();   // names swapped for this one: Meatball sits it out
     if (!Q.busy) Q.generating = true;
     G.type = opts?.quiet_prompt ? 'quiet' : type || 'normal'; G.dir = null;
     const last = [...(ctx().chat || [])].reverse().find((m) => !m.is_user && !m.is_system);
@@ -88,6 +90,12 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   });
   for (const ev of [E.GENERATION_ENDED, E.GENERATION_STOPPED]) eventSource.on(ev, () => { Q.generating = false; G.type = ''; R.pieces = null; kick(); });
   eventSource.on(E.MESSAGE_RECEIVED, (id) => {
+    if (G.swapGen) {   // made with swapped names: keep it out of the record (marked as read, nothing taken)
+      G.swapGen = false;
+      try { const chat = ctx().chat || [], m = chat[id] && !chat[id].is_user ? chat[id] : [...chat].reverse().find((x) => !x.is_user && !x.is_system);
+        if (m) { const S = store3(true); S.ev[fingerprint(m)] = [{ k: 'skip', v: 'name-swap' }]; } } catch (e) { /* */ }
+      G.dir = null; G.contFp = ''; G.sent = null; renderBar(); return;
+    }
     try {
       const chat = ctx().chat || [], m = chat[id] && !chat[id].is_user ? chat[id] : [...chat].reverse().find((x) => !x.is_user && !x.is_system);
       if (m && settings().on) {
