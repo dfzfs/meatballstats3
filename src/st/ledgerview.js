@@ -299,7 +299,9 @@ function rollDice(ui, draw) {
   for (let k = 0; k < 4; k++) {
     const P = placeReplies(ledger(), nowY, y0), rolls = rollDates(P, ledger().tl, nowY);
     if (!rolls.length) break;
-    const u = applyFixes(rolls.map((r) => ({ i: r.i, lines: [`date: ${r.date.y >= 100 ? `${r.date.y}년 ` : ''}${r.date.m}월 ${r.date.d}일`] })), '🎲');
+    // a guessed year (no year in the story, none set) is never written down: only month · day, the year stays a guess
+    const yr = (d) => (!P.guessed && d.y >= 100 ? `${d.y}년 ` : '');
+    const u = applyFixes(rolls.map((r) => ({ i: r.i, lines: [`date: ${yr(r.date)}${r.date.m}월 ${r.date.d}일`] })), '🎲');
     if (!u) break; undo.unshift(...u);
   }
   if (!undo.length) { window.toastr?.info(U2.diceNone || '정할 날짜가 없어요. 흐릿한 주(빗금)나 미정 답이 없어요.'); return; }
