@@ -37,19 +37,8 @@ function otherMeatball() {
   } catch (e) { /* optional */ }
 }
 
-// 🎬 지시창 is part of this extension now (director/). Off in settings = not loaded at all.
-function loadDirector() {
-  if (window.__mbDirector) return;
-  try {
-    if (!document.getElementById('mbd_css')) document.head.insertAdjacentHTML('beforeend', `<link id="mbd_css" rel="stylesheet" href="${new URL('director/style.css', import.meta.url).href}">`);
-    import('./director/index.js').catch((e) => console.error('[meatball3] director did not load', e));
-  } catch (e) { console.error('[meatball3] director did not load', e); }
-}
-
 (async function init() {
   try { await loadResources(new URL('.', import.meta.url)); } catch (e) { console.error('[meatball3] could not load text files', e); return; }
-  R.loadDirector = loadDirector;
-  if (settings().director !== false) loadDirector();
   fetch(new URL('manifest.json', import.meta.url)).then((r) => r.json()).then((j) => { R.version = j.version; }).catch(() => {});
   const { eventSource, event_types: E } = ctx();
   const changed = () => { refresh(); renderBar(); kick(); };

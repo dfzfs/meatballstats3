@@ -75,7 +75,7 @@ export function mountUI() {
     <div class="inline-drawer-toggle inline-drawer-header"><b>${h(U.title)}</b><div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div></div>
     <div class="inline-drawer-content">
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_director" type="checkbox"${s.director !== false ? ' checked' : ''} /><span>${h(U.director)}</span></label>${desc('director')}</div>
+      <div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
       <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label><select id="mb3_profile" class="text_pole"><option value=""></option></select>${desc('profile')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
@@ -107,11 +107,7 @@ export function mountUI() {
   document.getElementById('mb3_spark')?.addEventListener('change', (e) => { s.spark = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_gauto')?.addEventListener('change', (e) => { s.guardAuto = e.target.checked; c.saveSettingsDebounced(); });
   document.getElementById('mb3_rarity')?.addEventListener('change', (e) => { s.rarity = +e.target.value || 1; c.saveSettingsDebounced(); refresh(); });
-  document.getElementById('mb3_director')?.addEventListener('change', (e) => {
-    s.director = e.target.checked; c.saveSettingsDebounced();
-    if (s.director) R.loadDirector?.();
-    else { document.getElementById('mbd_btn')?.remove(); document.getElementById('mbd_wrap')?.remove(); window.toastr?.info(U.directorOff); }
-  });
+  drawDirector();
   for (const [id, k] of [['mb3_vlines', 'vaultLines'], ['mb3_rsteps', 'refuseSteps'], ['mb3_rush', 'rushCall'], ['mb3_human', 'human'], ['mb3_fauto', 'fallAuto'], ['mb3_mascot', 'mascot']]) document.getElementById(id)?.addEventListener('change', (e) => { s[k] = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_tr')?.addEventListener('change', (e) => { s.translate = e.target.checked; c.saveSettingsDebounced(); renderBar(); });
   document.getElementById('mb3_delall')?.addEventListener('click', () => { if (confirm(R.ui.delAllAsk)) clearAll(); });
@@ -126,4 +122,26 @@ export function mountUI() {
   document.getElementById('mb3_note')?.addEventListener('click', editNote);
   document.querySelectorAll('[data-mb3g]').forEach((cb) => cb.addEventListener('change', () => { s.groups = { ...(s.groups || {}), [cb.dataset.mb3g]: cb.checked }; c.saveSettingsDebounced(); }));
   document.getElementById('mb3_maker')?.addEventListener('change', (e) => { s.maker = e.target.checked; c.saveSettingsDebounced(); });
+}
+
+// 🎬 지시창 is its own extension: this button installs it from GitHub (the same as Install extension with the address).
+const DIRECTOR_REPO = 'https://github.com/dfzfs/meatball-director';
+const hasDirector = () => !!window.__mbDirector || !!document.getElementById('mbd_btn')
+  || [...document.querySelectorAll('script[src]')].some((e) => /third-party\/meatball-director\//i.test(e.src));
+let dirFresh = false;
+function drawDirector() {
+  const box = document.getElementById('mb3_dir_box'); if (!box) return;
+  const U = R.ui;
+  if (hasDirector()) { box.innerHTML = `<small class="mb3-desc">${h(U.directorHave)}</small>`; return; }
+  if (dirFresh) { box.innerHTML = `<small class="mb3-desc">${h(U.directorReload)}</small> <div id="mb3_dir_reload" class="menu_button">${h(U.directorReloadBtn)}</div>`; document.getElementById('mb3_dir_reload')?.addEventListener('click', () => location.reload()); return; }
+  box.innerHTML = `<div id="mb3_dir_get" class="menu_button" title="${h(DIRECTOR_REPO)}">${h(U.directorGet)}</div>`;
+  document.getElementById('mb3_dir_get')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget; if (b.dataset.busy) return; b.dataset.busy = '1'; b.textContent = U.directorBusy;
+    try {
+      const res = await fetch('/api/extensions/install', { method: 'POST', headers: ctx().getRequestHeaders?.() ?? { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: DIRECTOR_REPO, global: false }) });
+      if (!res.ok) { console.warn('[meatball3] director install failed', res.status, await res.text().catch(() => '')); throw new Error((U.directorErr || {})[res.status] || U.directorErrAny.replace('{n}', res.status)); }
+      dirFresh = true; window.toastr?.success(U.directorDone);
+    } catch (err) { window.toastr?.warning(err.message || U.directorErrAny.replace('{n}', '?'), '', { timeOut: 10000 }); }
+    drawDirector();
+  });
 }
