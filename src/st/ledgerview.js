@@ -8,7 +8,7 @@ import { refresh } from './inject.js';
 import { fold2, tieOf, trend } from '../core/ledger2.js';
 import { trWatch, showName, nameMerger } from './tr.js';
 import { mascotImg } from './mascot.js';
-import { chatHtml, chatLog, send as chatSend, decide as chatDecide, undo as chatUndo } from './mbchat.js';
+import { chatHtml, chatLog, send as chatSend, decide as chatDecide, undo as chatUndo, clearChat } from './mbchat.js';
 import { settings, ledger2, stateFor } from './store.js';
 import { absorb, absorbRel } from '../core/bundle.js';
 import { Q, kick } from './queue.js';
@@ -334,7 +334,7 @@ function render(box, ui) {
   } else if (ui.view === 'rel') {
     body = card(`💞 ${h(U2.tabRel || '관계')}`, pairs.length ? pairs.slice(0, 20).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('') + (ui.pair ? pairDetail(ui.pair, st, st2, L) : `<p class="mb3-dim">${h(U2.relTap2 || '카드를 누르면 근거가 보여요')}</p>`) : `<p class="mb3-dim">${h(U2.relNone)}</p>`, 'mb3-wide');
   } else if (ui.view === 'chat') {
-    body = card(`💬 ${h(U2.chatTitle || '미트볼에게 말하기')} <span class="mb3-dim" style="margin-left:auto;font-weight:500;font-size:12px">${h(U2.chatSub || '고칠 게 있으면 그냥 말해요')}</span>`, chatHtml(mascotImg('happy')), 'mb3-wide');
+    body = card(`💬 ${h(U2.chatTitle || '미트볼에게 말하기')} <span class="mb3-dim" style="margin-left:auto;font-weight:500;font-size:12px">${h(U2.chatSub || '고칠 게 있으면 그냥 말해요')}</span>${chatLog().length ? `<span class="mb3-cclear" title="${h(U2.chatClearTip || '')}">🗑 ${h(U2.chatClear || '대화 지우기')}</span>` : ''}`, chatHtml(mascotImg('happy')), 'mb3-wide');
   } else if (ui.view === 'map') {
     body = card(`🗺️ ${h(U2.tabMap || '지도')}`, `<p class="mb3-dim">${h(U2.mapHow || '')}</p>${mapHtml(st, ui)}`, 'mb3-wide');
   } else if (ui.view === 'people') {
@@ -379,9 +379,10 @@ export function openLedger(at = null) {
       if (a.matches('.mb3-delall')) { if (confirm(U.delAllAsk)) { clearAll(); draw(); } return; }
     }
     if (ev.target.closest('.mb3-all')) { ev.preventDefault(); ui.only = ''; draw(); return; }
-    const cb = ev.target.closest('.mb3-cyes,.mb3-cno,.mb3-cundo,.mb3-csend,[data-setdate]');
+    const cb = ev.target.closest('.mb3-cyes,.mb3-cno,.mb3-cundo,.mb3-csend,.mb3-cclear,[data-setdate]');
     if (cb && box.contains(cb)) {
       ev.preventDefault(); ev.stopPropagation();
+      if (cb.matches('.mb3-cclear')) { if (confirm(R.ui2.chatClearAsk || '대화를 지울까요? 이미 바꾼 기록은 그대로 남아요.')) { clearChat(); draw(); } return; }
       if (cb.dataset.setdate) { import('./ui.js').then((m) => m.setDate?.()).then(() => draw()); return; }
       if (cb.matches('.mb3-csend')) { const ta = box.querySelector('.mb3-cta'); const v = ta?.value || ''; if (ta) ta.value = ''; chatSend(v, ui._info, draw); return; }
       const m = chatLog()[+cb.dataset.cm];

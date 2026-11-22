@@ -968,7 +968,10 @@
       "time": "time",
       "loc": "place",
       "with": "with"
-    }
+    },
+    "chatClear": "Clear talk",
+    "chatClearTip": "Clears the talk only. Changes stay.",
+    "chatClearAsk": "Clear this talk? What was changed stays changed."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
