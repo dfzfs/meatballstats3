@@ -19,7 +19,18 @@ const G = { type: '', dir: null, contFp: '', sent: null };
 const QUIET = new Set(['quiet', 'impersonate']);
 
 // v0.9 connection for 「미트볼 지시창」 (a separate extension). Version 1. Without it, everything runs as before.
+// Every spelling Meatball knows for a person: lore aliases, the "name spellings" list, names learned from the story.
+function namesFor(name) {
+  const k = String(name || '').trim(); if (!k) return [];
+  const parts = new Set([k, ...k.split(/\s+/).filter((w) => w.length >= 2)]), out = new Set();
+  try {
+    for (const p of R.bp?.persons || []) if (parts.has(p.name) || (p.alias || []).some((a) => parts.has(a))) [p.name, ...(p.alias || [])].forEach((x) => out.add(x));
+    for (const line of String(settings().nameMap || '').split(/\r?\n/)) { const [l, r] = line.split(/=|→/).map((x) => (x || '').trim()); if (l && r && (parts.has(r) || parts.has(l))) { l.split(/[,，]/).map((x) => x.trim()).filter(Boolean).forEach((x) => out.add(x)); out.add(r); } }
+  } catch (e) { /* optional */ }
+  return [...out].filter((x) => x && x !== k);
+}
 window.MeatballAPI = {
+  namesFor: (n) => namesFor(n),
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
   pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
