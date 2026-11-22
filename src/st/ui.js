@@ -48,7 +48,7 @@ async function view() {
 }
 
 // The person sets today's story date. A person's line always wins (force).
-async function setDate() {
+export async function setDate() {
   const c = ctx(), U = R.ui, st = ledger(), L = R.lang[(navigator.language || '').startsWith('ko') ? 'ko' : 'en'];
   const text = await c.Popup.show.input(U.date, U.dateHint, fmtDate(dateAt(st.cal), L));
   const d = text && parseDate(text, R.V);

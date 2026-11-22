@@ -6,6 +6,7 @@ import { guardBlock, parseGuard, quarantine, scan, hasSign } from '../core/vault
 import { words } from '../core/ledger2.js';
 import { refresh } from './inject.js';
 import { afterSort, renderBar } from './bar.js';
+import { keepFixes } from './fix.js';
 
 const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 3000;   // thinking + answer; only what is used is paid
 export const Q = { rush: false, busy: false, generating: false, lastCall: 0, calls: [], coolUntil: 0, notBefore: 0, fails: 0, pushedKey: '', tries: {}, noEffort: false, timer: null, log: { status: '', dropped: [], lastReq: '', lastAnswer: '' } };
@@ -78,6 +79,7 @@ async function tick() {
     if (r.pushed) { Q.pushedKey = key; Q.log.status = `pushed:${r.kind}`; }                      // broken answer: wait for the next reply, no re-call
     else { Q.fails = 0; Q.log.status = 'ok'; if (rel) { const x = absorbRel(S.rel, b, answer, st, R.bp, R.V, R.lang, rel.hidden, ledger2()); Q.log.dropped = [...r.dropped, ...x.dropped]; }
       try { afterAbsorb(S, b, answer, vbp, falls, gb, habits); } catch (e) { console.warn('[meatball3] guard failed', e); }
+      try { keepFixes(b.fps); } catch (e) { console.warn('[meatball3] could not keep fixes', e); }   // ✋ the person's fixes stay on top
       save(); refresh(); try { afterSort(st, b.fps, hint); } catch (e) { console.warn('[meatball3] notice failed', e); } }
   } catch (e) {
     console.warn('[meatball3] sort call failed', e);
