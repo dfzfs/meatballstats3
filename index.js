@@ -5,6 +5,8 @@ import { Q, kick, reset, newReply, idle, guardNow } from './src/st/queue.js';
 import { refresh, lastPut } from './src/st/inject.js';
 import { mountUI } from './src/st/ui.js';
 import { openLedger } from './src/st/ledgerview.js';
+import { keepFixes } from './src/st/fix.js';
+import { store as store3 } from './src/st/store.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
 import { fingerprint } from './src/core/clean.js';
@@ -55,6 +57,9 @@ document.addEventListener?.('click', (e) => {
   if (Number.isInteger(i)) openLedger(i);
 }, true);
 
+// v0.11.1: relation fixes asked before this version were dropped by the quote check; put them back once per chat.
+function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) return; keepFixes(Object.keys(S.ufix)); store3(true).ufixV = 2; } catch (e) { /* optional */ } }
+
 (async function init() {
   try { await loadResources(new URL('.', import.meta.url)); } catch (e) { console.error('[meatball3] could not load text files', e); return; }
   fetch(new URL('manifest.json', import.meta.url)).then((r) => r.json()).then((j) => { R.version = j.version; }).catch(() => {});
@@ -63,7 +68,7 @@ document.addEventListener?.('click', (e) => {
   eventSource.on(E.APP_READY, () => { mountUI(); mountRelUI(); changed(); setTimeout(otherMeatball, 3000); });
   for (const ev of [E.CHARACTER_MESSAGE_RENDERED, E.MESSAGE_UPDATED, E.MESSAGE_SWIPED, E.CHAT_CHANGED, E.MORE_MESSAGES_LOADED]) if (ev) eventSource.on(ev, () => setTimeout(pawButtons, 50));
   setTimeout(pawButtons, 1500);
-  eventSource.on(E.CHAT_CHANGED, () => { reset(); tidy(); changed(); G.dir = null; loadBlueprint().then(refresh); });
+  eventSource.on(E.CHAT_CHANGED, () => { reset(); tidy(); fixesV2(); changed(); G.dir = null; loadBlueprint().then(refresh); });
   eventSource.on(E.GENERATION_STARTED, (type, opts, dryRun) => {
     if (dryRun) return;
     if (!Q.busy) Q.generating = true;

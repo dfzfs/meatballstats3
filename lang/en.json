@@ -960,7 +960,13 @@
     "legLow": "a little",
     "legHigh": "a lot",
     "legBig": "big event",
-    "setDate": "Set date"
+    "setDate": "Set date",
+    "fixWord": {
+      "date": "date",
+      "time": "time",
+      "loc": "place",
+      "with": "with"
+    }
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

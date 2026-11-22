@@ -88,7 +88,7 @@ export function fold2(chat, rel, fingerprint) {
           if (e.mv === 4) { d.clashDay = e.day; d.inner = ''; d.innerDay = null; }          // it came out: no longer held back
           else if (e.mv !== 5 && e.inner) { if (!d.inner) d.innerDay = e.day; d.inner = e.inner; d.q = e.q; }
         } else if (d.tex !== e.t) {
-          if ((d.cand === e.t && d.candAt === st.read - 1) || clash) { d.tex = e.t; d.cand = null; } else { d.cand = e.t; d.candAt = st.read; }   // two readings in a row
+          if ((d.cand === e.t && d.candAt === st.read - 1) || clash || e.by === 'user') { d.tex = e.t; d.cand = null; } else { d.cand = e.t; d.candAt = st.read; }   // two readings in a row
         }
       }
     }

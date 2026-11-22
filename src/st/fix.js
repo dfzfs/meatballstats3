@@ -4,6 +4,7 @@ import { ctx, store, save, ledger, ledger2, R } from './store.js';
 import { cleanText, fingerprint } from '../core/clean.js';
 import { absorb, absorbRel } from '../core/bundle.js';
 import { refresh } from './inject.js';
+import { resolve } from '../core/names.js';
 
 const EMPTY = '<mb>\nnone\n</mb>\n<rel>none</rel>';
 const part = (a, tag) => { const m = String(a || '').match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`)); return (m ? m[1] : '').split('\n').map((x) => x.trim()).filter((x) => x && x !== 'none'); };
@@ -56,8 +57,24 @@ export function undoFixes(undo) {
   for (const u of undo) { reabsorb(u.i, u.old); if (u.had) S.ufix[u.fp] = u.had; else delete S.ufix?.[u.fp]; }
   save(); refresh();
 }
+// The person's relation lines are taken as they are (the quote and name checks are for the classifier, not for them).
+function trustRel(S, fp, lines) {
+  const st = ledger(), list = (S.rel[fp] ||= []), day = list.find((e) => e.day != null)?.day ?? st.cal.n;
+  const nm = (n) => resolve(st.names, n.trim(), R.V) || n.trim();
+  const texOf = (w) => { const v = w.trim().toLowerCase(); for (const L of [R.lang.en, R.lang.ko]) { const i = L.rel.tex.findIndex((x) => x.toLowerCase() === v || v.startsWith(x.toLowerCase())); if (i >= 0) return i; } return -1; };
+  for (const l of lines) {
+    if (l.startsWith('-')) continue;
+    let m = l.match(/^(?:texture|결)\s*[:：]\s*([^=|>]+)>([^=|]+?)\s*=\s*([^|]+)/i);
+    if (m) { const a = nm(m[1]), b = nm(m[2]), t = texOf(m[3]); if (t < 0) continue;
+      S.rel[fp] = list.filter((e) => !(e.k === 'tex' && e.a === a && e.b === b)); S.rel[fp].push({ k: 'tex', a, b, t, q: '', day, by: 'user' }); continue; }
+    m = l.match(/^(?:tie|사이)\s*[:：]\s*([^=|]+?)\s*-\s*([^=|]+?)\s*=\s*([^|]+)/i);
+    if (m) { const a = nm(m[1]), b = nm(m[2]);
+      S.rel[fp] = (S.rel[fp] || list).filter((e) => !(e.k === 'tie' && [e.a, e.b].sort().join('|') === [a, b].sort().join('|'))); S.rel[fp].push({ k: 'tie', a, b, v: m[3].trim().slice(0, 40), q: '', day, by: 'user', user: true }); }
+  }
+}
 // The events made from the person's lines carry by:'user' (shown as ✋; a date is forced).
 function markUser(S, fp, lines) {
+  trustRel(S, fp, lines);
   const keys = new Set(lines.filter((l) => !l.startsWith('-')).map((l) => l.split(/[:|]/)[0].trim().toLowerCase()));
   for (const e of S.ev?.[fp] || []) if (keys.has(e.k)) { e.by = 'user'; if (e.k === 'date') e.force = true; }
   for (const e of S.rel?.[fp] || []) if (keys.has(e.k === 'tex' ? 'texture' : e.k)) e.by = 'user';

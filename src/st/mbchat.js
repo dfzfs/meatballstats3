@@ -53,7 +53,7 @@ ${msg}
 
 [LINE FORMAT] fix lines use exactly these forms
 ${keysBlock(settings().groups, lg)}
-texture: A>B=attraction|desire|lingering|love-hate|forbidden pull|resentment|bond|none
+texture: A>B=attraction|desire|lingering|love-hate|forbidden pull|resentment|bond|none   (pick one word from this list; if the user dislikes a word, pick the closest OTHER word, never "none" unless they ask to remove it)
 To remove a wrong line from a reply: -key: the old value
 
 [RULES]
@@ -106,6 +106,15 @@ export function decide(m, yes) {
 }
 export function undo(m) { if (m?.prop?.state !== 'done') return; undoFixes(m.prop.undo); m.prop.state = 'undone'; save(); }
 
+// A fix line in plain words: "texture: A>B=lingering" -> "A → B: 미련"
+function human(l) {
+  const L = R.lang[(navigator.language || '').startsWith('ko') ? 'ko' : 'en'], U2 = R.ui2;
+  let m = l.match(/^texture\s*:\s*([^>]+)>([^=]+)=\s*(.+)$/i);
+  if (m) { const i = R.lang.en.rel.tex.findIndex((x) => x === m[3].trim().toLowerCase()); return `${m[1].trim()} → ${m[2].trim()}: ${i >= 0 ? L.rel.tex[i] : m[3].trim()}`; }
+  m = l.match(/^tie\s*:\s*([^-]+)-([^=]+)=\s*(.+)$/i); if (m) return `${m[1].trim()} – ${m[2].trim()}: ${m[3].trim()}`;
+  m = l.match(/^(date|time|loc|with)\s*:\s*(.+)$/i); if (m) return `${(U2.fixWord || {})[m[1].toLowerCase()] || m[1]}: ${m[2].trim()}`;
+  return l;
+}
 const ICON = { date: '📅', time: '⏩', loc: '📍', with: '👥', wear: '👕', tie: '🤝', texture: '💞', refuse: '🚫', role: '🏷️', gone: '🚪', know: '💡', body: '🩹', item: '🎒', call: '🗣️', touch: '🤲' };
 export function chatHtml(mascot) {
   const U2 = R.ui2, log = chatLog();
@@ -114,7 +123,7 @@ export function chatHtml(mascot) {
     let p = '';
     if (m.prop) {
       const P = m.prop, lines = P.fixes.map((f) => f.lines.map((l) => { const neg = l.startsWith('-'), key = l.replace(/^-/, '').split(/[:|]/)[0].trim().toLowerCase();
-        return `<div class="mb3-fx${neg ? ' mb3-fxdel' : ''}"><span class="mb3-fxi">${neg ? '🗑' : ICON[key] || '✏️'}</span><span class="mb3-fxn">#${f.i}</span> ${h(l.replace(/^-/, ''))}</div>`; }).join('')).join('');
+        return `<div class="mb3-fx${neg ? ' mb3-fxdel' : ''}"><span class="mb3-fxi">${neg ? '🗑' : ICON[key] || '✏️'}</span><span class="mb3-fxn">#${f.i}</span> ${h(human(l.replace(/^-/, '')))}</div>`; }).join('')).join('');
       const btns = P.state === 'ask' ? `<div class="mb3-cbtns"><b class="mb3-cyes" data-cm="${k}">${h(U2.chatApply || '바꾸기')} <i>✋ ${h(U2.chatMine || '내 요청')}</i></b><b class="mb3-cno" data-cm="${k}">${h(U2.chatKeep || '그대로 두기')}</b></div>`
         : P.state === 'done' ? `<div class="mb3-cstate">✋ ${h(U2.chatApplied || '바뀜 · 내 요청으로')} <b class="mb3-cundo" data-cm="${k}">${h(U2.chatUndo || '되돌리기')}</b></div>`
         : `<div class="mb3-cstate">${h(P.state === 'undone' ? (U2.chatUndone || '되돌렸어요') : P.state === 'kept' ? (U2.chatKept || '그대로 뒀어요') : (U2.chatFailed || '이 답에는 고칠 수 없었어요'))}</div>`;
