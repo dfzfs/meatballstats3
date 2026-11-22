@@ -419,4 +419,3 @@ export function openLedger(at = null) {
   trWatch(box);   // the log is redrawn on every tab: translate each time (one request per view, cached)
   c.callGenericPopup(box, c.POPUP_TYPE.TEXT, '', { wide: true, large: true, allowVerticalScrolling: true });
 }
-export const _renderForTest = render;   // tests only

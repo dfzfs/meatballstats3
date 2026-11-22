@@ -99,13 +99,6 @@ function trustRel(S, fp, lines) {
       S.rel[fp] = (S.rel[fp] || list).filter((e) => !(e.k === 'tie' && [e.a, e.b].sort().join('|') === [a, b].sort().join('|'))); S.rel[fp].push({ k: 'tie', a, b, v: m[3].trim().slice(0, 40), q: '', day, by: 'user', user: true }); }
   }
 }
-// The events made from the person's lines carry by:'user' (shown as ✋; a date is forced).
-function markUser(S, fp, lines) {
-  trustRel(S, fp, lines);
-  const keys = new Set(lines.filter((l) => !l.startsWith('-')).map((l) => l.split(/[:|]/)[0].trim().toLowerCase()));
-  for (const e of S.ev?.[fp] || []) if (keys.has(e.k)) { e.by = 'user'; if (e.k === 'date') e.force = true; }
-  for (const e of S.rel?.[fp] || []) if (keys.has(e.k === 'tex' ? 'texture' : e.k)) e.by = 'user';
-}
 // After the classifier read these replies again: put the person's fixes back on top.
 export function keepFixes(fps) {
   const S = store(true), c = ctx(); if (!S?.ufix) return;
