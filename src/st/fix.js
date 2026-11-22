@@ -9,7 +9,7 @@ import { resolve } from '../core/names.js';
 
 const EMPTY = '<mb>\nnone\n</mb>\n<rel>none</rel>';
 const part = (a, tag) => { const m = String(a || '').match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`)); return (m ? m[1] : '').split('\n').map((x) => x.trim()).filter((x) => x && x !== 'none'); };
-const REL = /^(texture|tie|open|[^:|]+>[^:|]+\s*\|)/i;
+const REL = /^(texture|feel|마음|tie|open|[^:|]+>[^:|]+\s*\|)/i;
 
 // Read one reply again from a full answer (same path as editing it by hand).
 export function reabsorb(i, answer) {
@@ -72,6 +72,11 @@ export function undoFixes(undo) {
   for (const u of undo) { const clean = u.old.replace(/\s+✋$/gm, ''); reabsorb(u.i, u.had ? baseOf(clean, u.had.lines) : clean); if (u.had) { addUser(S, u.fp, u.i, u.had.lines); S.ufix[u.fp] = u.had; } else delete S.ufix?.[u.fp]; S.raw[u.fp].a = u.old; }
   save(); refresh();
 }
+// Free words -> the nearest of the engine's kinds (only for its rules; never shown). null = leave the kind alone.
+const NEAR = [[0, /사랑|좋아|연모|설렘|짝사랑|끌림|호감|반함|love|crush|attract/i], [1, /욕망|집착|소유|탐|want|desire|obsess|possess/i], [2, /미련|그리움|그리워|못\s*잊|linger|miss|long/i],
+  [3, /애증|love-hate/i], [5, /원망|미움|증오|분노|화|싫|resent|hate|anger/i], [6, /정$|우정|가족|신뢰|아낌|걱정|챙|연민|bond|care|trust|friend/i]];
+function nearKind(words) { const all = words.join(' '); const hit = NEAR.filter(([, re]) => re.test(all)).map(([t]) => t);
+  return hit.includes(0) && hit.includes(5) ? 3 : hit.length ? hit[0] : null; }
 // The person's relation lines are taken as they are (the quote and name checks are for the classifier, not for them).
 function trustRel(S, fp, lines) {
   const st = ledger(), list = (S.rel[fp] ||= []), day = list.find((e) => e.day != null)?.day ?? st.cal.n;
@@ -82,6 +87,13 @@ function trustRel(S, fp, lines) {
     let m = l.match(/^(?:texture|결)\s*[:：]\s*([^=|>]+)>([^=|]+?)\s*=\s*([^|]+)/i);
     if (m) { const a = nm(m[1]), b = nm(m[2]), t = texOf(m[3]); if (t < 0) continue;
       S.rel[fp] = list.filter((e) => !(e.k === 'tex' && e.a === a && e.b === b)); S.rel[fp].push({ k: 'tex', a, b, t, q: '', day, by: 'user' }); continue; }
+    // feel: A>B=사랑, 죄책감 — the person's own words; the nearest kind is picked quietly for the note rules
+    m = l.match(/^(?:feel|마음)\s*[:：]\s*([^=|>]+)>([^=|]+?)\s*=\s*([^|]+)/i);
+    if (m) { const a = nm(m[1]), b = nm(m[2]), words = m[3].split(/[,，·、]/).map((x) => x.trim()).filter(Boolean).slice(0, 4);
+      S.rel[fp] = (S.rel[fp] || list).filter((e) => !(e.k === 'feel' && e.a === a && e.b === b)); S.rel[fp].push({ k: 'feel', a, b, v: words, day, by: 'user' });
+      const t = nearKind(words);
+      if (t != null) { S.rel[fp] = S.rel[fp].filter((e) => !(e.k === 'tex' && e.a === a && e.b === b)); S.rel[fp].push({ k: 'tex', a, b, t, q: '', day, by: 'user' }); }
+      continue; }
     m = l.match(/^(?:tie|사이)\s*[:：]\s*([^=|]+?)\s*-\s*([^=|]+?)\s*=\s*([^|]+)/i);
     if (m) { const a = nm(m[1]), b = nm(m[2]);
       S.rel[fp] = (S.rel[fp] || list).filter((e) => !(e.k === 'tie' && [e.a, e.b].sort().join('|') === [a, b].sort().join('|'))); S.rel[fp].push({ k: 'tie', a, b, v: m[3].trim().slice(0, 40), q: '', day, by: 'user', user: true }); }

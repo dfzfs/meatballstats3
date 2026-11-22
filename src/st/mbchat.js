@@ -53,12 +53,12 @@ ${msg}
 
 [LINE FORMAT] fix lines use exactly these forms
 ${keysBlock(settings().groups, lg)}
-texture: A>B=attraction|desire|lingering|love-hate|forbidden pull|resentment|bond|none   (pick one word from this list; if the user dislikes a word, pick the closest OTHER word, never "none" unless they ask to remove it)
+feel: A>B=the user's own feeling words, comma separated, exactly as they said them (e.g. feel: A>B=사랑, 죄책감). Any word is fine.
 To remove a wrong line from a reply: -key: the old value
 
 [RULES]
 1. Put each line on the reply where it belongs (the reply where the event happened). A date fix is "date: March 6" on that reply; also fix the following replies of the same scene if they carry the wrong date.
-2. Change only what the user asked and what must follow from it. Keep names exactly as in the record.
+2. Change only what the user asked and what must follow from it. Keep names exactly as in the record. For feelings always use "feel:" with the user's own words; never say a word is not allowed, never mention lists, kinds or English terms.
 3. <say> is in Korean, warm and short (1-2 sentences): what you found, then end with a question asking if you should change it (e.g. "#26의 날짜를 3월 6일로 바꿀까요?"). Nothing is changed until the user agrees.
 
 [OUTPUT]
@@ -110,13 +110,15 @@ export function undo(m) { if (m?.prop?.state !== 'done') return; undoFixes(m.pro
 // A fix line in plain words: "texture: A>B=lingering" -> "A → B: 미련"
 function human(l) {
   const L = R.lang[(navigator.language || '').startsWith('ko') ? 'ko' : 'en'], U2 = R.ui2;
-  let m = l.match(/^texture\s*:\s*([^>]+)>([^=]+)=\s*(.+)$/i);
+  let m = l.match(/^feel\s*:\s*([^>]+)>([^=]+)=\s*(.+)$/i);
+  if (m) return `${m[1].trim()} → ${m[2].trim()}: ${m[3].trim()}`;
+  m = l.match(/^texture\s*:\s*([^>]+)>([^=]+)=\s*(.+)$/i);
   if (m) { const i = R.lang.en.rel.tex.findIndex((x) => x === m[3].trim().toLowerCase()); return `${m[1].trim()} → ${m[2].trim()}: ${i >= 0 ? L.rel.tex[i] : m[3].trim()}`; }
   m = l.match(/^tie\s*:\s*([^-]+)-([^=]+)=\s*(.+)$/i); if (m) return `${m[1].trim()} – ${m[2].trim()}: ${m[3].trim()}`;
   m = l.match(/^(date|time|loc|with)\s*:\s*(.+)$/i); if (m) return `${(U2.fixWord || {})[m[1].toLowerCase()] || m[1]}: ${m[2].trim()}`;
   return l;
 }
-const ICON = { date: '📅', time: '⏩', loc: '📍', with: '👥', wear: '👕', tie: '🤝', texture: '💞', refuse: '🚫', role: '🏷️', gone: '🚪', know: '💡', body: '🩹', item: '🎒', call: '🗣️', touch: '🤲' };
+const ICON = { feel: '💞', date: '📅', time: '⏩', loc: '📍', with: '👥', wear: '👕', tie: '🤝', texture: '💞', refuse: '🚫', role: '🏷️', gone: '🚪', know: '💡', body: '🩹', item: '🎒', call: '🗣️', touch: '🤲' };
 export function chatHtml(mascot) {
   const U2 = R.ui2, log = chatLog();
   const bubble = (m, k) => {

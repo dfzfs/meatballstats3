@@ -81,8 +81,9 @@ export function fold2(chat, rel, fingerprint) {
       for (const e of g) {
         if (e.k === 'tie') { st.tie[key2(e.a, e.b)] = { v: e.v, q: e.q, day: e.day, user: !!e.user }; for (const k of [`${e.a}>${e.b}`, `${e.b}>${e.a}`]) if (st.dir[k]) { st.dir[k].inner = ''; st.dir[k].innerDay = null; } }   // the tie changed: nothing is "held back" any more
         if (e.k === 'open') st.open[e.id] ||= { q: e.q, day: e.day };
-        if (e.k !== 'mv' && e.k !== 'tex') continue;
+        if (e.k !== 'mv' && e.k !== 'tex' && e.k !== 'feel') continue;
         const d = (st.dir[`${e.a}>${e.b}`] ||= { a: e.a, b: e.b, moves: [], inner: '', innerDay: null, tex: null, cand: null, candAt: 0, clashDay: null, q: '' });
+        if (e.k === 'feel') { d.feel = (e.v || []).slice(0, 4); continue; }   // the person's own words for this feeling (shown and sent as they are)
         if (e.k === 'mv') {
           d.moves.push(e.mv); if (d.moves.length > 3) d.moves.shift();
           if (e.mv === 4) { d.clashDay = e.day; d.inner = ''; d.innerDay = null; }          // it came out: no longer held back
@@ -119,7 +120,7 @@ export function gates(bp) {
 // Blocks for the classifier prompt. Hidden layers get L1, L2… per call; the numbers are never stored.
 export function relInputs(st2, bp, text, L) {
   const R = L.rel, base = Object.values(st2.dir).filter((d) => inText(d.a, text) && inText(d.b, text)).slice(-6)
-    .map((d) => `${d.a}>${d.b}: ${[d.tex != null && R.tex[d.tex], d.inner && `${R.inner}: ${d.inner}`, trend(d) && `${R.trendWord} ${R.trend[trend(d)]}`].filter(Boolean).join(' · ') || '-'}`);
+    .map((d) => `${d.a}>${d.b}: ${[d.feel?.length ? d.feel.join(', ') : d.tex != null && R.tex[d.tex], d.inner && `${R.inner}: ${d.inner}`, trend(d) && `${R.trendWord} ${R.trend[trend(d)]}`].filter(Boolean).join(' · ') || '-'}`);
   const hidden = gates(bp).filter((h) => !st2.open[h.id] && inText(h.who, text)).slice(0, 6).map((h, i) => ({ ...h, L: `L${i + 1}` }));
   for (const x of bp.unknown || []) if (inText(x.who, text)) base.push(`${x.who}: ${x.v} — ${R.unknownBase || 'unknown — do not infer'}`);
   return { baseline: base.join('\n') || '-', hidden, hiddenText: hidden.map((h) => `${h.L} | ${h.who}${h.to ? `>${h.to}` : ''} | ${h.content} | ${h.opens}`).join('\n') || '-' };
@@ -205,7 +206,7 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
       if (tie) now.push({ layer: 'now', kind: 'tie', text: `- ${fillAll(R.ordTie, { a, b, v: tie })}`, src: st2.tie[k]?.q || 'blueprint' });
     }
     const tpl = hiddenFrom(a, b) || watched(a, b) ? R.ordLeakWatched : R.ordLeak;
-    now.push({ layer: 'now', kind: 'leak', text: `- ${fillAll(tpl, { a, b, tex: name(t) })}`, src: st2.dir[`${a}>${b}`]?.q || 'blueprint' });
+    now.push({ layer: 'now', kind: 'leak', text: `- ${fillAll(tpl, { a, b, tex: st2.dir[`${a}>${b}`]?.feel?.length ? st2.dir[`${a}>${b}`].feel.join(', ') : name(t) })}`, src: st2.dir[`${a}>${b}`]?.q || 'blueprint' });
     leaking.add(a); leaking.add(b);
   }
   // where each person's feeling leaks (lore sheet), only when a held or leak line came this reply

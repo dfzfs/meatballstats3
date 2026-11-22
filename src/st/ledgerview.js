@@ -255,11 +255,15 @@ function pairsOf(st, st2, bp, M) {
 function pairCard(P, st, st2, bp, L, ui, M, all) {
   const U2 = R.ui2, k2 = (a, b) => [a, b].sort().join('|');
   const feel = (from, to) => { for (const [a, b] of P.raws) for (const [x, y] of [[a, b], [b, a]]) { if (M(x) !== from || M(y) !== to) continue; const d = st2.dir[`${x}>${y}`]; if (!d) continue;
-    const t = d.tex ?? d.cand, tr = trend(d); if (t == null && !tr) continue; return { t, tr, q: d.inner || '' }; } return null; };
+    const t = d.tex ?? d.cand, tr = trend(d); if (t == null && !tr && !d.inner && !d.feel?.length) continue; return { t, tr, q: d.inner || '', feel: d.feel || [] }; } return null; };
   let tie = '', wall = null;
   for (const [a, b] of P.raws) { tie ||= tieOf({ a, b, tie: st.pair?.[k2(a, b)]?.tie || '' }, st2, bp, R.V) || ''; wall ||= bp.barrier.find((x) => k2(x.a, x.b) === k2(a, b)) || null; }
   const row = (x, y) => { const f = feel(x, y);
-    return `<div class="mb3-prow"><span class="mb3-dir">${h(x)} → ${h(y)}</span>${f ? `${f.t != null && f.t < 7 ? `<span class="mb3-feel mb3-f-${TEXK[f.t]}">${TEXI[f.t]} ${h(L.rel.tex[f.t])}</span>` : ''}${f.tr ? `<span class="mb3-trend mb3-tr-${f.tr}">${TRI[f.tr]} ${h(L.rel.trend[f.tr])}</span>` : ''}` : `<span class="mb3-dim">${h(U2.relNoFeel || '아직 기록 없음')}</span>`}</div>`; };
+    // the person's words first; else the sharpest line Meatball read (the kind is only a small tag)
+    const words = f?.feel?.length ? f.feel.map((w) => `<span class="mb3-feel mb3-f-${f.t != null ? TEXK[f.t] || 'warm' : 'warm'}">💞 ${h(w)} <i class="mb3-mine">✋</i></span>`).join('')
+      : f?.q ? `<span class="mb3-inner">「${h(f.q)}」</span>${f.t != null && f.t < 7 ? `<span class="mb3-kind">${TEXI[f.t]} ${h(L.rel.tex[f.t])}</span>` : ''}`
+      : f?.t != null && f.t < 7 ? `<span class="mb3-feel mb3-f-${TEXK[f.t]}">${TEXI[f.t]} ${h(L.rel.tex[f.t])}</span>` : '';
+    return `<div class="mb3-prow"><span class="mb3-dir">${h(x)} → ${h(y)}</span>${f ? `${words}${f.tr ? `<span class="mb3-trend mb3-tr-${f.tr}">${TRI[f.tr]} ${h(L.rel.trend[f.tr])}</span>` : ''}` : `<span class="mb3-dim">${h(U2.relNoFeel || '아직 기록 없음')}</span>`}</div>`; };
   return `<div class="mb3-pair2${ui.pair === P.k ? ' mb3-on' : ''}" data-pair="${h(P.k)}">
     <div class="mb3-ptop">${avOf(P.A, all)}<b>${h(P.A)}</b><span class="mb3-amp">⇄</span><b>${h(P.B)}</b>${avOf(P.B, all)}</div>
     <div class="mb3-ptie">${tie ? `🤝 ${h(tie)}` : h(U2.relNoTie || '공식 관계 없음')}${wall ? ` · 🚧 ${h(wall.v)}` : ''}</div>

@@ -307,3 +307,8 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 
 .mb3-cclear { margin-left: 10px; font-size: 12px; font-weight: 600; color: var(--mbt-dim); cursor: pointer; }
 .mb3-cclear:hover { color: var(--mbt-acc); }
+
+/* feelings: the person's words, or Meatball's sharpest line; the engine's kind only as a small tag */
+.mb3-inner { font-size: 12.5px; color: var(--mbt-ink); }
+.mb3-kind { font-size: 11px; color: var(--mbt-dim); border: 1px solid var(--mbt-line); border-radius: 999px; padding: 0 7px; }
+.mb3-feel i.mb3-mine { font-style: normal; font-size: 10px; opacity: .7; }
