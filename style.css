@@ -242,3 +242,14 @@ body[data-mb3th="dark"] .mb3-feel { filter: brightness(1.45); }
 #mb3_settings .mb3-look select { margin-bottom: 4px; }
 /* the handwriting font runs small: a touch larger */
 body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[data-mb3font="pdh"] .mb3-lore { font-size: 15.5px; }
+
+/* map, in the card look */
+.mb3-log2 .mb3-map { display: flex; flex-wrap: wrap; gap: 8px; }
+.mb3-log2 .mb3-place { background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 14px; padding: 8px 10px; flex: 1 1 150px; cursor: pointer; }
+.mb3-log2 .mb3-place .mb3-place { background: var(--mbt-soft); }
+.mb3-log2 .mb3-place.mb3-path { border-color: var(--mbt-h2); }
+.mb3-log2 .mb3-place.mb3-here { border: 2px solid var(--mbt-acc); }
+.mb3-log2 .mb3-place.mb3-sel { box-shadow: 0 0 0 3px var(--mbt-acc2); }
+.mb3-log2 .mb3-pname { font-weight: 700; }
+.mb3-log2 .mb3-near { font-size: 12px; color: var(--mbt-dim); opacity: 1; }
+.mb3-seg { flex-wrap: wrap; }

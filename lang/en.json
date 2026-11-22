@@ -933,7 +933,9 @@
     "relNoFeel": "nothing yet",
     "relNoTie": "no official tie",
     "tlGap": "{n} days later",
-    "dayRel": "day {n} of the story"
+    "dayRel": "day {n} of the story",
+    "tabMap": "Map",
+    "mapHow": "Inner boxes are places inside. 📍 = here now. Tap a place for its replies."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
