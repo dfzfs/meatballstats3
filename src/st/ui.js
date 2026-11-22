@@ -1,5 +1,6 @@
 // Settings drawer + "view signpost". Nothing is ever drawn in the chat itself.
 import { ctx, settings, store, save, signpost, ledger, R } from './store.js';
+import { drawFillRow } from './fill.js';
 import { Q, kick } from './queue.js';
 import { refresh } from './inject.js';
 import { parseDate, fmtDate, dateAt } from '../core/time.js';
@@ -102,6 +103,7 @@ export function mountUI() {
       <details><summary>${h(R.ui2.groupsTitle)} ${desc('groups')}</summary>${GROUPS.filter((g) => !g.fixed).map((g) => `<label class="checkbox_label"><input type="checkbox" data-mb3g="${g.id}"${isOn(s.groups, g.id) ? ' checked' : ''} /><span>${h(R.ui2.groups[g.id])}</span></label>`).join('')}
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_maker" type="checkbox"${s.maker ? ' checked' : ''} /><span>${h(R.ui2.maker)}</span></label>${desc('maker')}</div></details>
       <div id="mb3_rel_slot"></div>
+      <div class="mb3-row mb3-fill" id="mb3_fill_row"></div>
       <details class="mb3-danger"><summary>${h(D.delAllSet)} ${desc('delAllSetDesc')}</summary><div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
     </div></div></div>`);
   const on = document.getElementById('mb3_on');
@@ -123,6 +125,7 @@ export function mountUI() {
   document.getElementById('mb3_names')?.addEventListener('input', (e) => { s.nameMap = e.target.value.slice(0, 2000); c.saveSettingsDebounced(); renderBar(); });
   document.getElementById('mb3_delall')?.addEventListener('click', () => { if (confirm(R.ui.delAllAsk)) clearAll(); });
   document.getElementById('mb3_copy')?.addEventListener('click', copyReport);
+  drawFillRow(R.ui2);
   setOpener(openLedger);
   document.getElementById('mb3_ledger').addEventListener('click', openLedger);
   const setProfile = (p) => { s.profile = p?.id || ''; c.saveSettingsDebounced(); };

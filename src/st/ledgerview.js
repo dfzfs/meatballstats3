@@ -383,11 +383,12 @@ export function openLedger(at = null) {
       if (a.matches('.mb3-delall')) { if (confirm(U.delAllAsk)) { clearAll(); draw(); } return; }
     }
     if (ev.target.closest('.mb3-all')) { ev.preventDefault(); ui.only = ''; draw(); return; }
-    const cb = ev.target.closest('.mb3-cyes,.mb3-cno,.mb3-cundo,.mb3-csend,.mb3-cclear,[data-setdate]');
+    const cb = ev.target.closest('.mb3-cyes,.mb3-cno,.mb3-cundo,.mb3-csend,.mb3-ccheck,.mb3-cclear,[data-setdate]');
     if (cb && box.contains(cb)) {
       ev.preventDefault(); ev.stopPropagation();
       if (cb.matches('.mb3-cclear')) { if (confirm(R.ui2.chatClearAsk || '대화를 지울까요? 이미 바꾼 기록은 그대로 남아요.')) { clearChat(); draw(); } return; }
       if (cb.dataset.setdate) { import('./ui.js').then((m) => m.setDate?.()).then(() => draw()); return; }
+      if (cb.matches('.mb3-ccheck')) { chatSend(`🔍 ${R.ui2.checkBtn || '기록 대조'}`, ui._info, draw, { check: true }); return; }
       if (cb.matches('.mb3-csend')) { const ta = box.querySelector('.mb3-cta'); const v = ta?.value || ''; if (ta) ta.value = ''; chatSend(v, ui._info, draw); return; }
       const m = chatLog()[+cb.dataset.cm];
       if (cb.matches('.mb3-cyes')) chatDecide(m, true); else if (cb.matches('.mb3-cno')) chatDecide(m, false); else chatUndo(m);

@@ -41,7 +41,8 @@ export function store(create = false) {
   return s || null;
 }
 export const save = () => ctx().saveMetadataDebounced?.();
-export const ledger = () => { const s = store(); return fold(ctx().chat || [], s?.ev || {}, R.V, s?.pre); };
+// upTo: only the chat before that index (a range read again starts from the state at that point)
+export const ledger = (upTo) => { const s = store(), c = ctx().chat || []; return fold(upTo == null ? c : c.slice(0, upTo), s?.ev || {}, R.V, s?.pre); };
 // The language of everything sent to AI (classifier prompt, signpost, lore draft): always English.
 // Korean in what goes to the main model (lore values, the director's note) is translated, names kept (see tr.js).
 export function storyLang() {
@@ -51,7 +52,7 @@ export function storyLang() {
   return last ? langOf(cleanText(last.mes).slice(-4000)) : 'en';
 }
 const isLoverTie = (v) => !!v && (R.V?.loverTie || []).some((w) => String(v).toLowerCase().includes(String(w).toLowerCase()));
-export const ledger2 = () => fold2(ctx().chat || [], store()?.rel || {}, fingerprint);
+export const ledger2 = (upTo) => { const c = ctx().chat || []; return fold2(upTo == null ? c : c.slice(0, upTo), store()?.rel || {}, fingerprint); };
 // Stage 1 signpost, plus the stage-2 rows when it is on. Any stage-2 error leaves stage 1 exactly as it was.
 // The person's standing director's note for this chat (one line each), added to the shallow layer every reply.
 export const noteLines = () => String(store()?.note || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 6);

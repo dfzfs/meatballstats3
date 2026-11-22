@@ -14,6 +14,17 @@ export const DEFAULTS = { minChars: 1500, maxReplies: 3, maxIn: 20000, catchUp: 
 export function pending(chat, ev, cfg = DEFAULTS, dirs = null) {
   const rows = chat.map((m, i) => ({ m, i, t: m.is_system ? '' : cleanText(m.mes) })).filter((r) => r.t);
   const ai = rows.filter((r) => !r.m.is_user);
+  // 「처음부터 정리」: the next few unread replies from the start, in order (the text stays under maxIn)
+  if (cfg.fill) {
+    const lo = cfg.from ?? 0, hi = cfg.to ?? Infinity, todo = ai.filter((r) => r.i >= lo && r.i <= hi && !ev[fingerprint(r.m)]);
+    if (!todo.length) return null;
+    let before = -1; for (const r of ai) if (r.i < todo[0].i && ev[fingerprint(r.m)]) before = r.i;
+    const pick = []; let n = 0;
+    for (const r of todo) { if (pick.length >= cfg.fill || (pick.length && n + r.t.length > cfg.maxIn)) break; pick.push(r); n += r.t.length; }
+    const wrapF = (r) => (r.m.is_user ? `<user>${r.t}</user>` : (dirs?.[fingerprint(r.m)]?.t ? `<director>${String(dirs[fingerprint(r.m)].t).trim()}</director>\n\n${r.t}` : r.t));
+    const text = rows.filter((r) => r.i > before && r.i <= pick.at(-1).i).map(wrapF).join('\n\n').slice(-cfg.maxIn);
+    return { text, fps: pick.map((r) => fingerprint(r.m)), catchUp: false, ready: true, fill: true, start: before + 1 };
+  }
   let lastDone = -1;
   for (const r of ai) if (ev[fingerprint(r.m)]) lastDone = r.i;
   const wait = ai.filter((r) => r.i > lastDone);

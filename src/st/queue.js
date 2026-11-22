@@ -1,12 +1,13 @@
 // The only place that calls a model. One call at a time, spaced out, never retried at once.
 import { ctx, settings, store, save, ledger, ledger2, R, shape, bpLive, namesOf, fallState, openThreads } from './store.js';
-import { pending, buildPrompt, absorb, addRelPrompt, absorbRel } from '../core/bundle.js';
+import { pending, buildPrompt, absorb, addRelPrompt, absorbRel, DEFAULTS } from '../core/bundle.js';
 import { fingerprint, cleanText } from '../core/clean.js';
 import { guardBlock, parseGuard, quarantine, scan, hasSign } from '../core/vault.js';
 import { words } from '../core/ledger2.js';
 import { refresh } from './inject.js';
 import { afterSort, renderBar } from './bar.js';
 import { keepFixes } from './fix.js';
+import { FILL_N, endFill } from './fill.js';
 
 const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 3000;   // thinking + answer; only what is used is paid
 export const Q = { rush: false, busy: false, generating: false, lastCall: 0, calls: [], coolUntil: 0, notBefore: 0, fails: 0, pushedKey: '', tries: {}, noEffort: false, timer: null, log: { status: '', dropped: [], lastReq: '', lastAnswer: '' } };
@@ -51,7 +52,10 @@ export async function idle(ms) {
 async function tick() {
   const s = settings(), chat = ctx().chat || [];
   if (!s.on || Q.busy || Q.generating || !chat.length || !R.V) return;
-  const S0 = store(), b = pending(chat, S0?.ev || {}, undefined, S0?.dir);
+  const S0 = store(), F = S0?.fill;
+  if (F?.paused) { Q.log.status = 'fill-paused'; return; }
+  const b = pending(chat, S0?.ev || {}, F ? { ...DEFAULTS, fill: FILL_N, from: F.from, to: F.to } : undefined, S0?.dir);
+  if (!b && F) { if (endFill()) { try { window.toastr?.success(R.ui2?.fillDone || '처음부터 정리 끝!'); } catch (e) { /* */ } } return; }
   if (!b || !(b.ready || Q.rush)) return;
   const key = b.fps.join('|');
   if (key === Q.pushedKey || Q.fails >= 5) { Q.log.status = Q.fails >= 5 ? 'stopped' : 'pushed'; return; }   // same request is never sent twice
@@ -59,12 +63,12 @@ async function tick() {
   Q.calls = Q.calls.filter((t) => now - t < 60e3);
   const wait = Math.max(Q.lastCall + (cooling ? GAP * 2 : GAP) - now, Q.notBefore - now, Q.calls.length >= 3 ? Q.calls[0] + 60e3 - now : 0);
   if (wait > 0) return kick(wait + 50);
-  const chatId = ctx().getCurrentChatId?.(), st = ledger();
+  const chatId = ctx().getCurrentChatId?.(), st = ledger(b.fill ? b.start : undefined), st2 = () => ledger2(b.fill ? b.start : undefined);
   const sh = shape(), opts = { groups: s.groups, bp: R.bp, notPeople: sh.notPeople, lang: 'en' };
   let { prompt, lg } = buildPrompt(R.prompts, b, st, R.lang, sh.seeds, opts), shown = prompt, rel = null;
-  if (s.stage2 && R.deep) try { rel = addRelPrompt(prompt, lg, R.deep, b, ledger2(), R.bp, R.lang); prompt = rel.prompt; shown = rel.shown; } catch (e) { rel = null; console.warn('[meatball3] stage 2 prompt failed', e); }
+  if (s.stage2 && R.deep) try { rel = addRelPrompt(prompt, lg, R.deep, b, st2(), R.bp, R.lang); prompt = rel.prompt; shown = rel.shown; } catch (e) { rel = null; console.warn('[meatball3] stage 2 prompt failed', e); }
   // v0.8 guard: the vault entries go only to this call; the shown copy never holds them
-  const vbp = bpLive(), falls = fallState().filter((f) => f.open && f.keeps), habits = R.habits || [], gb = guardBlock(vbp, R.lang[lg], { falls, habits });
+  const vbp = bpLive(), falls = fallState().filter((f) => f.open && f.keeps), habits = R.habits || [], gb = b.fill ? '' : guardBlock(vbp, R.lang[lg], { falls, habits });   // old replies: no guard check
   if (gb) { prompt += gb; shown += `\n\n[GUARD] (${vbp.vault.length})`; }
   Q.rush = false;
   Q.busy = true; Q.lastCall = now; Q.calls.push(now); Q.log.lastReq = shown; Q.log.status = 'sorting';
@@ -76,16 +80,18 @@ async function tick() {
     const S = store(true), hint = hintOf(S, b), r = absorb(S.ev, b, answer, st, R.V, hint, opts);
     keepRaw(S, b.fps.at(-1), answer, r);
     Q.log.lastAnswer = String(answer).slice(0, 2000); Q.log.dropped = r.dropped;
-    if (r.pushed) { Q.pushedKey = key; Q.log.status = `pushed:${r.kind}`; }                      // broken answer: wait for the next reply, no re-call
-    else { Q.fails = 0; Q.log.status = 'ok'; if (rel) { const x = absorbRel(S.rel, b, answer, st, R.bp, R.V, R.lang, rel.hidden, ledger2()); Q.log.dropped = [...r.dropped, ...x.dropped]; }
+    if (r.pushed && b.fill) { for (const fp of b.fps) S.ev[fp] ||= []; save(); Q.log.status = `fill-skip:${r.kind}`; }   // 처음부터 정리: a broken answer skips these few, the rest goes on
+    else if (r.pushed) { Q.pushedKey = key; Q.log.status = `pushed:${r.kind}`; }                      // broken answer: wait for the next reply, no re-call
+    else { Q.fails = 0; Q.log.status = 'ok'; if (rel) { const x = absorbRel(S.rel, b, answer, st, R.bp, R.V, R.lang, rel.hidden, st2()); Q.log.dropped = [...r.dropped, ...x.dropped]; }
       try { afterAbsorb(S, b, answer, vbp, falls, gb, habits); } catch (e) { console.warn('[meatball3] guard failed', e); }
       try { keepFixes(b.fps); } catch (e) { console.warn('[meatball3] could not keep fixes', e); }   // ✋ the person's fixes stay on top
-      save(); refresh(); try { afterSort(st, b.fps, hint); } catch (e) { console.warn('[meatball3] notice failed', e); } }
+      save(); refresh(); if (!b.fill) try { afterSort(st, b.fps, hint); } catch (e) { console.warn('[meatball3] notice failed', e); } }
   } catch (e) {
     console.warn('[meatball3] sort call failed', e);
     const tries = (Q.tries[key] = (Q.tries[key] || 0) + 1);
     if (is429(e)) { Q.coolUntil = Date.now() + COOL; Q.notBefore = Date.now() + WAIT_429; } else if (e.message !== 'timeout') Q.noEffort = true;
-    if (tries >= 2) { Q.pushedKey = key; Q.fails++; Q.log.status = 'pushed:error'; } else Q.log.status = 'retry';
+    if (tries >= 2 && b.fill) { Q.fails++; try { const S = store(true); for (const fp of b.fps) S.ev[fp] ||= []; save(); } catch (er) { /* */ } Q.log.status = 'fill-skip:error'; }
+    else if (tries >= 2) { Q.pushedKey = key; Q.fails++; Q.log.status = 'pushed:error'; } else Q.log.status = 'retry';
   } finally { Q.busy = false; R.sorting = false; R.stalled = Q.fails >= 5; try { renderBar(); } catch (e) { /* optional */ } if (Q.log.status === 'retry') kick(GAP); else kick(); }
 }
 
@@ -99,8 +105,8 @@ function afterAbsorb(S, b, answer, bp, falls, gb, habits = []) {
     const dw = new Set(words(d.t || ''));
     for (const e of S.ev[fp] || []) if (e.k === 'lead' && !e.byUser && (d.press === 'lead' || words(e.v).some((w) => dw.has(w)))) e.byUser = true;
   }
-  // a refusal given up with nothing new (yield on an open thread) -> warning; keeping it closes the thread
-  const open = openThreads();
+  // a refusal given up with nothing new (yield on an open thread) -> warning; keeping it closes the thread (not for old replies read again)
+  const open = b.fill ? [] : openThreads();
   for (const fp of b.fps) for (const y of (S.ev[fp] || []).filter((e) => e.k === 'yield')) {
     const t = open.find((t) => t.a === y.a && t.b === y.b && words(t.v).some((w) => y.v.toLowerCase().includes(w)));
     if (t) addGuard(S, fp, { who: t.a, kind: 'reversal', q: y.q || y.v, a: t.a, b: t.b, v: t.v, src: 'ai' });

@@ -1,0 +1,58 @@
+// 「처음부터 정리」: an old chat is read again from its first reply, a few replies per call, in order.
+// The record is rebuilt from scratch; the person's ✋ fixes, director notes and set dates stay and are put back on top.
+// While it runs, no note goes to the story AI (the record is still behind the story). Pause / go on any time.
+import { ctx, store, save } from './store.js';
+import { cleanText, fingerprint } from '../core/clean.js';
+import { Q, kick } from './queue.js';
+import { refresh } from './inject.js';
+import { renderBar } from './bar.js';
+
+export const FILL_N = 6;
+export const fillState = () => store()?.fill || null;
+export const filling = () => { const f = fillState(); return !!f && !f.paused; };
+const inRange = (f) => (m, i) => !m.is_user && !m.is_system && cleanText(m.mes) && i >= (f?.from ?? 0) && i <= (f?.to ?? Infinity);
+export function fillCount(f = fillState()) {
+  const S = store(), ai = (ctx().chat || []).filter(inRange(f));
+  return { done: ai.filter((m) => S?.ev?.[fingerprint(m)]).length, total: ai.length };
+}
+const redraw = () => { try { refresh(); renderBar(); } catch (e) { /* */ } };
+// from / to: message numbers (#) as SillyTavern shows them; none = the whole chat
+export function startFill(from = null, to = null) {
+  const S = store(true), whole = from == null && to == null, f = { at: Date.now() };
+  if (!whole) { f.from = from ?? 0; f.to = to ?? null; }
+  if (whole) Object.assign(S, { ev: {}, rel: {}, raw: {}, edited: {}, guard: {} });
+  else (ctx().chat || []).forEach((m, i) => { if (!inRange(f)(m, i)) return; const fp = fingerprint(m); for (const k of ['ev', 'rel', 'raw', 'edited', 'guard']) if (S[k]) delete S[k][fp]; });
+  S.fill = f;
+  save(); Q.pushedKey = ''; Q.fails = 0; Q.tries = {}; redraw(); kick(500);
+}
+export function pauseFill(on) {
+  const S = store(true); if (!S.fill) return;
+  S.fill.paused = !!on; save(); Q.pushedKey = ''; redraw(); if (!on) kick(500);
+}
+export function endFill() {
+  const S = store(true); if (!S.fill) return false;
+  delete S.fill; save(); redraw(); return true;
+}
+
+// The row in the settings: start · progress · pause / go on · stop
+const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+export function drawFillRow(T) {
+  const el = document.getElementById('mb3_fill_row'); if (!el?.querySelector) return;
+  const f = fillState(), { done, total } = fillCount(), U = T || {};
+  el.innerHTML = !f
+    ? `<div class="menu_button mb3-fill-go" title="${h(U.fillDesc || '')}">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
+       <span class="mb3-fill-r">#<input class="text_pole mb3-fill-a" type="number" min="0" placeholder="${h(U.fillFirst || '처음')}" /> ~ #<input class="text_pole mb3-fill-b" type="number" min="0" placeholder="${h(U.fillLast || '끝')}" /></span>
+       <span class="mb3-dim">${h(U.fillDesc || '')}</span>`
+    : `<b>📚 ${h(f.paused ? U.fillPaused || '정리 멈춤' : U.fillRun || '처음부터 정리 중')}${f.from != null ? ` (#${f.from}~#${f.to === Infinity || f.to == null ? '' : f.to})` : ''} ${done}/${total}</b>
+       <div class="menu_button mb3-fill-p">${h(f.paused ? U.fillGo || '이어 하기' : U.fillPause || '멈추기')}</div><div class="menu_button mb3-fill-x">${h(U.fillStop || '그만두기')}</div>`;
+  el.querySelector('.mb3-fill-go')?.addEventListener('click', () => {
+    const num = (sel) => { const v = el.querySelector(sel)?.value?.trim(); return v === '' || v == null || isNaN(+v) ? null : Math.max(0, Math.floor(+v)); };
+    let a = num('.mb3-fill-a'), b = num('.mb3-fill-b'); if (a != null && b != null && a > b) [a, b] = [b, a];
+    const whole = a == null && b == null, cnt = fillCount(whole ? null : { from: a ?? 0, to: b ?? Infinity }).total;
+    if (!cnt) { try { window.toastr?.warning(U.fillNone || '그 구간에는 AI 답이 없어요'); } catch (e) { /* */ } return; }
+    const ask = whole ? U.fillAsk : String(U.fillAskRange || '').replace('{a}', a ?? 0).replace('{b}', b ?? (ctx().chat || []).length - 1);
+    if (confirm(String(ask || '').replace('{n}', cnt).replace('{c}', Math.ceil(cnt / FILL_N)))) { whole ? startFill() : startFill(a, b); drawFillRow(T); }
+  });
+  el.querySelector('.mb3-fill-p')?.addEventListener('click', () => { pauseFill(!f.paused); drawFillRow(T); });
+  el.querySelector('.mb3-fill-x')?.addEventListener('click', () => { if (confirm(U.fillStopAsk || '')) { endFill(); kick(500); drawFillRow(T); } });
+}

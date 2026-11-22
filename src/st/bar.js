@@ -6,6 +6,7 @@ import { refresh } from './inject.js';
 import { trDom } from './tr.js';
 import { fingerprint } from '../core/clean.js';
 import { mascotImg, poke } from './mascot.js';
+import { fillState, fillCount, drawFillRow } from './fill.js';
 
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export const uiLang = () => ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
@@ -19,6 +20,7 @@ export function renderBar() {
 function draw() {
   let el = document.getElementById('mb3_bar');
   const s = settings();
+  try { drawFillRow(R.ui2); } catch (e) { /* settings not open */ }
   if (!s.on || !s.bar || !ctx().chat?.length) { if (el) el.style.display = 'none'; return; }
   if (!el) {
     const form = document.getElementById('send_form');
@@ -28,11 +30,13 @@ function draw() {
     el.addEventListener('click', () => openLedger());
   }
   const st = ledger(), L = R.lang[uiLang()], U = R.ui;
-  if (!st.classified && !lastGuard()) { el.style.display = 'none'; return; }
+  const F = fillState();
+  if (!st.classified && !lastGuard() && !F) { el.style.display = 'none'; return; }
   const date = nowDate(st.cal, L);
   const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   const parts = [date || '📅 ?', st.cal.tod, st.loc && `📍 ${st.loc}`, who && `👥 ${who}`, passed].filter(Boolean);
+  if (F) { const n = fillCount(); parts.unshift(`📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`); }
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
   const face = R.sorting ? 'think' : g ? 'surprise' : fr.length ? 'party' : R.stalled ? 'sad' : 'idle';
   el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${parts.map(h).join('<span class="mb3-sep">·</span>').replace(/^📅 /, '')}`;

@@ -13,8 +13,8 @@ export const chatLog = () => { const S = store(); return S?.mbchat || []; };
 const push = (m) => { const S = store(true); (S.mbchat ||= []).push(m); if (S.mbchat.length > 30) S.mbchat.splice(0, S.mbchat.length - 30); save(); return m; };
 
 // What Meatball wrote, one line per reply: "#26 (March 7 · noon · flower shop): refused to help pick a gift"
-function recordLines(es, fmt) {
-  return es.slice(-60).map((e) => `#${e.x.i} (${fmt(e)}): ${e.its.map((it) => `${it.icon} ${it.title}`).join('; ').slice(0, 220)}`).join('\n');
+function recordLines(es, fmt, n = 60) {
+  return es.slice(-n).map((e) => `#${e.x.i} (${fmt(e)}): ${e.its.map((it) => `${it.icon} ${it.title}`).join('; ').slice(0, 220)}`).join('\n');
 }
 // The few replies the request is about: explicit #numbers, then the ones whose record or text share its words.
 function findReplies(msg, es) {
@@ -71,6 +71,42 @@ line
 </fix>
 (one <fix> per reply; nothing when there is nothing to change)`;
 }
+// 「기록 대조」: one call over the whole record, only when the person presses it. Finds what does not add up and asks first.
+function buildCheck(es, fmt, nowLine) {
+  return `[ROLE]
+You keep the story record for a roleplay ("Meatball"). The user pressed "check the record". Read the whole [RECORD] and find what does not add up.
+
+[NOW]
+${nowLine}
+
+[RECORD] what is written now, one line per reply (#number = reply), oldest first
+${recordLines(es, fmt, 150) || '-'}
+
+[LOOK FOR]
+- dates or days that go backwards, or jump, with nothing in the record explaining it
+- one person written under two names or spellings
+- a place, item or piece of clothing that changes with no reason
+- relationships or feelings that flip with nothing in between
+- a person who is said to be gone or away but still acts
+Only real contradictions. Small gaps or things the story simply did not mention are fine. At most 5 problems, the clearest first.
+
+[LINE FORMAT] fix lines use exactly these forms
+${keysBlock(settings().groups, 'en')}
+feel: A>B=feeling words, comma separated
+To remove a wrong line from a reply: -key: the old value
+
+[RULES]
+1. Each fix goes on the reply where it belongs. Keep names exactly as in the record.
+2. <say> is in Korean, plain and short: list what you found in 1-3 short sentences with #numbers, then ask once if you should fix them (e.g. "#12의 날짜가 #11보다 앞서요. 고칠까요?"). If nothing is wrong, say so in one sentence and write no fix. Never mention lists, kinds or English terms.
+
+[OUTPUT]
+<say>…</say>
+<conflict>no</conflict>
+<fix #number>
+line
+</fix>
+(one <fix> per reply; nothing when there is nothing to change)`;
+}
 function parse(ans) {
   const say = (ans.match(/<say>([\s\S]*?)<\/say>/) || [])[1]?.trim() || '';
   const conflict = /<conflict>\s*yes/i.test(ans);
@@ -80,15 +116,15 @@ function parse(ans) {
 }
 
 // Send one message. ctxInfo: { es, fmt(e), nowLine }. redraw() after each step.
-export async function send(text, info, redraw) {
+export async function send(text, info, redraw, opts = {}) {
   const msg = String(text || '').trim(); if (!msg) return;
   const log = chatLog(), last = [...log].reverse().find((m) => m.who === 'mb' && m.prop);
   push({ who: 'me', text: msg.slice(0, 600), at: Date.now() });
   // "응 / 바꿔" right after a question: apply it, no call
-  if (last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
+  if (!opts.check && last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
   const wait = push({ who: 'mb', text: '…', wait: true, at: Date.now() }); redraw();
   let res;
-  try { res = parse(String(await request(buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>', settings().chatProfile || '') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
+  try { res = parse(String(await request(opts.check ? buildCheck(info.es, info.fmt, info.nowLine) : buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>', settings().chatProfile || '') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
   const S = store(true), m = S.mbchat.find((x) => x.at === wait.at && x.wait) || wait; delete m.wait;
   if (!res || (!res.say && !res.fixes.length)) { m.text = R.ui2.chatFail || '지금은 대답을 못 했어요. 잠깐 뒤에 다시 말해 줄래요?'; save(); redraw(); return; }
   m.text = res.say || (res.fixes.length ? (R.ui2.chatFound || '이렇게 고칠게요.') : (R.ui2.chatNone || '못 찾았어요. 몇 번째 답인지 알려 줄래요?'));
@@ -135,5 +171,5 @@ export function chatHtml(mascot) {
     return `<div class="mb3-cmb">${mascot}<div class="mb3-cb">${m.wait ? '<span class="mb3-dots3"><i></i><i></i><i></i></span>' : h(m.text)}${p}</div></div>`;
   };
   return `<div class="mb3-chat"><div class="mb3-msgs">${log.length ? log.map(bubble).join('') : `<div class="mb3-cmb">${mascot}<div class="mb3-cb">${h(U2.chatHello || '기록이 틀렸으면 그냥 말해 줘요. 예: 「그 거절, 3일이 아니라 2일이야」 · 「깡통이랑 깡캐 이제 사귀는 사이야」')}</div></div>`}</div>
-    <div class="mb3-cin"><textarea class="mb3-cta mb3-notr" rows="1" placeholder="${h(U2.chatPh || '고칠 걸 말해 줘요')}"></textarea><b class="mb3-csend">${h(U2.chatSend || '보내기')}</b></div></div>`;
+    <div class="mb3-cin"><textarea class="mb3-cta mb3-notr" rows="1" placeholder="${h(U2.chatPh || '고칠 걸 말해 줘요')}"></textarea><b class="mb3-csend">${h(U2.chatSend || '보내기')}</b></div><div class="mb3-cchk"><b class="mb3-ccheck" title="${h(U2.checkTip || '')}">🔍 ${h(U2.checkBtn || '기록 대조')}</b> <span class="mb3-dim">${h(U2.checkTip || '')}</span></div></div>`;
 }

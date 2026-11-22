@@ -280,3 +280,11 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-inner { font-size: 12.5px; color: var(--mbt-ink); }
 .mb3-kind { font-size: 11px; color: var(--mbt-dim); border: 1px solid var(--mbt-line); border-radius: 999px; padding: 0 7px; }
 .mb3-feel i.mb3-mine { font-style: normal; font-size: 10px; opacity: .7; }
+#mb3_settings .mb3-fill { gap: 6px; }
+#mb3_settings .mb3-fill .menu_button { width: auto; white-space: nowrap; padding: 4px 10px; margin: 0; }
+#mb3_settings .mb3-fill .mb3-dim { flex: 1 0 100%; font-size: .85em; opacity: .7; }
+#mb3_settings .mb3-fill-r { display: inline-flex; align-items: center; gap: 3px; font-size: .9em; }
+#mb3_settings .mb3-fill-r input { width: 64px; padding: 2px 6px; margin: 0; }
+.mb3-cchk { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+.mb3-cchk .mb3-ccheck { cursor: pointer; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--mbt-line, #ddd); background: var(--mbt-card, #fff); white-space: nowrap; }
+.mb3-cchk .mb3-dim { flex: 1; min-width: 0; }
