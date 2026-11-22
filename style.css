@@ -237,3 +237,5 @@ body[data-mb3th="dark"] .mb3-feel { filter: brightness(1.45); }
 
 .mb3-log2, .mb3-lore, .mb3-bubble, #mb3_bar { font-family: var(--mbt-font, inherit); }
 #mb3_settings .mb3-look select { margin-bottom: 4px; }
+/* the handwriting font runs small: a touch larger */
+body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[data-mb3font="pdh"] .mb3-lore { font-size: 15.5px; }
