@@ -22,8 +22,9 @@ export function fold(chat, ev, V, pre) {
 function tlPush(st, i, read, g) {
   const c = st.cal, has = c.doy != null, skip = (g || []).some((e) => e.k === 'skip');
   if (has && !st.tlAnchor) st.tlAnchor = { an: c.an, doy: c.doy, wd: c.wd, y: c.y, n: c.n };
-  const yx = (g || []).filter((e) => (e.k === 'date' || e.k === 'time') && e.date?.y != null).map((e) => e.date.y).at(-1) ?? null;   // a year this reply itself names
-  st.tl.push({ i, n: c.n, read: read && !skip, md: has ? dateRaw(c) : null, fz: isFuzzy(c), user: (g || []).some((e) => e.k === 'date' && e.by === 'user'), yx });
+  const ys = (g || []).filter((e) => (e.k === 'date' || e.k === 'time') && e.date?.y != null), yx = ys.map((e) => e.date.y).at(-1) ?? null;   // a year this reply itself names
+  const yu = ys.some((e) => e.by === 'user');   // …and whether the person wrote it (the classifier often just copies the year it was given)
+  st.tl.push({ i, n: c.n, read: read && !skip, md: has ? dateRaw(c) : null, fz: isFuzzy(c), user: (g || []).some((e) => e.k === 'date' && e.by === 'user'), yx, yu });
 }
 // Fingerprints that still exist in the chat (any swipe). Results for anything else are removed when a chat opens.
 export function prune(chat, ev, fpOfText) {

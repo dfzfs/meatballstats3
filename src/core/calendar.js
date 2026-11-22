@@ -33,8 +33,12 @@ export function placeReplies(st, nowY = new Date().getFullYear(), year0 = null) 
     if (year == null) {
       if (t.yx != null) year = t.yx; else if (md.y != null) year = md.y;
       else { year = guessYear(md.m, md.d, md.wd, nowY); guessed = true; }
-    } else if (t.yx != null) year = t.yx;
-    else if (prev && doy(md.m, md.d) + 180 < doy(prev.m, prev.d)) year += 1;
+    } else {
+      const wrap = prev && doy(md.m, md.d) + 180 < doy(prev.m, prev.d) ? year + 1 : year;
+      // a year named in the reply counts if the person wrote it, or if it does not send time backwards
+      const back = t.yx != null && (t.yx < year || (t.yx === year && wrap > year));
+      year = t.yx != null && (t.yu || !back) ? t.yx : wrap;
+    }
     const d = Math.min(md.d, dimOf(year, md.m));
     out.push({ i: t.i, n: t.n, y: year, m: md.m, d, key: keyOf(year, md.m, d), wk: weekKey(year, md.m, d), approx: !!t.fz, read: t.read, user: t.user });
     prev = md;

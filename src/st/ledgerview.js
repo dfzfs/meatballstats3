@@ -258,9 +258,13 @@ function replyRuns(st, L) {
 }
 function listHtml(st, L, ui) {
   const U2 = R.ui2, runs = replyRuns(st, L);
+  let lastY = null;
+  // short: "12월 24일 (수)"; the year only where it changes
+  const short = (i) => { const o = rd(i); if (!o) return ''; const y = o.y !== lastY ? `<i class="mb3-ry">${h(fill(L.fmt.y, { x: '', y: o.y }).replace(/[,\s]+$|^[,\s]+/g, ''))}</i>` : ''; lastY = o.y;
+    return `${y}${o.approx ? '≈ ' : ''}${h(fill(L.fmt.md, { mon: L.mon[o.m - 1], d: o.d }))} <span class="mb3-dim">(${h(String(L.wd[o.wd]).slice(0, 1))})</span>`; };
   return `<div class="mb3-rlist"><div class="mb3-rlh">📜 ${h(U2.replyList || '답 순서대로')}</div>${runs.map((x) => {
     const a = x.ids[0], b = x.ids.at(-1), rg = a === b ? `#${a}` : `#${a}~#${b}`;
-    const what = x.k === 'x' ? `<span class="mb3-dim">${h(U2.notRead || '아직 안 읽음')}</span>` : x.k === 'u' ? `<span class="mb3-dim">${h(U2.undated || '날짜 미정')}</span>` : h(rfmt(a, L, true));
+    const what = x.k === 'x' ? `<span class="mb3-dim">${h(U2.notRead || '아직 안 읽음')}</span>` : x.k === 'u' ? `<span class="mb3-dim">${h(U2.undated || '날짜 미정')}</span>` : short(a);
     const sel = ui.sel && x.k === ui.sel ? ' mb3-on' : '';
     const btn = x.k === 'x' ? `<b class="mb3-rbtn" data-reread="${a}-${b}">🔄 ${h(U2.readThese || '다시 읽기')}</b>` : `<b class="mb3-rbtn" data-setd="${a}" title="${h(U2.setThisDate || '이 답부터 날짜 바꾸기')}">✏️</b>`;
     return `<div class="mb3-rrow${sel}${x.k === 'x' ? ' mb3-rx' : ''}"${x.k.length > 1 ? ` data-go="${h(x.k)}"` : ''}><b class="mb3-rr">${rg}</b><span class="mb3-rd">${what}</span>${btn}</div>`;
