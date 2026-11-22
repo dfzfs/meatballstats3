@@ -88,7 +88,7 @@ export async function send(text, info, redraw) {
   if (last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
   const wait = push({ who: 'mb', text: '…', wait: true, at: Date.now() }); redraw();
   let res;
-  try { res = parse(String(await request(buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
+  try { res = parse(String(await request(buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>', settings().chatProfile || '') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
   const S = store(true), m = S.mbchat.find((x) => x.at === wait.at && x.wait) || wait; delete m.wait;
   if (!res || (!res.say && !res.fixes.length)) { m.text = R.ui2.chatFail || '지금은 대답을 못 했어요. 잠깐 뒤에 다시 말해 줄래요?'; save(); redraw(); return; }
   m.text = res.say || (res.fixes.length ? (R.ui2.chatFound || '이렇게 고칠게요.') : (R.ui2.chatNone || '못 찾았어요. 몇 번째 답인지 알려 줄래요?'));

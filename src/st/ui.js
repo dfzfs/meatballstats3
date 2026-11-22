@@ -82,6 +82,7 @@ export function mountUI() {
         <label for="mb3_font">${h(U.font)}</label>${desc('font')}<select id="mb3_font" class="text_pole">${Object.keys(FONTS).map((k) => `<option value="${k}"${(s.font || '') === k ? ' selected' : ''}>${h(U.fonts[k || 'st'])}</option>`).join('')}</select></div>
       <div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
       <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label>${desc('profile')}<select id="mb3_profile" class="text_pole"><option value=""></option></select></div>
+      <div class="mb3-row"><label for="mb3_chatprofile">${h(U.chatProfile)}</label>${desc('chatProfile')}<select id="mb3_chatprofile" class="text_pole"><option value=""></option></select></div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
       <div class="mb3-row mb3-col"><label for="mb3_names">${h(U.nameMap)}</label>${desc('nameMap')}<textarea id="mb3_names" class="text_pole" rows="2" placeholder="${h(U.nameMapPh)}">${h(s.nameMap || '')}</textarea></div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
@@ -126,6 +127,7 @@ export function mountUI() {
   document.getElementById('mb3_ledger').addEventListener('click', openLedger);
   const setProfile = (p) => { s.profile = p?.id || ''; c.saveSettingsDebounced(); };
   try { c.ConnectionManagerRequestService.handleDropdown('#mb3_profile', s.profile, setProfile); } catch (e) { document.getElementById('mb3_profile').disabled = true; }
+  try { c.ConnectionManagerRequestService.handleDropdown('#mb3_chatprofile', s.chatProfile || '', (p) => { s.chatProfile = p?.id || ''; c.saveSettingsDebounced(); }); } catch (e) { const el = document.getElementById('mb3_chatprofile'); if (el) el.disabled = true; }
   document.getElementById('mb3_view').addEventListener('click', view);
   document.getElementById('mb3_date').addEventListener('click', setDate);
   document.getElementById('mb3_lore_btn')?.addEventListener('click', openLore);

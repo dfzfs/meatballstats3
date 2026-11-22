@@ -15,11 +15,11 @@ export function kick(delay = AFTER_REPLY) { clearTimeout(Q.timer); Q.timer = set
 export function reset() { clearTimeout(Q.timer); Q.pushedKey = ''; Q.tries = {}; Q.fails = 0; Q.log = { status: '', dropped: [], lastReq: '', lastAnswer: '' }; }
 export const newReply = () => { if (Q.fails >= 5) Q.fails = 4; };          // after 5 failures: one more try per new reply
 
-export async function request(prompt, stop = '</mb>') {
-  const c = ctx(), s = settings();
-  if (s.profile && c.ConnectionManagerRequestService) {
+export async function request(prompt, stop = '</mb>', profile = '') {
+  const c = ctx(), s = settings(), pid = profile || s.profile;
+  if (pid && c.ConnectionManagerRequestService) {
     const over = { temperature: 0.2, stop: [stop], ...(Q.noEffort ? {} : { reasoning_effort: 'low' }) };
-    const r = await c.ConnectionManagerRequestService.sendRequest(s.profile, prompt, MAX_OUT, { stream: false, extractData: true, includePreset: false, includeInstruct: false }, over);
+    const r = await c.ConnectionManagerRequestService.sendRequest(pid, prompt, MAX_OUT, { stream: false, extractData: true, includePreset: false, includeInstruct: false }, over);
     return typeof r === 'string' ? r : (r?.content ?? '');
   }
   return await c.generateRaw({ prompt, responseLength: MAX_OUT });       // no profile chosen: main connection, prompt only

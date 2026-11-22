@@ -472,7 +472,8 @@
       "director": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat. A separate extension.",
       "nameMap": "Only for the Korean screen: if a name is translated into a word (Grace → 은혜), write \"English name = shown name\", one per line. Aliases in the lore sheet are added on their own.",
       "theme": "Colours of the log, lore window, director panel and tips.",
-      "font": "Font for Meatball windows only. Loaded once when picked (Ownglyph PDH ships inside the extension)."
+      "font": "Font for Meatball windows only. Loaded once when picked (Ownglyph PDH ships inside the extension).",
+      "chatProfile": "The AI used when you fix the record by talking. Used rarely, so a smarter model costs little. Empty = the sorting profile."
     },
     "btnHelp": "What the buttons do",
     "copyBtn": "📋 Copy test report",
@@ -565,7 +566,8 @@
       "suit": "SUIT",
       "gowun": "Gowun Dodum",
       "pdh": "Ownglyph PDH (handwriting)"
-    }
+    },
+    "chatProfile": "💬 Profile for talking to Meatball (empty = same as above)"
   },
   "rel": {
     "moves": [
