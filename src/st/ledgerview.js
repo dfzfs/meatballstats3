@@ -7,6 +7,7 @@ import { uiLang, renderBar } from './bar.js';
 import { refresh } from './inject.js';
 import { fold2, tieOf, trend } from '../core/ledger2.js';
 import { trWatch } from './tr.js';
+import { mascotImg } from './mascot.js';
 import { settings, ledger2 } from './store.js';
 import { absorb, absorbRel } from '../core/bundle.js';
 import { Q, kick } from './queue.js';
@@ -282,24 +283,33 @@ function render(box, ui) {
   const nowLine = [fmtDate(dateAt(st.cal), L), st.cal.tod, st.loc, st.weather].filter(Boolean).join(' · ') || U.nothing;
   const tabs = [['flow', U2.byFlow], ['date', U.byDate], ['reply', U.byReply], ['rel', U2.byRel], ['map', U2.byMap], ['people', U2.byPeople]];
   let body = '';
-  if (!es.length && ui.view !== 'people') body = `<p class="mb3-dim">${h(U.empty)}</p>`;
+  if (!es.length && ui.view !== 'people' && !ui.only) body = `<p class="mb3-dim">${h(U.empty)}</p>`;
   else if (ui.view === 'flow' || ui.view === 'date') body = flowHtml(st, L, chs, ui);
+  else if (ui.view === 'reply' && ui.only) {
+    const one = es.find((e) => e.fp === ui.only), redoing = !one && store()?.ev && !store().ev[ui.only];
+    body = `<div class="mb3-only"><a href="#" class="mb3-all">← ${h(U.allReplies)}</a></div>`
+      + (one ? entryHtml(one, st, L, ui.open) : `<p class="mb3-dim">${h(redoing ? U.notReadYet : U.noChange)}</p>`);
+  }
   else if (ui.view === 'reply') body = es.slice().reverse().slice(0, ui.shown * 3).map((e) => entryHtml(e, st, L, ui.open)).join('');
   else if (ui.view === 'rel') body = relHtml(st, L, ui);
   else if (ui.view === 'map') body = mapHtml(st, ui);
   else if (ui.view === 'people') body = peopleHtml(st, L, ui);
-  const more = (ui.view === 'flow' && chs.length > ui.shown) || (ui.view === 'reply' && es.length > ui.shown * 3) || ui.view === 'date';
+  const more = (ui.view === 'flow' && chs.length > ui.shown) || (ui.view === 'reply' && !ui.only && es.length > ui.shown * 3) || ui.view === 'date';
   box.innerHTML = `<div class="mb3-log">
-    <div class="mb3-top"><b>${h(U.now)}:</b> ${h(nowLine)}</div>
+    <div class="mb3-wbar"><span class="mb3-dots"><i></i><i></i><i></i></span>${mascotImg('idle')}<span class="mb3-wt">meatball.log</span></div>
+    <div class="mb3-top"><span class="mb3-nowlab">${h(U.now)}</span> <span class="mb3-nowv">${h(nowLine)}</span></div>
     <div class="mb3-tabs">${tabs.map(([k, t]) => `<button class="menu_button${ui.view === k ? ' mb3-on' : ''}" data-view="${k}">${h(t)}</button>`).join('')}</div>
     <div class="mb3-legend">📜 ${h(U.lg.text)} · 🎬 ${h(U.lg.dir)} · ✋ ${h(U.lg.user)} · ⚙️ ${h(U.lg.rule)} · 🧠 ${h(U2.reason)}</div>
-    ${ui.view === 'reply' && es.length ? `<div class="mb3-bulk"><button class="menu_button mb3-delsel" title="${h(U.delSelTip)}">🗑 ${h(U.delSel)}</button><button class="menu_button mb3-redosel" title="${h(U.redoSelTip)}">🔁 ${h(U.redoSel)}</button><button class="menu_button mb3-delall" title="${h(U.delAllTip)}">⚠ ${h(U.delAll)}</button></div>` : ''}
+    ${ui.view === 'reply' && !ui.only && es.length ? `<div class="mb3-bulk"><button class="menu_button mb3-delsel" title="${h(U.delSelTip)}">🗑 ${h(U.delSel)}</button><button class="menu_button mb3-redosel" title="${h(U.redoSelTip)}">🔁 ${h(U.redoSel)}</button><button class="menu_button mb3-delall" title="${h(U.delAllTip)}">⚠ ${h(U.delAll)}</button></div>` : ''}
     ${body}${more && ['flow', 'reply', 'date'].includes(ui.view) ? `<button class="menu_button mb3-more">${h(U.more)}</button>` : ''}</div>`;
 }
 
-export function openLedger() {
+// at = a chat index: open straight at that reply (its record, why, and ✏️ 🔁 🗑), with a link back to all replies
+export function openLedger(at = null) {
   const c = ctx(), box = document.createElement('div');
-  const ui = { view: 'flow', chap: null, shown: 8, open: new Set(), pair: '', place: '', who: '' };
+  const ui = { view: 'flow', chap: null, shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
+  const m = at != null ? c.chat?.[at] : null;
+  if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); }
   const draw = () => { try { render(box, ui); } catch (e) { console.warn('[meatball3] log view', e); box.innerHTML = `<pre>${h(e.message)}</pre>`; } };
   box.addEventListener('click', (ev) => {
     if (ev.target.matches('.mb3-pickfp')) { ev.stopPropagation(); return; }
@@ -309,11 +319,12 @@ export function openLedger() {
       const U = R.ui, picked = [...box.querySelectorAll('.mb3-pickfp:checked')].map((x) => x.dataset.fp);
       if (a.matches('.mb3-edit')) { editReply(+a.dataset.i).then((ok) => ok && draw()); return; }
       if (a.matches('.mb3-del')) { if (confirm(U.delAsk)) { clearReplies([a.dataset.fp]); draw(); } return; }
-      if (a.matches('.mb3-redo')) { clearReplies([a.dataset.fp], true); draw(); return; }
+      if (a.matches('.mb3-redo')) { clearReplies([a.dataset.fp], true); draw(); const fp = a.dataset.fp; let n = 0; const w = setInterval(() => { if (store()?.ev?.[fp] || ++n > 40 || !box.isConnected) { clearInterval(w); if (box.isConnected) draw(); } }, 1500); return; }
       if (a.matches('.mb3-delsel')) { if (picked.length && confirm(U.delSelAsk.replace('{n}', picked.length))) { clearReplies(picked); draw(); } return; }
       if (a.matches('.mb3-redosel')) { if (picked.length) { clearReplies(picked, true); draw(); } return; }
       if (a.matches('.mb3-delall')) { if (confirm(U.delAllAsk)) { clearAll(); draw(); } return; }
     }
+    if (ev.target.closest('.mb3-all')) { ev.preventDefault(); ui.only = ''; draw(); return; }
     const t = ev.target.closest('[data-view],[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
     if (!t || !box.contains(t)) return;
     if (t.matches('.mb3-go')) { ev.preventDefault(); document.querySelector(`#chat .mes[mesid="${t.dataset.i}"]`)?.scrollIntoView({ block: 'start' }); return; }
@@ -324,7 +335,7 @@ export function openLedger() {
       if (g) { g.push(t.dataset.fuzzy ? { k: 'time', days: 0, fuzzy: t.dataset.fuzzy, tod: '', by: 'user' } : { k: 'time', days: +t.dataset.days, tod: '', by: 'user' }); save(); refresh(); renderBar(); draw(); }
       return;
     }
-    if (t.dataset.view) { ui.view = t.dataset.view; ui.shown = 8; }
+    if (t.dataset.view) { ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
     else if (t.matches('.mb3-more')) ui.shown += 8;
     else if (t.dataset.pair != null) ui.pair = ui.pair === t.dataset.pair ? '' : t.dataset.pair;
     else if (t.dataset.who != null) { ui.who = t.dataset.who; if (ui.view === 'rel') ui.view = 'people'; }

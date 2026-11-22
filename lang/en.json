@@ -542,7 +542,10 @@
       "404": "Installing extensions is off on this SillyTavern",
       "500": "Download failed. Check the internet or git and try again"
     },
-    "directorErrAny": "Could not install ({n}). Use Extensions › Install extension with https://github.com/dfzfs/meatballinput"
+    "directorErrAny": "Could not install ({n}). Use Extensions › Install extension with https://github.com/dfzfs/meatballinput",
+    "pawTip": "Meatball record: see, fix, re-read or clear what Meatball noted for this reply",
+    "allReplies": "All replies",
+    "notReadYet": "Not read yet. Meatball reads it shortly."
   },
   "rel": {
     "moves": [

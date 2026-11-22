@@ -4,6 +4,7 @@ import { mountRelUI } from './src/st/relview.js';
 import { Q, kick, reset, newReply, idle, guardNow } from './src/st/queue.js';
 import { refresh, lastPut } from './src/st/inject.js';
 import { mountUI } from './src/st/ui.js';
+import { openLedger } from './src/st/ledgerview.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
 import { fingerprint } from './src/core/clean.js';
@@ -37,12 +38,31 @@ function otherMeatball() {
   } catch (e) { /* optional */ }
 }
 
+// 🐾 on each AI message (in its ⋯ menu): opens the log at that reply — see, fix, re-read or clear it in one place.
+function pawButtons() {
+  try {
+    if (!settings().on) return;
+    for (const el of document.querySelectorAll('#chat .mes[is_user="false"] .extraMesButtons')) {
+      if (el.querySelector('.mb3-paw')) continue;
+      el.insertAdjacentHTML('afterbegin', `<div class="mes_button mb3-paw fa-solid fa-paw" title="${String(R.ui.pawTip || '').replace(/"/g, '&quot;')}"></div>`);
+    }
+  } catch (e) { /* optional */ }
+}
+document.addEventListener?.('click', (e) => {
+  const b = e.target.closest?.('.mb3-paw'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const i = Number(b.closest('.mes')?.getAttribute('mesid'));
+  if (Number.isInteger(i)) openLedger(i);
+}, true);
+
 (async function init() {
   try { await loadResources(new URL('.', import.meta.url)); } catch (e) { console.error('[meatball3] could not load text files', e); return; }
   fetch(new URL('manifest.json', import.meta.url)).then((r) => r.json()).then((j) => { R.version = j.version; }).catch(() => {});
   const { eventSource, event_types: E } = ctx();
   const changed = () => { refresh(); renderBar(); kick(); };
   eventSource.on(E.APP_READY, () => { mountUI(); mountRelUI(); changed(); setTimeout(otherMeatball, 3000); });
+  for (const ev of [E.CHARACTER_MESSAGE_RENDERED, E.MESSAGE_UPDATED, E.MESSAGE_SWIPED, E.CHAT_CHANGED, E.MORE_MESSAGES_LOADED]) if (ev) eventSource.on(ev, () => setTimeout(pawButtons, 50));
+  setTimeout(pawButtons, 1500);
   eventSource.on(E.CHAT_CHANGED, () => { reset(); tidy(); changed(); G.dir = null; loadBlueprint().then(refresh); });
   eventSource.on(E.GENERATION_STARTED, (type, opts, dryRun) => {
     if (dryRun) return;
