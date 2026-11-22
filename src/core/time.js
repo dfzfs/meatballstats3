@@ -16,6 +16,8 @@ export const isFuzzy = (cal, day = cal.n) => !!cal.fz && day > cal.fz.from;
 export function dateAt(cal, day = cal.n) {
   return isFuzzy(cal, day) ? {} : rawAt(cal, day);
 }
+// The date the engine counts for that day, also inside a vague skip (then it is only a guess: the nominal length)
+export const dateRaw = (cal, day = cal.n) => rawAt(cal, day);
 function rawAt(cal, day = cal.n) {
   const off = day - cal.an, o = {};
   if (cal.doy != null) { const t = cal.doy + off; Object.assign(o, mdOf(mod(t, 365))); if (cal.y != null) o.y = cal.y + Math.floor(t / 365); }
@@ -87,7 +89,7 @@ function settle(cal, p) {
   if (p.m != null && p.d != null && cal.src === 'pick') cal.src = 'text';
   return 'calibrated';
 }
-export function applyDate(cal, p, force) {
+export function applyDate(cal, p, force, maxJump = 275) {
   if (cal.fz && force) cal.fz = null;
   if (cal.fz) { const r = settle(cal, p); if (r) return r; }
   const cur = rawAt(cal);
@@ -112,6 +114,7 @@ export function applyDate(cal, p, force) {
   const fwd = mod(tgt - curDoy, 365);
   if (fwd === 0) { if (p.wd != null && cal.wd == null) anchor(cal, curDoy, p.wd); return 'same'; }
   if (fwd > 275) return 'kept';                            // text is behind the engine: the engine wins
+  if (!force && fwd > maxJump) return 'kept';              // months ahead with no "months later" in the reply: a mention or a misread, not a jump
   const y = cal.y != null ? cur.y + (tgt < curDoy ? 1 : 0) : null;
   const wd = p.wd ?? (cur.wd != null ? mod(cur.wd + fwd, 7) : null);
   cal.n += fwd; cal.wd = wd; cal.y = p.y ?? y; cal.an = cal.n; cal.doy = tgt; cal.src = exact ? 'text' : cal.src;

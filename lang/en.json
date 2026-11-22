@@ -967,7 +967,18 @@
     "loreBooksTip": "Pick any lorebook in SillyTavern for the draft. The character's and the chat's are ticked at first. Remembered per character.",
     "loreBooksFind": "Find by name",
     "loreBooksNone": "No lorebooks",
-    "dayRange": "day {a}–{b}"
+    "dayRange": "day {a}–{b}",
+    "fillDates": "Fill in missing dates",
+    "fillDatesTip": "Meatball picks a date for every reply with no date or only \"a few days later\", from the story's clues (one AI call). Applied at once; undo in the Meatball tab. You can also ask in the Meatball chat.",
+    "calEmpty": "nothing recorded",
+    "yearGuess": "year guessed",
+    "yearGuessTip": "The story names no year: the nearest year whose weekdays match is shown. Set it with \"Set date\" or the Meatball chat.",
+    "weekSome": "somewhere this week",
+    "weekOf": "somewhere {a}–{b}",
+    "undated": "no date yet",
+    "legWeek": "that week",
+    "noRecord": "nothing to record · or not read yet",
+    "legMine": "date set"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

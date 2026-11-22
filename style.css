@@ -292,3 +292,18 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-lore .mb3-books summary { cursor: pointer; }
 .mb3-lore .mb3-books-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; padding: 6px 2px; }
 .mb3-lore .mb3-books-q { margin: 0 0 4px; }
+/* v0.15 calendar: always a real month; a vague skip colours its week; every reply number shown */
+.mb3-caltop { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.mb3-fillday { cursor: pointer; font-size: 12px; padding: 4px 11px; border-radius: 999px; background: var(--mbt-acc); color: var(--mbt-onacc); white-space: nowrap; }
+.mb3-ymsel { width: auto !important; min-width: 0; padding: 2px 6px !important; margin: 0 !important; font-size: 14px; font-weight: 700; background: transparent; border: 1px solid var(--mbt-line); border-radius: 8px; color: var(--mbt-ink); }
+.mb3-yg { font-size: 11px; border-bottom: 1px dotted currentColor; cursor: help; }
+.mb3-big .mb3-cc { aspect-ratio: auto; min-height: 46px; max-height: none; justify-content: flex-start; padding-top: 5px; }
+.mb3-big .mb3-cc i { font-size: 9px; line-height: 1.15; margin-top: 2px; word-break: break-all; text-align: center; padding: 0 2px; }
+.mb3-cc.mb3-wkon:not(.mb3-l1):not(.mb3-l2):not(.mb3-l3) { background: repeating-linear-gradient(135deg, var(--mbt-soft) 0 5px, var(--mbt-acc2) 5px 8px); color: var(--mbt-ink); cursor: pointer; }
+.mb3-cc.mb3-mine { box-shadow: inset 0 -3px 0 #e8a33d; }
+.mb3-wstrip { grid-column: 1 / -1; font-size: 11px; padding: 4px 10px; border-radius: 8px; background: repeating-linear-gradient(135deg, var(--mbt-soft) 0 6px, var(--mbt-acc2) 6px 10px); color: var(--mbt-ink); cursor: pointer; }
+.mb3-wstrip.mb3-sel { outline: 2px solid var(--mbt-ink); outline-offset: -1px; }
+.mb3-tray { margin-top: 8px; font-size: 12px; padding: 6px 10px; border-radius: 8px; border: 1px dashed var(--mbt-line); color: var(--mbt-mid); }
+.mb3-leg .mb3-legwk { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; background: repeating-linear-gradient(135deg, var(--mbt-soft) 0 3px, var(--mbt-acc2) 3px 5px); }
+.mb3-norec { font-size: 12px; margin-top: 8px; }
+.mb3-leg .mb3-legmine { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; background: var(--mbt-soft); box-shadow: inset 0 -3px 0 #e8a33d; }

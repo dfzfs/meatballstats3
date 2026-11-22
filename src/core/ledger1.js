@@ -9,8 +9,8 @@ export const newState = () => ({
 const pairOf = (st, a, b) => (st.pair[[a, b].sort().join('|')] ||= { a, b, tie: '', call: {}, touch: null });
 const cap = (arr, n) => { while (arr.length > n) arr.shift(); };
 
-function setDate(st, date, force) {
-  const before = dateAt(st.cal), r = applyDate(st.cal, date, force);
+function setDate(st, date, force, maxJump) {
+  const before = dateAt(st.cal), r = applyDate(st.cal, date, force, maxJump);
   if (r === 'kept') st.notes.push({ day: st.cal.n, text: date, engine: before });   // the story wrote an older date: the engine wins
   cap(st.notes, 10);
   st.fresh?.dates.push({ r, text: date, before, after: dateAt(st.cal), force: !!force });
@@ -23,6 +23,8 @@ export function applyGroup(st, events, V) {
   st.gn = (st.gn || 0) + 1;   // reply counter: the signpost repeats a prop only right after it changed
   st.fresh = { passed: 0, was, arrived: [], fixes: [], cut: false, dates: [], slips: [] };
   const N = (n) => resolve(st.names, n, V) || learn(st.names, n, V);
+  // a date may jump far ahead only when this reply also says a long time passed ("months later", "the next spring")
+  const longSkip = events.some((e) => e.k === 'time' && ((e.days || 0) >= 30 || e.fuzzy === 'mo' || e.fuzzy === 'y')), maxJump = longSkip ? 275 : 120;
   for (const e of events) if (e.k === 'alias') addAlias(st.names, e.who, e.v, V);
   const mentioned = new Set();
   for (const e of events) for (const n of [e.who, e.a, e.b, ...(e.add || [])]) if (n) mentioned.add(resolve(st.names, n, V) || n);
@@ -47,8 +49,8 @@ export function applyGroup(st, events, V) {
           st.cal.n += nom; st.fresh.fuzzy = e.fuzzy;
         } else st.cal.n += e.days || 0;
         if (e.tod || e.days || e.fuzzy) st.cal.tod = e.tod || '';
-        if (e.date) setDate(st, e.date); break; }
-      case 'date': setDate(st, e.date, e.force); break;
+        if (e.date) setDate(st, e.date, false, maxJump); break; }
+      case 'date': setDate(st, e.date, e.force, maxJump); break;
       case 'loc': {
         const path = e.v.split(/\s*(?:>|→|›)\s*/).map((x) => x.trim()).filter(Boolean);
         for (let i = 0; i < path.length; i++) { const p = (st.places[path[i]] ||= { up: '', near: {} }); if (i > 0) p.up = path[i - 1]; }

@@ -1,6 +1,7 @@
 // The log: what changed at each reply, and the evidence for it. Built only when opened.
 import { ctx, store, save, ledger, R } from './store.js';
 import { dateAt, fmtDate, span } from '../core/time.js';
+import { placeReplies, ranges, keyOf, weekKey, dimOf } from '../core/calendar.js';
 import { cleanText, fingerprint } from '../core/clean.js';
 import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
@@ -191,7 +192,6 @@ const TEXK = ['love', 'want', 'miss', 'bitter', 'forbid', 'grudge', 'warm', ''];
 const TRI = { closer: '↗', back: '↘', waver: '〰' };
 const AVC = ['#f4a3b8', '#9fb7ea', '#b9dfb4', '#f3c98f', '#c7b6ef', '#f1b49a', '#9fd6d6', '#d9c0a3', '#b8c4d8'];
 const avOf = (n, all) => `<i class="mb3-av" style="background:${AVC[Math.max(0, all.indexOf(n)) % AVC.length]}">${h([...String(n)][0] || '?')}</i>`;
-function dayList(chs) { const m = new Map(); chs.forEach((c, k) => { if (!m.has(c.n)) m.set(c.n, []); m.get(c.n).push([c, k]); }); return [...m.entries()].map(([n, sc]) => ({ n, scenes: sc })); }
 function sceneRow(c, k, st, L, ui, M) {
   const first = c.es[0].x.i, last = c.es.at(-1).x.i, open = ui.chap === k;
   const its = c.es.flatMap((e) => e.its).filter((it) => !it.dim);
@@ -204,42 +204,58 @@ function sceneRow(c, k, st, L, ui, M) {
     <div class="mb3-sr">#${first}${last !== first ? `–${last}` : ''}</div>
     ${open ? `<div class="mb3-cbody">${c.es.map((e) => entryHtml(e, st, L, ui.open)).join('')}</div>` : ''}</div>`;
 }
-// Calendar: a real month when the story has dates, else "day N" cells. Colour = how much happened, dot = a big event.
-const DIM = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-function calHtml(st, L, days, ui, big) {
-  const info = new Map(days.map((d) => [d.n, { size: d.scenes.reduce((a, [c]) => a + c.size, 0), hot: d.scenes.some(([c]) => c.hot) }]));
-  const lvl = (n) => { const x = info.get(n); return !x ? '' : x.size > 8 ? ' mb3-l3' : x.size > 3 ? ' mb3-l2' : ' mb3-l1'; };
-  const cell = (n, label, sub = '') => { const x = info.get(n);
-    return `<div class="mb3-cc${lvl(n)}${x?.hot ? ' mb3-hotc' : ''}${n === ui.day ? ' mb3-sel' : ''}${n === st.cal.n ? ' mb3-now' : ''}"${x ? ` data-day="${n}"` : ''}>${h(label)}${sub ? `<i>${h(sub)}</i>` : ''}</div>`; };
-  const d0 = dateAt(st.cal, ui.day);
-  if (d0.m != null && d0.d != null) {
-    // which story day sits on each date of this month (by offset from the chosen day)
-    const m = d0.m, len = DIM[m - 1], first = ui.day - (d0.d - 1), wd1 = d0.wd != null ? ((d0.wd - (d0.d - 1)) % 7 + 7) % 7 : null;
-    const head = wd1 != null ? L.wd.map((w) => `<div class="mb3-cw">${h(String(w).slice(0, 1))}</div>`).join('') : '';
-    const pad = wd1 != null ? '<div class="mb3-cc mb3-out"></div>'.repeat(wd1) : '';
-    let cells = ''; for (let d = 1; d <= len; d++) cells += cell(first + d - 1, String(d));
-    const ns = days.map((x) => x.n), prevM = ns.filter((n) => n < first).at(-1), nextM = ns.find((n) => n >= first + len);
-    return `<div class="mb3-mon">${prevM != null ? `<span data-day="${prevM}">‹</span>` : '<span class="mb3-dim">‹</span>'}<b>${h(L.mon[m - 1])}</b>${nextM != null ? `<span data-day="${nextM}">›</span>` : '<span class="mb3-dim">›</span>'}</div>
-      <div class="mb3-cal">${head}${pad}${cells}</div>`;
+// Calendar: always a real year · month. Every AI reply sits on a date: exact days are coloured by how much happened,
+// a reply inside a vague skip colours its whole week, and replies before any date wait in the 「미정」 tray.
+function calModel(st) {
+  const P = placeReplies(st), day = new Map(), week = new Map();
+  for (const r of P.list) { const m = r.approx ? week : day, k = r.approx ? r.wk : r.key; if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
+  const months = [...new Set(P.list.map((r) => `${r.y}-${r.m}`))].map((s) => s.split('-').map(Number)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return { ...P, day, week, months };
+}
+const ymLabel = (y, m, L) => fill(L.fmt.y, { x: L.mon[m - 1], y });
+function calHtml(st, L, M0, chs, ui, big) {
+  const U2 = R.ui2, lastR = M0.list.at(-1);
+  if (!ui.ym && lastR) ui.ym = `${lastR.y}-${lastR.m}`;
+  if (!ui.ym) { const n = new Date(); ui.ym = `${n.getFullYear()}-${n.getMonth() + 1}`; }
+  const [y, m] = ui.ym.split('-').map(Number), len = dimOf(y, m), pad = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const step = (k) => { const d = new Date(Date.UTC(y, m - 1 + k, 1)); return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`; };
+  const has = M0.months.some(([a, b]) => a === y && b === m) ? '' : ` <span class="mb3-dim">(${h(U2.calEmpty || '기록 없음')})</span>`;
+  const opts = M0.months.map(([a, b]) => `<option value="${a}-${b}"${a === y && b === m ? ' selected' : ''}>${h(ymLabel(a, b, L))}</option>`).join('');
+  const head = `<div class="mb3-mon"><span data-ym="${step(-1)}">‹</span>${M0.months.length > 1 ? `<select class="mb3-ymsel">${M0.months.some(([a, b]) => a === y && b === m) ? '' : `<option selected>${h(ymLabel(y, m, L))}</option>`}${opts}</select>` : `<b>${h(ymLabel(y, m, L))}</b>`}<span data-ym="${step(1)}">›</span>${has}${M0.guessed ? ` <span class="mb3-dim mb3-yg" data-mb3tip="${h(U2.yearGuessTip || '')}">${h(U2.yearGuess || '연도 추정')}</span>` : ''}</div>`;
+  const wd = L.wd.map((w) => `<div class="mb3-cw">${h(String(w).slice(0, 1))}</div>`).join('');
+  let cells = '<div class="mb3-cc mb3-out"></div>'.repeat(pad), col = pad, row = [];
+  const hotOf = (rs) => { const ids = new Set(rs.map((r) => r.i)); return chs.some((c) => c.hot && c.es.some((e) => ids.has(e.x.i))); };
+  const strip = (wk) => { const rs = M0.week.get(wk); if (!rs) return '';
+    return `<div class="mb3-wstrip${ui.sel === `w:${wk}` ? ' mb3-sel' : ''}" data-wk="${wk}">≈ ${h(U2.weekSome || '이 주 어딘가')} · ${h(ranges(rs.map((r) => r.i)))}</div>`; };
+  let wkOfRow = keyOf(y, m, 1) && weekKey(y, m, 1);
+  for (let d = 1; d <= len; d++) {
+    const k = keyOf(y, m, d), rs = M0.day.get(k) || [], wk = weekKey(y, m, d), wkOn = M0.week.has(wk);
+    const lv = !rs.length ? '' : rs.length > 4 ? ' mb3-l3' : rs.length > 1 ? ' mb3-l2' : ' mb3-l1';
+    cells += `<div class="mb3-cc${lv}${wkOn ? ' mb3-wkon' : ''}${rs.length && hotOf(rs) ? ' mb3-hotc' : ''}${ui.sel === `d:${k}` ? ' mb3-sel' : ''}${rs.some((r) => r.user) ? ' mb3-mine' : ''}"${rs.length ? ` data-dk="${k}"` : wkOn ? ` data-wk="${wk}"` : ''}>${d}${rs.length && big ? `<i>${h(ranges(rs.map((r) => r.i)))}</i>` : ''}</div>`;
+    col++;
+    if (col % 7 === 0 || d === len) { cells += strip(wkOfRow); if (d < len) wkOfRow = weekKey(y, m, d + 1); }
   }
-  // no date in the story: day 1, 2, 3 … in pages of 5 weeks (2 in the small card); ‹ › move between pages
-  const size = big ? 35 : 14, last = Math.max(...days.map((x) => x.n), st.cal.n || 0), from = Math.floor(Math.max(0, ui.day ?? last) / size) * size, to = Math.min(last, from + size - 1);
-  let cells = ''; for (let n = from; n <= to; n++) cells += cell(n, String(n + 1), n === from ? (R.ui2.dayCell || '일째') : '');
-  const ns = days.map((x) => x.n), prevP = ns.filter((n) => n < from).at(-1), nextP = ns.find((n) => n > to);
-  const nav = last >= size ? `<div class="mb3-mon">${prevP != null ? `<span data-day="${prevP}">‹</span>` : '<span class="mb3-dim">‹</span>'}<b>${h(fill(R.ui2.dayRange || '{a}~{b}일째', { a: from + 1, b: to + 1 }))}</b>${nextP != null ? `<span data-day="${nextP}">›</span>` : '<span class="mb3-dim">›</span>'}</div>` : '';
-  return `${nav}<div class="mb3-cal mb3-calN">${cells}</div>`;
+  const tray = M0.undated.length ? `<div class="mb3-tray">📭 ${h(U2.undated || '날짜 미정')} · ${h(ranges(M0.undated))}</div>` : '';
+  return `${head}<div class="mb3-cal">${wd}${cells}</div>${tray}`;
 }
 function flowCard(st, L, chs, ui, M, big) {
-  const U2 = R.ui2, days = dayList(chs);
-  if (!days.length) return `<p class="mb3-dim">${h(R.ui.empty)}</p>`;
-  if (ui.day == null || !days.some((d) => d.n === ui.day)) ui.day = days.at(-1).n;
-  const at = days.findIndex((d) => d.n === ui.day);
-  const date = fmtDate(dateAt(st.cal, ui.day), L) || fill(U2.dayRel || '{n}일째', { n: ui.day + 1 });
-  const prev = days[at - 1], gap = prev && ui.day - prev.n > 1 ? ` <span class="mb3-dim">· ⏩ ${h(fill(U2.tlGap || '{n}일 뒤', { n: ui.day - prev.n }))}</span>` : '';
-  const scenes = days[at].scenes.slice().reverse();
-  return `<div class="mb3-flow${big ? ' mb3-big' : ''}"><div class="mb3-calbox">${calHtml(st, L, days, ui, big)}
-    <div class="mb3-leg"><span><b class="mb3-l1"></b>${h(U2.legLow || '조금')}</span><span><b class="mb3-l3"></b>${h(U2.legHigh || '많이')}</span><span><b class="mb3-legdot"></b>${h(U2.legBig || '큰 일')}</span><span class="mb3-dpen" data-setdate="1">✏️ ${h(U2.setDate || '날짜 정하기')}</span></div></div>
-    <div class="mb3-daybox"><div class="mb3-dtitle">📅 ${h(date)}${gap}</div>${scenes.slice(0, big ? 99 : 2).map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}${!big && scenes.length > 2 ? `<div class="mb3-more2" data-view="flow">+${scenes.length - 2} ›</div>` : ''}</div></div>`;
+  const U2 = R.ui2, M0 = calModel(st);
+  if (!M0.list.length && !M0.undated.length) return `<p class="mb3-dim">${h(R.ui.empty)}</p>`;
+  // what is picked: a day ("d:2026-12-15") or a week ("w:2026-12-13"); default = where the story is now
+  const valid = (s) => s && (s.startsWith('d:') ? M0.day.has(s.slice(2)) : M0.week.has(s.slice(2)));
+  if (!valid(ui.sel)) { const r = M0.list.at(-1); ui.sel = r ? (r.approx ? `w:${r.wk}` : `d:${r.key}`) : ''; if (r) ui.ym = `${r.y}-${r.m}`; }
+  const picked = !ui.sel ? M0.undated.map((i) => ({ i })) : ui.sel.startsWith('d:') ? M0.day.get(ui.sel.slice(2)) : M0.week.get(ui.sel.slice(2));
+  const ids = new Set(picked.map((r) => r.i));
+  let title = U2.undated || '날짜 미정';
+  if (ui.sel.startsWith('d:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number); title = fmtDate({ y, m, d, wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay() }, L); }
+  else if (ui.sel.startsWith('w:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number), e = new Date(Date.UTC(y, m - 1, d + 6)), md = (mm, dd) => fill(L.fmt.md, { mon: L.mon[mm - 1], d: dd });
+    title = fill(U2.weekOf || '{a}~{b} 사이 어딘가', { a: md(m, d), b: md(e.getUTCMonth() + 1, e.getUTCDate()) }); }
+  const scenes = chs.map((c, k) => [c, k]).filter(([c]) => c.es.some((e) => ids.has(e.x.i))).reverse();
+  const noRec = [...ids].filter((i) => !chs.some((c) => c.es.some((e) => e.x.i === i)));
+  const top = `<div class="mb3-caltop"><span class="mb3-fillday" data-mb3tip="${h(U2.fillDatesTip || '')}">🗓 ${h(U2.fillDates || '미정 날짜 정하기')}</span></div>`;
+  return `<div class="mb3-flow${big ? ' mb3-big' : ''}"><div class="mb3-calbox">${top}${calHtml(st, L, M0, chs, ui, big)}
+    <div class="mb3-leg"><span><b class="mb3-l1"></b>${h(U2.legLow || '조금')}</span><span><b class="mb3-l3"></b>${h(U2.legHigh || '많이')}</span><span><b class="mb3-legwk"></b>${h(U2.legWeek || '그 주 어딘가')}</span><span><b class="mb3-legdot"></b>${h(U2.legBig || '큰 일')}</span><span><b class="mb3-legmine"></b>${h(U2.legMine || '정한 날짜')}</span><span class="mb3-dpen" data-setdate="1">✏️ ${h(U2.setDate || '날짜 정하기')}</span></div></div>
+    <div class="mb3-daybox"><div class="mb3-dtitle">📅 ${h(title)} <span class="mb3-dim">· ${h(ranges([...ids]))}</span></div>${scenes.slice(0, big ? 99 : 2).map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}${!big && scenes.length > 2 ? `<div class="mb3-more2" data-view="flow">+${scenes.length - 2} ›</div>` : ''}${noRec.length ? `<div class="mb3-dim mb3-norec">${h(ranges(noRec))} · ${h(U2.noRecord || '기록할 변화 없음 · 또는 아직 안 읽음')}</div>` : ''}</div></div>`;
 }
 function pairsOf(st, st2, bp, M) {
   const k2 = (a, b) => [a, b].sort().join('|'), raw = new Map();
@@ -358,7 +374,7 @@ function render(box, ui) {
       ${card(`📖 ${h(U2.tabFlow || '흐름')} ${more('flow')}`, flowCard(st, L, chs, ui, M, false))}</div>
       ${card(`👤 ${h(U2.tabPeople || '인물')}`, `<div class="mb3-pchips">${peopleChips(people.slice(0, 6), null, all)}</div>`, 'mb3-span')}</div>`;
   }
-  ui._info = { es, nowLine: [fmtDate(dateAt(st.cal), L), st.cal.tod, st.loc].filter(Boolean).join(' · ') || '-', fmt: (e) => [fmtDate(dateAt(st.cal, e.x.n), L, false), e.x.tod, roomOf(e.x.loc)].filter(Boolean).join(' · ') || '-' };
+  ui._info = { st, es, nowLine: [fmtDate(dateAt(st.cal), L), st.cal.tod, st.loc].filter(Boolean).join(' · ') || '-', fmt: (e) => [fmtDate(dateAt(st.cal, e.x.n), L, false), e.x.tod, roomOf(e.x.loc)].filter(Boolean).join(' · ') || '-' };
   box.innerHTML = `<div class="mb3-log2" data-th="${h(settings().theme || 'gray')}">
     <div class="mb3-top2">${mascotImg('idle')}<div><div class="mb3-tt">${h(U2.logTitle || '미트볼 일지')}</div><div class="mb3-dim">${h(fill(U2.logSub || '답 {n}개 읽음', { n: es.length }))}</div></div>
     <div class="mb3-seg">${tabs.map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}</div></div>
@@ -368,7 +384,7 @@ function render(box, ui) {
 // at = a chat index: open straight at that reply (its record, why, and ✏️ 🔁 🗑), with a link back to all replies
 export function openLedger(at = null) {
   const c = ctx(), box = document.createElement('div');
-  const ui = { view: 'dash', chap: -1, day: null, shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
+  const ui = { view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
   const m = at != null ? c.chat?.[at] : null;
   if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); }
   const draw = () => { try { render(box, ui); const ms = box.querySelector('.mb3-msgs'); if (ms) ms.scrollTop = ms.scrollHeight; box.querySelector('.mb3-cta')?.focus?.(); } catch (e) { console.warn('[meatball3] log view', e); box.innerHTML = `<pre>${h(e.message)}</pre>`; } };
@@ -397,7 +413,7 @@ export function openLedger(at = null) {
       if (cb.matches('.mb3-cyes')) chatDecide(m, true); else if (cb.matches('.mb3-cno')) chatDecide(m, false); else chatUndo(m);
       renderBar(); draw(); return;
     }
-    const t = ev.target.closest('[data-view],[data-day],[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
+    const t = ev.target.closest('[data-view],[data-dk],[data-wk],[data-ym],.mb3-fillday,[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
     if (!t || !box.contains(t)) return;
     if (t.matches('.mb3-go')) { ev.preventDefault(); document.querySelector(`#chat .mes[mesid="${t.dataset.i}"]`)?.scrollIntoView({ block: 'start' }); return; }
     if (t.matches('.mb3-why')) { ev.preventDefault(); ev.stopPropagation(); ui.open.has(t.dataset.fp) ? ui.open.delete(t.dataset.fp) : ui.open.add(t.dataset.fp); draw(); return; }
@@ -408,7 +424,10 @@ export function openLedger(at = null) {
       return;
     }
     if (t.dataset.view) { ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
-    else if (t.dataset.day != null) { ui.day = +t.dataset.day; ui.chap = -1; }
+    else if (t.dataset.dk) { ui.sel = `d:${t.dataset.dk}`; ui.chap = -1; }
+    else if (t.dataset.wk) { ui.sel = `w:${t.dataset.wk}`; ui.chap = -1; }
+    else if (t.dataset.ym) { ui.ym = t.dataset.ym; }
+    else if (t.matches('.mb3-fillday')) { ui.view = 'chat'; draw(); chatSend(`🗓 ${R.ui2.fillDates || '미정 날짜 정하기'}`, ui._info, draw, { dates: true, auto: true }); return; }
     else if (t.matches('.mb3-more')) ui.shown += 8;
     else if (t.dataset.pair != null) { ui.pair = ui.pair === t.dataset.pair ? '' : t.dataset.pair; ui.view = 'rel'; }
     else if (t.dataset.who != null) { ui.who = t.dataset.who; ui.view = 'people'; }
@@ -416,6 +435,7 @@ export function openLedger(at = null) {
     else if (t.dataset.chap != null) { if (ev.target.closest('.mb3-cbody')) return; ui.chap = +t.dataset.chap === ui.chap ? -1 : +t.dataset.chap; }
     draw();
   });
+  box.addEventListener('change', (ev) => { if (ev.target.matches?.('.mb3-ymsel')) { ui.ym = ev.target.value; draw(); } });
   box.addEventListener('keydown', (ev) => {
     if (ev.target.matches?.('.mb3-cta') && ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); const v = ev.target.value; ev.target.value = ''; chatSend(v, ui._info, draw); }
   });
