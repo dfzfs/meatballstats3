@@ -7,7 +7,7 @@ import { relInputs, toRelEvents, parseRel } from './ledger2.js';
 import { keysBlock, activeKeys } from './keys.js';
 import { loreSurface, loreDeep } from './blueprint.js';
 
-export const DEFAULTS = { minChars: 1500, maxReplies: 3, maxIn: 20000, catchUp: 15000 };
+export const DEFAULTS = { minChars: 1500, maxReplies: 3, maxIn: 60000, catchUp: 40000 };
 
 // Returns null when nothing waits. { text, fps, ready, catchUp }: fps = fingerprints of the waiting replies (events attach to the last).
 // dirs: { fingerprint: hidden instruction that produced that reply } — put just before the reply as <director>…</director>.

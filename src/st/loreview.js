@@ -34,10 +34,10 @@ async function draft(books) {
       if (t) book += `${book ? '\n\n' : ''}## ${name}\n${t}`;
     } catch (e) { /* that book could not be read: skip it */ }
   }
-  const src = [ch.description, ch.personality, ch.scenario, ch.data?.system_prompt ? '' : '', book].filter(Boolean).join('\n\n').slice(0, 24000);
+  const src = [ch.description, ch.personality, ch.scenario, ch.data?.system_prompt ? '' : '', book].filter(Boolean).join('\n\n').slice(0, 200000);
   if (!src.trim()) { window.toastr?.info(U.loreNoSource); return null; }
   const p = R.lang.en.ui2.draftPrompt.replace('{{SRC}}', () => src);   // AI-facing text: always English
-  const out = await request(p, '</lore>', '', 16000);   // a whole sheet after the model's thinking: needs room
+  const out = await request(p, '</lore>', '', 32000);   // a whole sheet after the model's thinking: needs room
   return String(out || '').replace(/^[\s\S]*?<lore>/i, '').replace(/<\/lore>[\s\S]*$/i, '').trim();
 }
 

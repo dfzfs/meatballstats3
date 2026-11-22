@@ -9,7 +9,7 @@ import { afterSort, renderBar } from './bar.js';
 import { keepFixes } from './fix.js';
 import { FILL_N, endFill } from './fill.js';
 
-const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 8000;   // thinking + answer (a thinking model can spend 3k before writing); only what is used is paid
+const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 90e3, MAX_OUT = 16000;   // thinking + answer (a thinking model can spend 3k before writing); only what is used is paid
 export const Q = { rush: false, busy: false, generating: false, lastCall: 0, calls: [], coolUntil: 0, notBefore: 0, fails: 0, pushedKey: '', tries: {}, noEffort: false, timer: null, log: { status: '', dropped: [], lastReq: '', lastAnswer: '' } };
 
 export function kick(delay = AFTER_REPLY) { clearTimeout(Q.timer); Q.timer = setTimeout(tick, delay); }
@@ -19,7 +19,7 @@ export const newReply = () => { if (Q.fails >= 5) Q.fails = 4; };          // af
 export async function request(prompt, stop = '</mb>', profile = '', maxOut = MAX_OUT) {
   const c = ctx(), s = settings(), pid = profile || s.profile;
   if (pid && c.ConnectionManagerRequestService) {
-    const over = { temperature: 0.2, stop: [stop], ...(Q.noEffort ? {} : { reasoning_effort: 'low' }) };
+    const over = { temperature: 0.2, stop: [stop], ...(Q.noEffort ? {} : { reasoning_effort: 'min' }) };   // 'min' = the least thinking the model allows (off where it can be)
     const r = await c.ConnectionManagerRequestService.sendRequest(pid, prompt, maxOut, { stream: false, extractData: true, includePreset: false, includeInstruct: false }, over);
     return typeof r === 'string' ? r : (r?.content ?? '');
   }
