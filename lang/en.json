@@ -325,8 +325,8 @@
   },
   "ui": {
     "title": "Meatball Status 3",
-    "on": "On (signpost for the AI)",
-    "profile": "Connection profile for sorting (empty = main connection)",
+    "on": "Turn Meatball on",
+    "profile": "AI for sorting",
     "view": "📝 This reply's note",
     "date": "Set today's story date",
     "dateHint": "Example: March 2 Tuesday",
@@ -547,7 +547,7 @@
     },
     "font": "Font",
     "fonts": {
-      "st": "SillyTavern font",
+      "st": "Default (system font)",
       "pretendard": "Pretendard",
       "suit": "SUIT",
       "gowun": "Gowun Dodum",
@@ -973,7 +973,7 @@
     "fillDates": "Fill in missing dates",
     "fillDatesTip": "No AI — a roll of the dice. With no date at all, a random start day is picked; each vague reply (\"a few days / weeks later\") gets a random day inside the striped week the calendar shows for it, never past a date the text names later. ↩ Undo takes it all back.",
     "calEmpty": "nothing recorded",
-    "yearGuess": "year guessed",
+    "yearGuess": "guess",
     "yearGuessTip": "The story names no year: the nearest year whose weekdays match is shown. Set it with \"Set date\" or the Meatball chat.",
     "weekSome": "somewhere this week",
     "weekOf": "somewhere {a}–{b}",
@@ -1078,8 +1078,8 @@
     "layerTip_now": "lines and leak level",
     "introTitle": "New here? This is all you need",
     "introSteps": [
-      "Check that \"On\" is ticked",
-      "Pick a fast, cheap model in \"Connection profile for sorting\" (empty = the main connection)",
+      "Check that \"Turn Meatball on\" is on",
+      "Pick a fast, cheap model in \"AI for sorting\" (empty = the main connection)",
       "Just roleplay. Meatball records in the background and quietly adds a note to the next reply",
       "Curious? 📝 This reply's note · Meatball log. The other settings are fine as they are"
     ],
@@ -1091,7 +1091,20 @@
     "effWith": "with note",
     "effWithout": "without",
     "effRow": "⚠ {w} of {n} ({p}%)",
-    "effNote": "Fewer ⚠ means the lines held better. Scenes differ, so take it as a rough sign."
+    "effNote": "Fewer ⚠ means the lines held better. Scenes differ, so take it as a rough sign.",
+    "moreTabs": "People · Map",
+    "tWarnLong": "A warning on this reply",
+    "tSecretLong": "Secrets kept",
+    "tRefuseLong": "Refusals standing",
+    "calMenu": "Date tools",
+    "yearRow": "Year of the first reply",
+    "legendRow": "What the colours mean",
+    "moreSettings": "More",
+    "secLook": "Look",
+    "secFill": "Rebuild the record",
+    "secTools": "Use with",
+    "secFine": "Note fine-tuning (defaults are fine)",
+    "secHelp": "Help"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

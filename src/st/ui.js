@@ -7,7 +7,7 @@ import { parseDate, fmtDate, dateAt } from '../core/time.js';
 import { fingerprint, HIDDEN } from '../core/clean.js';
 import { lookalikes } from '../core/names.js';
 import { renderBar, setOpener } from './bar.js';
-import { openLedger, clearAll } from './ledgerview.js';
+import { openLedger, clearAll, effectHtml } from './ledgerview.js';
 import { trLines } from './tr.js';
 import { copyReport } from './report.js';
 import { openLore } from './loreview.js';
@@ -42,11 +42,13 @@ async function view() {
   const order = ['deep', 'mid', 'now'], byL = order.map((k) => [k, rows.filter((r) => r.layer === k)]).filter(([, a]) => a.length);
   const list = byL.map(([k, a]) => `<div class="mb3-pvh">${LAYER_I[k]} ${h(U2[`layer_${k}`] || k)} <span class="mb3-dim">· ${h(U2[`layerTip_${k}`] || '')}</span></div>${a.map((r, n) => `<div class="mb3-pvr"><div class="mb3-pvt">${h(r.text.replace(/^- /, ''))}</div><div class="mb3-pvtr" data-k="${k}" data-n="${n}"></div>${whyOf(r, L, W) ? `<div class="mb3-pvw">↳ ${h(whyOf(r, L, W))}</div>` : ''}</div>`).join('')}`).join('');
   const off = !sp ? `<pre>${h(U.off)}</pre>` : !rows.length ? `<p class="mb3-dim">${h(U2.previewNone || '이번 답에는 붙는 줄이 없어요.')}</p>` : '';
-  const html = `<div class="mb3-view mb3-pv"><div class="mb3-btns"><div class="menu_button mb3-copyrep">${h(U.copyBtn)}</div></div>
+  const html = `<div class="mb3-view mb3-pv">
     <h4>📝 ${h(U2.previewTitle || '이번 답에 붙는 쪽지')}</h4><small>${h(U2.previewSub || '본편 AI가 다음 답을 쓸 때 몰래 붙는 줄과, 왜 들어갔는지예요.')}${sp ? ` · ${sp.tokens} ${h(U.tokens)}` : ''}</small>
     ${off}${list}
     ${walled.length ? `<div class="mb3-pvh">🧱 ${h(U2.previewWalled || '비밀 낱말이 있어서 뺀 줄')}</div>${walled.slice(0, 8).map((l) => `<div class="mb3-pvr mb3-pvx"><div class="mb3-pvt">${h(String(l).replace(/^- /, ''))}</div></div>`).join('')}` : ''}
+    ${effectHtml()}
     <details><summary>${h(U2.previewRaw || '보내는 원문 그대로 · 상태')}</summary>
+    <div class="mb3-btns"><div class="menu_button mb3-copyrep">${h(U.copyBtn)}</div></div>
     <small>${h(Q.log.status || '-')}${cool} · ${Object.keys(st.names.seen).length} ${h(U.learned)}${pairs ? ` · ${h(pairs)}?` : ''}</small>
     ${sp ? order.map((k) => `<h4>${k}</h4><pre class="mb3-notr">${h(sp[k] || '—')}</pre>`).join('') : ''}
     ${notes ? `<h4>${h(U.notes)}</h4><pre>${h(notes)}</pre>` : ''}
@@ -93,40 +95,66 @@ export function mountUI() {
   enableTips();
   const btn = (id, label, k) => `<div id="${id}" class="menu_button" data-mb3tip="${h(D[k] || '')}">${h(label)}</div>`;
   document.getElementById('extensions_settings2').insertAdjacentHTML('beforeend', `
-  <div id="mb3_settings" class="extension_settings"><div class="inline-drawer">
+  <div id="mb3_settings" class="extension_settings mb3-ios"><div class="inline-drawer">
     <div class="inline-drawer-toggle inline-drawer-header"><b>${h(U.title)}</b><div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div></div>
     <div class="inline-drawer-content">
-      ${s.introSeen ? '' : `<div class="mb3-intro" id="mb3_intro"><b>🐱 ${h(R.ui2.introTitle || '처음이면 이것만')}</b><ol>${(R.ui2.introSteps || []).map((t) => `<li>${h(t)}</li>`).join('')}</ol><div class="menu_button mb3-intro-x">${h(R.ui2.introOk || '알겠어요')}</div></div>`}
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
-      <div class="mb3-row mb3-look"><label for="mb3_theme">${h(U.theme)}</label>${desc('theme')}<select id="mb3_theme" class="text_pole">${THEMES.map((k) => `<option value="${k}"${(s.theme || 'gray') === k ? ' selected' : ''}>${h(U.themes[k])}</option>`).join('')}</select>
-        <label for="mb3_font">${h(U.font)}</label>${desc('font')}<select id="mb3_font" class="text_pole">${Object.keys(FONTS).map((k) => `<option value="${k}"${(s.font || '') === k ? ' selected' : ''}>${h(U.fonts[k || 'st'])}</option>`).join('')}</select></div>
-      <div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
-      <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label>${desc('profile')}<select id="mb3_profile" class="text_pole"><option value=""></option></select></div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
-      <div class="mb3-row mb3-col"><label for="mb3_names">${h(U.nameMap)}</label>${desc('nameMap')}<textarea id="mb3_names" class="text_pole" rows="2" placeholder="${h(U.nameMapPh)}">${h(s.nameMap || '')}</textarea></div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
-      <details class="mb3-adv"><summary>⚙️ ${h(R.ui2.advTitle || '세부 설정 (기본값이면 충분해요)')}</summary>
-      <div class="mb3-row"><label for="mb3_chatprofile">${h(U.chatProfile)}</label>${desc('chatProfile')}<select id="mb3_chatprofile" class="text_pole"><option value=""></option></select></div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_wait" type="checkbox"${s.waitSort ? ' checked' : ''} /><span>${h(U.waitSort)}</span></label>${desc('wait')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_spark" type="checkbox"${s.spark !== false ? ' checked' : ''} /><span>${h(U.spark)}</span></label>${desc('spark')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_gauto" type="checkbox"${s.guardAuto ? ' checked' : ''} /><span>${h(U.guardAuto)}</span></label>${desc('guardAuto')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_vlines" type="checkbox"${s.vaultLines !== false ? ' checked' : ''} /><span>${h(U.vaultLines)}</span></label>${desc('vaultLines')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_rsteps" type="checkbox"${s.refuseSteps !== false ? ' checked' : ''} /><span>${h(U.refuseSteps)}</span></label>${desc('refuseSteps')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_rush" type="checkbox"${s.rushCall !== false ? ' checked' : ''} /><span>${h(U.rushCall)}</span></label>${desc('rushCall')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_human" type="checkbox"${s.human !== false ? ' checked' : ''} /><span>${h(U.human)}</span></label>${desc('human')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_mascot" type="checkbox"${s.mascot !== false ? ' checked' : ''} /><span>${h(U.mascot)}</span></label>${desc('mascot')}</div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_fauto" type="checkbox"${s.fallAuto ? ' checked' : ''} /><span>${h(U.fallAuto)}</span></label>${desc('fallAuto')}</div>
-      <div class="mb3-row"><label for="mb3_rarity">${h(U.rarity)}</label>${desc('rarity')}<select id="mb3_rarity" class="text_pole">${[[2, U.rarityLow], [1, U.rarityMid], [0.6, U.rarityHigh]].map(([v, t]) => `<option value="${v}"${(+s.rarity || 1) === v ? ' selected' : ''}>${h(t)}</option>`).join('')}</select></div>
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_hidden" type="checkbox"${s.readHidden ? ' checked' : ''} /><span>👁 ${h(R.ui2.readHidden || '숨긴 메시지도 기록에 넣기')}</span></label>${tipQ(R.ui2.readHiddenTip || '', h)}</div>
-      </details>
-      <div class="mb3-btns">${btn('mb3_ledger', U.ledger, 'ledger')}${btn('mb3_view', U.view, 'view')}${btn('mb3_note', U.noteBtn, 'note')}${btn('mb3_lore_btn', R.ui2.loreBtn, 'lore')}${btn('mb3_date', U.date, 'date')}${btn('mb3_copy', U.copyBtn, 'copy')}</div>
-      <details class="mb3-help"><summary>${h(U.btnHelp)}</summary>
-        <dl><dt>${h(U.ledger)}</dt><dd>${h(D.ledger)}</dd><dt>${h(U.view)}</dt><dd>${h(D.view)}</dd><dt>${h(U.noteBtn)}</dt><dd>${h(D.note)}</dd><dt>${h(R.ui2.loreBtn)}</dt><dd>${h(D.lore)}</dd><dt>${h(U.date)}</dt><dd>${h(D.date)}</dd><dt>${h(U.copyBtn)}</dt><dd>${h(D.copy)}</dd></dl></details>
-      <details><summary>${h(R.ui2.groupsTitle)} ${desc('groups')}</summary>${GROUPS.filter((g) => !g.fixed).map((g) => `<label class="checkbox_label"><input type="checkbox" data-mb3g="${g.id}"${isOn(s.groups, g.id) ? ' checked' : ''} /><span>${h(R.ui2.groups[g.id])}</span></label>`).join('')}
-      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_maker" type="checkbox"${s.maker ? ' checked' : ''} /><span>${h(R.ui2.maker)}</span></label>${desc('maker')}</div></details>
-      <div id="mb3_rel_slot"></div>
-      <div class="mb3-row mb3-fill" id="mb3_fill_row"></div>
-      <details class="mb3-danger"><summary>${h(D.delAllSet)} ${desc('delAllSetDesc')}</summary><div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
+${s.introSeen ? '' : `<div class="mb3-intro" id="mb3_intro"><b>🐱 ${h(R.ui2.introTitle || '처음이면 이것만')}</b><ol>${(R.ui2.introSteps || []).map((t) => `<li>${h(t)}</li>`).join('')}</ol><div class="menu_button mb3-intro-x">${h(R.ui2.introOk || '알겠어요')}</div></div>`}
+<div class="mb3-sec">
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
+<div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label>${desc('profile')}<select id="mb3_profile" class="text_pole"><option value=""></option></select></div>
+</div>
+<div class="mb3-sec">
+<div id="mb3_ledger" class="mb3-r mb3-rb" data-mb3tip="${h(D['ledger'] || '')}"><span class="mb3-rl">📒 ${h(U.ledger)}</span><i class="mb3-chev">›</i></div>
+<div id="mb3_view" class="mb3-r mb3-rb" data-mb3tip="${h(D['view'] || '')}"><span class="mb3-rl">${h(U.view)}</span><i class="mb3-chev">›</i></div>
+</div>
+<details class="mb3-more"><summary><span>${h(R.ui2.moreSettings || '더 보기')}</span><i class="mb3-chev">›</i></summary>
+<div class="mb3-sech">${h(R.ui2.secLook || '화면')}</div>
+<div class="mb3-sec">
+<div class="mb3-row mb3-look"><label for="mb3_theme">${h(U.theme)}</label>${desc('theme')}<select id="mb3_theme" class="text_pole">${THEMES.map((k) => `<option value="${k}"${(s.theme || 'gray') === k ? ' selected' : ''}>${h(U.themes[k])}</option>`).join('')}</select>
+<label for="mb3_font">${h(U.font)}</label>${desc('font')}<select id="mb3_font" class="text_pole">${Object.keys(FONTS).map((k) => `<option value="${k}"${(s.font || '') === k ? ' selected' : ''}>${h(U.fonts[k || 'st'])}</option>`).join('')}</select></div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_mascot" type="checkbox"${s.mascot !== false ? ' checked' : ''} /><span>${h(U.mascot)}</span></label>${desc('mascot')}</div>
+<div class="mb3-row mb3-col"><label for="mb3_names">${h(U.nameMap)}</label>${desc('nameMap')}<textarea id="mb3_names" class="text_pole" rows="2" placeholder="${h(U.nameMapPh)}">${h(s.nameMap || '')}</textarea></div>
+</div>
+<div class="mb3-sech">${h(R.ui2.secFill || '기록 다시 정리')}</div>
+<div class="mb3-sec">
+<div class="mb3-row mb3-fill" id="mb3_fill_row"></div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_hidden" type="checkbox"${s.readHidden ? ' checked' : ''} /><span>👁 ${h(R.ui2.readHidden || '숨긴 메시지도 기록에 넣기')}</span></label>${tipQ(R.ui2.readHiddenTip || '', h)}</div>
+</div>
+<div class="mb3-sech">${h(R.ui2.secTools || '함께 쓰기')}</div>
+<div class="mb3-sec">
+<div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
+<div id="mb3_note" class="mb3-r mb3-rb" data-mb3tip="${h(D['note'] || '')}"><span class="mb3-rl">🗒️ ${h(U.noteBtn)}</span><i class="mb3-chev">›</i></div>
+<div id="mb3_lore_btn" class="mb3-r mb3-rb" data-mb3tip="${h(D['lore'] || '')}"><span class="mb3-rl">📚 ${h(R.ui2.loreBtn)}</span><i class="mb3-chev">›</i></div>
+<div id="mb3_date" class="mb3-r mb3-rb" data-mb3tip="${h(D['date'] || '')}"><span class="mb3-rl">📅 ${h(U.date)}</span><i class="mb3-chev">›</i></div>
+</div>
+<div class="mb3-sech">${h(R.ui2.secFine || '쪽지 세부 (기본값이면 충분해요)')}</div>
+<div class="mb3-sec">
+<div class="mb3-row"><label for="mb3_chatprofile">${h(U.chatProfile)}</label>${desc('chatProfile')}<select id="mb3_chatprofile" class="text_pole"><option value=""></option></select></div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_wait" type="checkbox"${s.waitSort ? ' checked' : ''} /><span>${h(U.waitSort)}</span></label>${desc('wait')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_spark" type="checkbox"${s.spark !== false ? ' checked' : ''} /><span>${h(U.spark)}</span></label>${desc('spark')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_gauto" type="checkbox"${s.guardAuto ? ' checked' : ''} /><span>${h(U.guardAuto)}</span></label>${desc('guardAuto')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_vlines" type="checkbox"${s.vaultLines !== false ? ' checked' : ''} /><span>${h(U.vaultLines)}</span></label>${desc('vaultLines')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_rsteps" type="checkbox"${s.refuseSteps !== false ? ' checked' : ''} /><span>${h(U.refuseSteps)}</span></label>${desc('refuseSteps')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_rush" type="checkbox"${s.rushCall !== false ? ' checked' : ''} /><span>${h(U.rushCall)}</span></label>${desc('rushCall')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_human" type="checkbox"${s.human !== false ? ' checked' : ''} /><span>${h(U.human)}</span></label>${desc('human')}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_fauto" type="checkbox"${s.fallAuto ? ' checked' : ''} /><span>${h(U.fallAuto)}</span></label>${desc('fallAuto')}</div>
+<div class="mb3-row"><label for="mb3_rarity">${h(U.rarity)}</label>${desc('rarity')}<select id="mb3_rarity" class="text_pole">${[[2, U.rarityLow], [1, U.rarityMid], [0.6, U.rarityHigh]].map(([v, t]) => `<option value="${v}"${(+s.rarity || 1) === v ? ' selected' : ''}>${h(t)}</option>`).join('')}</select></div>
+<div id="mb3_rel_slot"></div>
+<details><summary>${h(R.ui2.groupsTitle)} ${desc('groups')}</summary>${GROUPS.filter((g) => !g.fixed).map((g) => `<label class="checkbox_label"><input type="checkbox" data-mb3g="${g.id}"${isOn(s.groups, g.id) ? ' checked' : ''} /><span>${h(R.ui2.groups[g.id])}</span></label>`).join('')}
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_maker" type="checkbox"${s.maker ? ' checked' : ''} /><span>${h(R.ui2.maker)}</span></label>${desc('maker')}</div></details>
+</div>
+<div class="mb3-sech">${h(R.ui2.secHelp || '도움')}</div>
+<div class="mb3-sec">
+<div id="mb3_copy" class="mb3-r mb3-rb" data-mb3tip="${h(D['copy'] || '')}"><span class="mb3-rl">${h(U.copyBtn)}</span><i class="mb3-chev">›</i></div>
+<details class="mb3-help"><summary>${h(U.btnHelp)}</summary>
+<dl><dt>${h(U.ledger)}</dt><dd>${h(D.ledger)}</dd><dt>${h(U.view)}</dt><dd>${h(D.view)}</dd><dt>${h(U.noteBtn)}</dt><dd>${h(D.note)}</dd><dt>${h(R.ui2.loreBtn)}</dt><dd>${h(D.lore)}</dd><dt>${h(U.date)}</dt><dd>${h(D.date)}</dd><dt>${h(U.copyBtn)}</dt><dd>${h(D.copy)}</dd></dl></details>
+</div>
+<div class="mb3-sec">
+<details class="mb3-danger"><summary>${h(D.delAllSet)} ${desc('delAllSetDesc')}</summary><div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
+</div>
+</details>
     </div></div></div>`);
   const on = document.getElementById('mb3_on');
   on.checked = s.on;
