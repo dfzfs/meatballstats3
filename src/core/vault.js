@@ -187,7 +187,7 @@ export function rows3(st1, st2, bp, L, opts = {}) {
   const goalPush = (x, who) => {
     if (!here.length) return;
     const mk = `goal:${hashOf(x.v)}`, ago = opts.marks?.get(mk) ?? 99, every = Math.max(2, opts.goalEvery || 4);
-    if (ago < every || (x.signs || []).some((s) => hasSign(opts.tail || '', s))) return;
+    if (ago < every || (x.signs || []).some((s) => hasSign(opts.recent || opts.tail || '', s))) return;   // its words showed in the last few replies: it is moving (or there)
     row('goalPush', `${R.goalPushLabel}${who ? ` (${who})` : ''}: ${fillAll(R.goalPush, { v: x.v })}`, 'vault', mk);
   };
   // --- vault (grade 0). Nothing here holds the secret or a sign word.
@@ -223,11 +223,12 @@ export function rows3(st1, st2, bp, L, opts = {}) {
     if (t.mode && t.mode !== 'ease') busy.add(t.a);
   }
   const push = (L.rel.pushWords || []).some((w) => hasSign(cue, w));
-  for (const x of bp.line || []) {
-    if (!here.includes(x.who) || !cue || busy.has(x.who)) continue;
+  (bp.line || []).forEach((x, i) => {
+    // its 풀림 already came (the relationship reading marked it open): this line no longer asks for a no
+    if (!here.includes(x.who) || !cue || busy.has(x.who) || st2?.open?.[`line:${x.who}:${i}`]) return;
     const others = here.filter((n) => n !== x.who), lovers = others.some((o) => opts.lover?.(x.who, o));
     if (touches(x.v, cue) || (!lovers && push)) row('refuse', fillAll(R.ordRefuse, { who: x.who }), 'line');
-  }
+  });
   // --- spark (grade 3, shares the one special slot): no fixed beat; when the pair stands still, or after a gap that
   // the last reply's fingerprint shakes a little. The person's character is in the pair when possible.
   const pairs = [];

@@ -62,7 +62,9 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
   const ev = [], dropped = [...parsed.dropped], active = opts.active ? new Set(opts.active) : null;
   const notP = new Set((opts.notPeople || []).map((n) => bare(n).toLowerCase()));
   // trust: lines the person asked for — no name-in-text or quote checks (they know their story)
-  const ok = (n, raw) => (opts.trust ? true : notP.has(bare(n).toLowerCase()) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
+  // a name passes when the text has it, or when that person is already in the scene (named earlier, here now)
+  const sceneSet = new Set((scene || []).map((n) => bare(n).toLowerCase()));
+  const ok = (n, raw) => (opts.trust ? true : notP.has(bare(n).toLowerCase()) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) || sceneSet.has(bare(n).toLowerCase()) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
   const qok = (q, t, min) => !!opts.trust || (!!q && quoteOk(q, t, min));
   const quoteOf = (v) => (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1];
   let cut = null, hasWith = false, moved = false;

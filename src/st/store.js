@@ -4,7 +4,7 @@ import { fold, prune } from '../core/fold.js';
 import { build, BUDGET } from '../core/signpost.js';
 import { enLine } from './tr.js';
 import { fingerprint } from '../core/clean.js';
-import { fold2, rows2, tieOf } from '../core/ledger2.js';
+import { fold2, rows2, tieOf, hideId } from '../core/ledger2.js';
 import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
 import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
@@ -90,7 +90,9 @@ export function bpLive() {
   try {
     const S = store(), goals = (S?.goals || []).map((g) => ({ who: g.who, v: g.v, signs: g.signs || [], shows: '', cover: '', opens: '', goal: true, hint: !!g.hint && !g.push, push: !!g.push }));
     const bp = bpAll(S, goals);
-    return liveBp(bp, foldVault(ctx().chat || [], S, bp, ledger2(), fingerprint));
+    const st2 = ledger2(), live = liveBp(bp, foldVault(ctx().chat || [], S, bp, st2, fingerprint));
+    // a 숨김 the story already gave away (marked open by the relationship reading) no longer holds
+    return live?.hide?.some((x) => st2.open?.[hideId(x)]) ? { ...live, hide: live.hide.filter((x) => !st2.open?.[hideId(x)]) } : live;
   } catch (e) { return R.bp; }
 }
 // the lore's vault lines + secrets typed in 지시창 (S.secrets) + destinations, before anything is opened
@@ -132,7 +134,7 @@ function signpost0(lg, L) {
       const redo = R.redoLine && Date.now() - R.redoLine.t < 120e3 ? R.redoLine : null;
       const rare = Math.min(3, Math.max(0.5, +s.rarity || 1));
       const fallenNow = new Set(fallState().filter((f) => f.open).map((f) => f.a));
-      y = rows3(st, st2, bp, L, { cue, tail, goalEvery: Math.round(4 * rare), lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
+      y = rows3(st, st2, bp, L, { cue, tail, recent: chat.filter((m) => !m.is_user && !m.is_system).slice(-6).map((m) => cleanText(m.mes).slice(-1500)).join('\n'), goalEvery: Math.round(4 * rare), lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
         threads: s.refuseSteps === false ? [] : threads(chat, st, st2, bp, S, fingerprint, cleanText, R.lang, { lover }),
         ago: sent.ago, jitter: lastAi ? parseInt(fingerprint(lastAi).split('.').at(-1), 10) % 3 === 0 : true, seed: sent.ago });
       if (s.vaultLines === false) y = y.filter((r) => !['vaultCover', 'vaultPov', 'vaultAvoid'].includes(r.kind));

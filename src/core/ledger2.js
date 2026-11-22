@@ -34,7 +34,10 @@ export function parseRel(t) {
 // Checks every line against the text. Returns events (stored) and dropped lines (log only; hidden content never kept).
 export function toRelEvents(answer, text, V, L, ctx) {
   const { names, day, bp = emptyBlueprint(), hidden = [] } = ctx, ev = [], dropped = [];
-  const who = (n) => { const b = bare(n); return inText(b, text) ? (resolve(names, b, V) || b) : null; };
+  // a name counts when the text has it, or when that person is already in the scene (a confession in dialogue
+  // often never writes the speaker's name; in 1:1 roleplay the user's character is rarely named at all)
+  const here = new Set((ctx.here || []).map((n) => String(n)));
+  const who = (n) => { const b = bare(n), r = resolve(names, b, V) || b; return inText(b, text) || here.has(r) || here.has(b) ? r : null; };
   const lists = (k) => [0, 1, 2, 3, 4, 5, 6, 7].map((i) => [L.en.rel[k][i], L.ko.rel[k][i]].filter(Boolean));
   // Only the part before the quote is checked: a quote that is really in the story text is not a leak.
   const leaks = (raw) => hidden.some((h) => { if (h.leakOk) return false; const c = norm(h.content), r = norm(raw.includes('|') ? raw.slice(0, raw.lastIndexOf('|')) : raw); for (let i = 0; i + 16 <= c.length; i += 4) if (r.includes(c.slice(i, i + 16))) return true; return false; });
@@ -110,11 +113,14 @@ export function tieOf(p, st2, bp, V) {
 
 // Everything that opens on a quoted event goes through the same hidden-layer list (the classifier answers "open: L#"):
 // locked layers (깊은속), v0.9 a vault's 열림 and a line's 풀림. Line releases are not secret (leakOk).
+export const hideId = (x) => `hide:${x.a}-${x.b}>${x.c}`;
 export function gates(bp) {
   const out = [...(bp.deep || [])];
   for (const x of bp.vault || []) if (x.opens) out.push({ id: `vault:${x.who}`, who: x.who.split('-')[0].trim(), to: x.who.split('-')[1]?.trim() || '', content: x.v, opens: x.opens });
   (bp.line || []).forEach((x, i) => { if (x.release) out.push({ id: `line:${x.who}:${i}`, who: x.who, to: '', content: `${x.who} lets this pass: ${x.v}`, opens: x.release, leakOk: true }); });
   for (const x of bp.fall || []) if (x.opens) out.push({ id: `fall:${x.a}>${x.b}`, who: x.a, to: x.b, content: `${x.a} falls for ${x.b}`, opens: x.opens, leakOk: true });
+  // 숨김 A-B → C: ends when the story shows C knows about the two (then the "act as your surface relationship" line stops)
+  for (const x of bp.hide || []) out.push({ id: hideId(x), who: x.a, to: x.b, content: `${x.c} must not find out what ${x.a} and ${x.b} are`, opens: `${x.c} finds out about ${x.a} and ${x.b}`, leakOk: true });
   return out;
 }
 // Blocks for the classifier prompt. Hidden layers get L1, L2… per call; the numbers are never stored.
@@ -173,8 +179,10 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
   const rested = (a, b) => [st2.dir[`${a}>${b}`], st2.dir[`${b}>${a}`]].some((d) => d?.clashDay != null && today - d.clashDay < restDays);
   // burst: held back longest, both here. Permission only when they are alone and not right after a clash;
   // with others watching it is held tighter; with someone it is hidden from, only the surface.
-  const held = Object.values(st2.dir).filter((d) => d.inner && both(d.a, d.b) && (d.innerDay == null || today - d.innerDay >= heldDays)).sort((x, y) => (x.innerDay ?? 0) - (y.innerDay ?? 0))[0];
-  const bpHeld = !held && bp.inner.find((x) => both(x.a, x.b) && !st2.dir[`${x.a}>${x.b}`]?.clashDay);
+  // a couple (official tie = lovers) has said it: what the relationship reading notes between them is no longer "held back"
+  const said = (a, b) => isLover(st2.tie[key2(a, b)]?.v || '', V) || bp.tie.some((x) => key2(x.a, x.b) === key2(a, b) && isLover(x.v, V) && !st2.tie[key2(a, b)]);
+  const held = Object.values(st2.dir).filter((d) => d.inner && both(d.a, d.b) && !said(d.a, d.b) && (d.innerDay == null || today - d.innerDay >= heldDays)).sort((x, y) => (x.innerDay ?? 0) - (y.innerDay ?? 0))[0];
+  const bpHeld = !held && bp.inner.find((x) => both(x.a, x.b) && !said(x.a, x.b) && !st2.dir[`${x.a}>${x.b}`]?.clashDay);
   const h = held || (bpHeld && { a: bpHeld.a, b: bpHeld.b, inner: bpHeld.v });
   const hSore = h && bp.sore.find((x) => x.a === h.a && x.b === h.b);
   // v0.7: what is held back goes to the background layer (know it, don't copy it); the shallow line carries only the

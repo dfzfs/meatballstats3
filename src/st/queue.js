@@ -116,7 +116,9 @@ function afterAbsorb(S, b, answer, bp, falls, gb, habits = []) {
     if (t) addGuard(S, fp, { who: t.a, kind: 'reversal', q: y.q || y.v, a: t.a, b: t.b, v: t.v, src: 'ai' });
   }
   if (!gb) return;
-  const gone = [...quarantine(S.ev, b.fps, bp), ...quarantine(S.rel, b.fps, bp)];
+  // the lore as it stands AFTER this reply: a reply that opens a secret (열림 in its own <rel>) keeps its record of it
+  let bpNow = bp; try { bpNow = bpLive(); } catch (e) { /* the earlier lore */ }
+  const gone = [...quarantine(S.ev, b.fps, bpNow), ...quarantine(S.rel, b.fps, bpNow)];
   if (gone.length) Q.log.dropped = [...(Q.log.dropped || []), ...gone];
   for (const h of parseGuard(answer, b.text, live, bp, { falls, habits })) {
     if (h.cls === 'H') { if (!h.byUser) { S.habit ||= {}; const a = (S.habit[h.fp] ||= []); if (!a.includes(h.who)) a.push(h.who); } continue; }

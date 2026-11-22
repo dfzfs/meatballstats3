@@ -35,33 +35,38 @@ export function pending(chat, ev, cfg = DEFAULTS, dirs = null) {
   if (!wait.length) return null;
   const waiting = new Set(wait.map((r) => r.i));
   const dirOf = (r) => (dirs && waiting.has(r.i) ? String(dirs[fingerprint(r.m)]?.t || '').trim() : '');
-  const wrap = (r) => (r.m.is_user ? `<user>${r.t}</user>` : dirOf(r) ? `<director>${dirOf(r)}</director>\n\n${r.t}` : r.t);
+  const many = wait.length > 1 && wait.length <= cfg.maxReplies;
+  const wrap = (r) => (r.m.is_user ? `<user>${r.t}</user>` : `${many && waiting.has(r.i) ? `[#${r.i}]\n` : ''}${dirOf(r) ? `<director>${dirOf(r)}</director>\n\n${r.t}` : r.t}`);
   // Too many unread replies (first install on a long chat, or switched back on): read only the tail once.
   const catchUp = wait.length > cfg.maxReplies;
   const from = catchUp ? 0 : lastDone;
   const text = rows.filter((r) => r.i > from && r.i <= wait.at(-1).i).map(wrap).join('\n\n').slice(-(catchUp ? cfg.catchUp : cfg.maxIn));
   const own = wait.reduce((a, r) => a + r.t.length, 0);
-  return { text, fps: wait.map((r) => fingerprint(r.m)), catchUp, ready: catchUp || own >= cfg.minChars || wait.length >= cfg.maxReplies };
+  return { text, fps: wait.map((r) => fingerprint(r.m)), ...(many ? { ids: wait.map((r) => r.i) } : {}), catchUp, ready: catchUp || own >= cfg.minChars || wait.length >= cfg.maxReplies };
 }
 
 // The classifier prompt for one batch. `prompts` = { ko, en } surface prompt texts.
 // opts: groups (switched-on key groups), bp (lore sheet), notPeople (title / director names), lang ('en' | 'ko' to force).
+const NUMBERED = {
+  ko: `[답 번호] 글 속 답마다 앞에 [#번호]가 있다. <mb> 안의 줄마다 그 일이 일어난 답의 번호를 맨 앞에 붙인다. 답 순서대로 적는다.
+예: #12 date: 3월 2일 / #12 loc: 학교 / #14 time: +1d 아침 / #15 with: 지호
+`,
+  en: `[Reply numbers] Each reply in the text starts with [#number]. Start every line inside <mb> with the number of the reply where it happened, in reply order.
+e.g. #12 date: March 2 / #12 loc: school / #14 time: +1d morning / #15 with: Jiho
+`,
+};
 const FILL_DATES = {
   ko: `[처음부터 정리: 날짜는 꼭]
 지난 답 여러 개를 이어 붙인 글이다. 이번에는 날짜 · 시간을 비워 두지 않는 게 중요한 일이다. 이 항목은 규칙 1 · 14보다 앞선다.
 - [지금 상태]에 날짜가 없으면 date를 반드시 적는다. 글의 요일 · 계절 · 명절 · 날씨 · 학기 · 옷차림 단서로 그럴듯한 날을 고른다(눈 → 12월 중순, 벚꽃 → 4월 초). 단서가 하나도 없어도 날을 하나 골라 적는다.
 - 글 안에서 날이 바뀌면(다음 날 · 아침이 밝았다 · 자고 일어남 · 주말이 지나) 반드시 time: +1d 처럼 며칠인지 적는다. 여러 번 바뀌면 모두 더한 값.
 - 얼마나 지났는지 흐릿해도 비우지 말고 time: +?d / +?w / +?mo 를 적는다.
-[답 번호] 글 속 답마다 앞에 [#번호]가 있다. <mb> 안의 줄마다 그 일이 일어난 답의 번호를 맨 앞에 붙인다. 답 순서대로 적는다.
-예: #12 date: 3월 2일 / #12 loc: 학교 / #14 time: +1d 아침 / #15 with: 지호
 `,
   en: `[Rebuild from the start: dates matter]
 This is several old replies joined together. This time, leaving date and time empty is the mistake to avoid. This overrides rules 1 and 14.
 - If [CURRENT STATE] has no date, you must write date. Pick a plausible day from clues (weekday, season, holiday, weather, school term, clothes: snow → mid December, cherry blossoms → early April). With no clue at all, still pick a day.
 - When the day changes in the text (next day, morning came, woke up, after the weekend) you must write time: +1d etc. If it changes several times, write the total.
 - If how long passed is vague, do not leave it out: time: +?d / +?w / +?mo.
-[Reply numbers] Each reply in the text starts with [#number]. Start every line inside <mb> with the number of the reply where it happened, in reply order.
-e.g. #12 date: March 2 / #12 loc: school / #14 time: +1d morning / #15 with: Jiho
 `,
 };
 export function buildPrompt(prompts, bundle, st, langs, seeds = [], opts = {}) {
@@ -71,7 +76,9 @@ export function buildPrompt(prompts, bundle, st, langs, seeds = [], opts = {}) {
     '{{LORE}}': opts.bp ? loreSurface(opts.bp, L, lg) : '', '{{NOTPEOPLE}}': notP.length ? `\n${L.lore.notPeople}\n${notP.join(' · ')}\n` : '' };
   let prompt = prompts[lg].replace(/\{\{(STATE|NAMES|TEXT|KEYS|LORE|NOTPEOPLE)\}\}/g, (k) => fillIn[k]);
   // 「처음부터 정리」: several old replies at once. Dates were mostly left empty; here a date is part of the job.
-  if (bundle.fill) prompt = prompt.replace(/\n\[(키|KEYS)\]/, (m) => `\n${(FILL_DATES[lg] || FILL_DATES.en).trimEnd()}\n${m}`);
+  // several replies in one call (처음부터 정리, or a few short replies in play): each line names its reply
+  const add = [bundle.fill ? FILL_DATES[lg] || FILL_DATES.en : '', bundle.ids?.length > 1 ? NUMBERED[lg] || NUMBERED.en : ''].filter(Boolean).join('');
+  if (add) prompt = prompt.replace(/\n\[(키|KEYS)\]/, (m) => `\n${add.trimEnd()}\n${m}`);
   return { lg, prompt };
 }
 // Take the classifier's answer in. Broken answers change nothing (the batch waits for the next reply).
@@ -93,7 +100,7 @@ export function splitByReply(answer, ids) {
 export function absorb(ev, bundle, answer, st, V, hint = null, opts = {}) {
   const kind = brokenKind(answer);
   if (kind) return { pushed: true, kind, dropped: [] };
-  const split = bundle.fill ? splitByReply(answer, bundle.ids) : null;
+  const split = bundle.ids?.length > 1 ? splitByReply(answer, bundle.ids) : null;
   if (split) {
     // one record per reply: the calendar sees the day change on the reply where it happened
     const dropped = [], parts = new Map(), toks = { active: opts.groups ? activeKeys(opts.groups) : null, notPeople: opts.notPeople };
@@ -129,7 +136,7 @@ export function addRelPrompt(prompt, lg, deepPrompts, bundle, st2, bp, langs) {
 export function absorbRel(rel, bundle, answer, st1, bp, V, langs, hidden, st2 = null) {
   const prevTie = (a, b) => st2?.tie?.[[a, b].sort().join('|')]?.v || '';
   let r = { ev: [], dropped: [] };
-  try { if (parseRel(answer).found) r = toRelEvents(answer, bundle.text, V, langs, { names: st1.names, day: st1.cal.n, bp, hidden, prevTie }); } catch (e) { r = { ev: [], dropped: [{ raw: '', why: `rel-error: ${e.message}` }] }; }
+  try { if (parseRel(answer).found) r = toRelEvents(answer, bundle.text, V, langs, { names: st1.names, day: st1.cal.n, bp, hidden, prevTie, here: st1.with || [] }); } catch (e) { r = { ev: [], dropped: [{ raw: '', why: `rel-error: ${e.message}` }] }; }
   rel[bundle.fps.at(-1)] = r.ev;
   return r;
 }

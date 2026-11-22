@@ -121,3 +121,16 @@ test('a record of what happened is not deleted for touching a direction; real se
   quarantine(g, ['a'], bp);
   assert.deepEqual(g.a.map((e) => e.k), ['touch', 'loc']);
 });
+
+test('in play, two or three short replies read together are numbered and split back too', () => {
+  const chat = [{ is_user: true, mes: 'u0', name: 'U' }, { is_user: false, mes: '짧은 답 하나', name: 'N' }, { is_user: true, mes: 'u1', name: 'U' }, { is_user: false, mes: '다음 날 아침 짧은 답 둘', name: 'N' }];
+  const ev = {}, b = pending(chat, ev, { ...DEFAULTS, minChars: 0 });
+  assert.deepEqual(b.ids, [1, 3]); assert.ok(b.text.includes('[#1]') && b.text.includes('[#3]'));
+  const st = fold([], {}, V);
+  const p = buildPrompt(prompts, b, st, { en, ko }, [], { lang: 'ko' }).prompt;
+  assert.match(p, /\[답 번호\]/); assert.doesNotMatch(p, /처음부터 정리: 날짜는 꼭/);
+  absorb(ev, b, '<mb>\n#1 loc: 학교\n#3 time: +1d 아침\n</mb>', st, V);
+  assert.deepEqual(ev[b.fps[0]].map((e) => e.k), ['loc']); assert.deepEqual(ev[b.fps[1]].map((e) => e.k), ['time']);
+  const one = pending(chat.slice(0, 2), {}, { ...DEFAULTS, minChars: 0 });
+  assert.equal(one.ids, undefined); assert.ok(!one.text.includes('[#'));
+});
