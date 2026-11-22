@@ -932,7 +932,8 @@
     "relTap2": "Tap a card for the evidence",
     "relNoFeel": "nothing yet",
     "relNoTie": "no official tie",
-    "tlGap": "{n} days later"
+    "tlGap": "{n} days later",
+    "dayRel": "day {n} of the story"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

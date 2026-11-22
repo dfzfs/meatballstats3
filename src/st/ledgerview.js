@@ -214,7 +214,7 @@ function flowCard(st, L, chs, ui, M, big) {
   const prev = days[at - 1], gap = prev && ui.day - prev.n > 1 ? `<div class="mb3-gap">⏩ ${h(fill(U2.tlGap || '{n}일 뒤', { n: ui.day - prev.n }))}</div>` : '';
   const nav = `${from > 0 ? `<div class="mb3-dp mb3-dnav" data-day="${days[Math.max(0, from - 1)].n}">‹</div>` : ''}${pills}${from + (big ? 7 : 4) < days.length ? `<div class="mb3-dp mb3-dnav" data-day="${days[Math.min(days.length - 1, from + (big ? 7 : 4))].n}">›</div>` : ''}`;
   const date = fmtDate(dateAt(st.cal, ui.day), L) || fill(R.ui.dayN, { n: ui.day + 1 });
-  return `<div class="mb3-days">${nav}</div>${gap}<div class="mb3-dtitle">📅 ${h(date)}</div>${days[at].scenes.slice().reverse().map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}`;
+  return `<div class="mb3-days">${nav}</div>${gap}<div class="mb3-dtitle">📅 ${h(date)}</div>${days[at].scenes.slice().reverse().slice(0, big ? 99 : 2).map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}`;
 }
 function pairsOf(st, st2, bp, M) {
   const k2 = (a, b) => [a, b].sort().join('|'), raw = new Map();
@@ -239,7 +239,8 @@ function pairCard(P, st, st2, bp, L, ui, M, all) {
   const row = (x, y) => { const f = feel(x, y);
     return `<div class="mb3-prow"><span class="mb3-dir">${h(x)} → ${h(y)}</span>${f ? `${f.t != null && f.t < 7 ? `<span class="mb3-feel mb3-f-${TEXK[f.t]}">${TEXI[f.t]} ${h(L.rel.tex[f.t])}</span>` : ''}${f.tr ? `<span class="mb3-trend mb3-tr-${f.tr}">${TRI[f.tr]} ${h(L.rel.trend[f.tr])}</span>` : ''}` : `<span class="mb3-dim">${h(U2.relNoFeel || '아직 기록 없음')}</span>`}</div>`; };
   return `<div class="mb3-pair2${ui.pair === P.k ? ' mb3-on' : ''}" data-pair="${h(P.k)}">
-    <div class="mb3-ptop">${avOf(P.A, all)}<b>${h(P.A)}</b><span class="mb3-ptie">${tie ? `🤝 ${h(tie)}` : h(U2.relNoTie || '공식 관계 없음')}${wall ? ` · 🚧 ${h(wall.v)}` : ''}</span><b>${h(P.B)}</b>${avOf(P.B, all)}</div>
+    <div class="mb3-ptop">${avOf(P.A, all)}<b>${h(P.A)}</b><span class="mb3-amp">⇄</span><b>${h(P.B)}</b>${avOf(P.B, all)}</div>
+    <div class="mb3-ptie">${tie ? `🤝 ${h(tie)}` : h(U2.relNoTie || '공식 관계 없음')}${wall ? ` · 🚧 ${h(wall.v)}` : ''}</div>
     ${row(P.A, P.B)}${row(P.B, P.A)}</div>`;
 }
 function pairDetail(k, st, st2, L) {
@@ -312,15 +313,15 @@ function render(box, ui) {
   } else if (ui.view === 'people') {
     body = card(`👤 ${h(U2.tabPeople || '인물')}`, people.length ? `<div class="mb3-pchips">${peopleChips(people, who, all)}</div>${personSheet(st, L, who, M)}` : `<p class="mb3-dim">${h(U.empty)}</p>`, 'mb3-wide');
   } else {
-    const dt = dateAt(st.cal), date = fmtDate(dt, L) || U.nothing, withs = [...new Set((st.with || []).map(M))];
+    const dt = dateAt(st.cal), date = fmtDate(dt, L) || fill(U2.dayRel || '{n}일째', { n: (st.cal.n || 0) + 1 }), withs = [...new Set((st.with || []).map(M))];
     const recent = es.slice(-12).reverse().flatMap((e) => e.its.filter((it) => !it.dim).map((it) => ({ it, i: e.x.i }))).sort((a, b) => (HOT.has(b.it.icon) - HOT.has(a.it.icon)) || b.i - a.i).slice(0, 3);
     const now = `<div class="mb3-card mb3-hero">${mascotImg('happy')}<div class="mb3-hl">${h(U.now)}</div><div class="mb3-hd">${h(date)}</div>${st.cal.tod ? `<span class="mb3-htod">${h(st.cal.tod)}</span>` : ''}
       ${st.loc ? `<div class="mb3-hp">📍 ${h(st.loc)}</div>` : ''}<div class="mb3-hw">${withs.map((n) => { const w = [...st.with].filter((x) => M(x) === n).map((x) => st.wear?.[x]?.v).find(Boolean); return `<span>${avOf(n, all)}${h(n)}${w ? ` · ${h(w)}` : ''}</span>`; }).join('')}</div></div>
       <div class="mb3-tiles"><div class="mb3-tile mb3-t1"><b>${nSecret}</b><span>🔒 ${h(U2.tSecret || '비밀')}</span></div><div class="mb3-tile mb3-t2"><b>${nRefuse}</b><span>🚫 ${h(U2.tRefuse || '거절 중')}</span></div><div class="mb3-tile mb3-t3"><b>${nWarn}</b><span>⚠ ${h(U2.tWarn || '경고')}</span></div></div>
       ${card(`${h(U2.recent || '최근 일')} ${more('flow', U2.tabFlow)}`, recent.map(({ it, i }) => `<div class="mb3-rline">${it.icon} ${h(it.title)}<i>#${i}</i></div>`).join('') || `<p class="mb3-dim">${h(U.empty)}</p>`)}`;
-    body = `<div class="mb3-grid"><div class="mb3-col1">${now}</div>
-      ${card(`💞 ${h(U2.tabRel || '관계')} ${more('rel')}`, pairs.length ? pairs.slice(0, 3).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('') : `<p class="mb3-dim">${h(U2.relNone)}</p>`)}
-      ${card(`📖 ${h(U2.tabFlow || '흐름')} ${more('flow')}`, flowCard(st, L, chs, ui, M, false))}
+    body = `<div class="mb3-grid"><div class="mb3-col1">${now}</div><div class="mb3-col2">
+      ${card(`💞 ${h(U2.tabRel || '관계')} ${more('rel')}`, pairs.length ? pairs.slice(0, 2).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('') : `<p class="mb3-dim">${h(U2.relNone)}</p>`)}
+      ${card(`📖 ${h(U2.tabFlow || '흐름')} ${more('flow')}`, flowCard(st, L, chs, ui, M, false))}</div>
       ${card(`👤 ${h(U2.tabPeople || '인물')}`, `<div class="mb3-pchips">${peopleChips(people.slice(0, 6), null, all)}</div>`, 'mb3-span')}</div>`;
   }
   box.innerHTML = `<div class="mb3-log2" data-th="${h(settings().theme || 'gray')}">

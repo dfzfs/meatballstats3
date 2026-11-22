@@ -146,7 +146,8 @@ body[data-mb3th="dark"] { --mbt-page:#18191c;--mbt-bg:#222428;--mbt-card:#2c2f34
 .mb3-seg { margin-left: auto; display: flex; gap: 2px; padding: 4px; background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 999px; }
 .mb3-seg b { padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--mbt-dim); cursor: pointer; }
 .mb3-seg b.mb3-on { background: var(--mbt-acc); color: var(--mbt-onacc); }
-.mb3-grid { display: grid; grid-template-columns: minmax(230px, 280px) 1fr 1fr; gap: 12px; align-items: start; }
+.mb3-grid { display: grid; grid-template-columns: minmax(260px, 2fr) minmax(300px, 3fr); gap: 12px; align-items: start; }
+.mb3-col2 > * + * { margin-top: 12px; }
 .mb3-span { grid-column: 1 / -1; }
 .mb3-card { background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 20px; padding: 14px; }
 .mb3-card + .mb3-card, .mb3-col1 > * + * { margin-top: 10px; }
@@ -173,10 +174,12 @@ body[data-mb3th="dark"] { --mbt-page:#18191c;--mbt-bg:#222428;--mbt-card:#2c2f34
 /* relation */
 .mb3-pair2 { background: var(--mbt-soft); border-radius: 16px; padding: 11px; margin-bottom: 8px; cursor: pointer; border: 1.5px solid transparent; }
 .mb3-pair2.mb3-on { border-color: var(--mbt-acc); }
-.mb3-ptop { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; }
-.mb3-ptie { margin: 0 auto; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--mbt-card); border: 1px solid var(--mbt-line); color: var(--mbt-mid); text-align: center; }
+.mb3-ptop { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; flex-wrap: wrap; }
+.mb3-amp { color: var(--mbt-dim); font-weight: 400; }
+.mb3-ptie { display: inline-block; margin-top: 7px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--mbt-card); border: 1px solid var(--mbt-line); color: var(--mbt-mid); }
 .mb3-prow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-size: 12.5px; }
-.mb3-dir { color: var(--mbt-dim); min-width: 88px; }
+.mb3-dir { color: var(--mbt-dim); }
+.mb3-prow .mb3-trend { margin-left: 0; }
 .mb3-feel { padding: 2px 9px; border-radius: 999px; font-weight: 700; font-size: 12px; }
 .mb3-f-love { background: rgba(212,83,126,.15); color: #c94b77; } .mb3-f-want { background: rgba(216,90,48,.15); color: #c4562f; }
 .mb3-f-miss { background: rgba(127,119,221,.16); color: #6f66cf; } .mb3-f-bitter { background: rgba(153,53,86,.15); color: #a33d61; }
@@ -187,7 +190,7 @@ body[data-mb3th="dark"] .mb3-feel { filter: brightness(1.45); }
 .mb3-tr-closer { color: var(--mbt-acc); }
 /* flow */
 .mb3-days { display: flex; gap: 6px; margin-bottom: 8px; }
-.mb3-dp { flex: 1; text-align: center; padding: 5px 0; border-radius: 13px; background: var(--mbt-card); border: 1px solid var(--mbt-line); font-size: 11px; color: var(--mbt-dim); cursor: pointer; position: relative; }
+.mb3-dp { flex: 0 1 64px; min-width: 46px; text-align: center; padding: 5px 0; border-radius: 13px; background: var(--mbt-card); border: 1px solid var(--mbt-line); font-size: 11px; color: var(--mbt-dim); cursor: pointer; position: relative; }
 .mb3-dp b { display: block; font-size: 15px; color: var(--mbt-ink); }
 .mb3-dp i { display: block; width: 5px; height: 5px; border-radius: 50%; background: var(--mbt-acc); margin: 2px auto 0; }
 .mb3-dp.mb3-on { background: var(--mbt-acc); border-color: var(--mbt-acc); color: var(--mbt-onacc); }
@@ -231,7 +234,7 @@ body[data-mb3th="dark"] .mb3-feel { filter: brightness(1.45); }
 .mb3-log2 .mb3-raw pre { background: var(--mbt-soft); color: var(--mbt-ink); border: 1px solid var(--mbt-line); }
 .mb3-log2 .mb3-detail { border-top: 1px dashed var(--mbt-line); margin-top: 6px; padding-top: 8px; font-size: 12.5px; }
 .mb3-log2 .menu_button.mb3-apply { background: var(--mbt-card) !important; color: var(--mbt-ink) !important; border: 1px solid var(--mbt-line) !important; border-radius: 999px; }
-@media (max-width: 860px) { .mb3-grid { grid-template-columns: 1fr; } .mb3-seg { margin-left: 0; } .mb3-log2 { padding: 10px; border-radius: 18px; } }
+@media (max-width: 760px) { .mb3-grid { grid-template-columns: 1fr; } .mb3-seg { margin-left: 0; } .mb3-log2 { padding: 10px; border-radius: 18px; } }
 /* tips and lore window follow the theme too */
 .mb3-bubble { background: var(--mbt-card); color: var(--mbt-ink); border-color: var(--mbt-line); }
 
