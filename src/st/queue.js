@@ -32,7 +32,10 @@ const is429 = (e) => /429|too many requests|rate.?limit|quota/i.test(`${e?.messa
 function keepRaw(S, fp, answer, r) {
   try {
     S.raw ||= {};
-    S.raw[fp] = { a: String(answer || '').slice(0, 1500), t: Date.now(), d: (r.dropped || []).slice(0, 8).map((x) => [x.why, String(x.raw || '').slice(0, 80)]) };
+    // only the <mb> and <rel> blocks are kept (fixes rebuild from them); a model's talk around them only made chats bigger
+    const A = String(answer || ''), blk = (tag) => (A.match(new RegExp(`<${tag}>[\\s\\S]*?(</${tag}>|$)`, 'i')) || [''])[0].trim();
+    const kept = [blk('mb'), blk('rel')].filter(Boolean).join('\n') || A;
+    S.raw[fp] = { a: kept.slice(0, 1500), t: Date.now(), d: (r.dropped || []).slice(0, 8).map((x) => [x.why, String(x.raw || '').slice(0, 80)]) };
     const ks = Object.keys(S.raw);
     if (ks.length > 300) ks.sort((a, b) => S.raw[a].t - S.raw[b].t).slice(0, ks.length - 300).forEach((k) => delete S.raw[k]);
   } catch (e) { /* the note is optional */ }

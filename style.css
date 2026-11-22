@@ -283,6 +283,7 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 #mb3_settings .mb3-fill .mb3-dim { flex: 1 0 100%; font-size: .85em; opacity: .7; }
 #mb3_settings .mb3-fill-r { display: inline-flex; align-items: center; gap: 3px; font-size: .9em; }
 #mb3_settings .mb3-fill-r input { width: 64px; padding: 2px 6px; margin: 0; }
+#mb3_settings .mb3-fill-sep { width: 1px; align-self: stretch; background: var(--SmartThemeBorderColor, #555); margin: 0 4px; opacity: .6; }
 .mb3-cchk { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
 .mb3-cchk .mb3-ccheck { cursor: pointer; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--mbt-line, #ddd); background: var(--mbt-card, #fff); white-space: nowrap; }
 .mb3-cchk .mb3-dim { flex: 1; min-width: 0; }
@@ -341,3 +342,13 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-mon span[data-ym]:hover { background: var(--mbt-soft); }
 .mb3-caltop { gap: 6px; }
 .mb3-diceundo { cursor: pointer; font-size: 12px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--mbt-line); color: var(--mbt-mid); background: var(--mbt-card); white-space: nowrap; }
+/* v0.18: the story's months in one row; the list says what happened */
+.mb3-yrow { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
+.mb3-ym { cursor: pointer; min-width: 26px; padding: 2px 6px; border-radius: 7px; font-size: 11px; text-align: center; color: var(--mbt-ink); position: relative; }
+.mb3-ym i { font-style: normal; font-size: 9.5px; color: var(--mbt-mid); margin-right: 3px; }
+.mb3-ym1 { background: var(--mbt-acc2); }
+.mb3-ym2 { background: var(--mbt-h2); background: color-mix(in srgb, var(--mbt-acc) 45%, var(--mbt-soft)); }
+.mb3-ym3 { background: var(--mbt-acc); color: var(--mbt-onacc); } .mb3-ym3 i { color: inherit; opacity: .8; }
+.mb3-ym.mb3-on { outline: 2px solid var(--mbt-ink); outline-offset: -1px; }
+.mb3-rs { display: block; font-size: 11.5px; color: var(--mbt-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.mb3-rrow.mb3-on .mb3-rs { color: inherit; opacity: .85; }

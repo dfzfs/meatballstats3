@@ -80,7 +80,8 @@ function settle(cal, p) {
     gap = mod(doyOf(p.m, d) - doyOf(base.m, base.d), 365);
     if (gap === 0) return 'kept';
     // "a few days" then a date months away is not a few days: the date is behind (a memory, a slip), the engine wins
-    if (gap > ({ d: 13, w: 70, mo: 340 }[fz.unit] ?? 365)) return 'kept';
+    // …but a full date (day named) is a much stronger sign than a month alone: allow a longer skip before calling it a slip
+    if (gap > ((p.d != null ? { d: 45, w: 120, mo: 365 } : { d: 13, w: 70, mo: 340 })[fz.unit] ?? 365)) return 'kept';
   } else if (fz.unit === 'd' && p.wd != null) {
     gap = FUZZY_NOM.d + mod(p.wd - (base.wd + FUZZY_NOM.d), 7);
   } else return 'same';                                   // "a few weeks" + a weekday alone: still unknown

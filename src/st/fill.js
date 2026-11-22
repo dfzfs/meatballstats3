@@ -44,18 +44,29 @@ export function drawFillRow(T) {
   // the start button then saw two empty boxes = the whole chat. Idle row already there: leave it (and what is typed) alone.
   if (!f && el.querySelector('.mb3-fill-go')) return;
   el.innerHTML = !f
-    ? `<div class="menu_button mb3-fill-go">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
+    ? `<div class="menu_button mb3-fill-go" title="${h(U.fillWholeTip || '')}">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
+       <span class="mb3-fill-sep"></span>
        <span class="mb3-fill-r">#<input class="text_pole mb3-fill-a" type="number" min="0" placeholder="${h(U.fillFirst || '처음')}" /> ~ #<input class="text_pole mb3-fill-b" type="number" min="0" placeholder="${h(U.fillLast || '끝')}" /></span>
+       <div class="menu_button mb3-fill-rg">🎯 ${h(U.fillRangeBtn || '구간 정리')}</div>
        ${tipQ(U.fillDesc || '', h)}`
-    : `<b>📚 ${h(f.paused ? U.fillPaused || '정리 멈춤' : U.fillRun || '처음부터 정리 중')}${f.from != null ? ` (#${f.from}~#${f.to === Infinity || f.to == null ? '' : f.to})` : ''} ${done}/${total}</b>
+    : `<b>📚 ${h(f.paused ? U.fillPaused || '정리 멈춤' : f.from != null ? U.fillRangeRun || '구간 정리 중' : U.fillRun || '처음부터 정리 중')}${f.from != null ? ` (#${f.from}~#${f.to === Infinity || f.to == null ? '' : f.to})` : ''} ${done}/${total}</b>
        <div class="menu_button mb3-fill-p">${h(f.paused ? U.fillGo || '이어 하기' : U.fillPause || '멈추기')}</div><div class="menu_button mb3-fill-x">${h(U.fillStop || '그만두기')}</div>`;
+  const toast = (t) => { try { window.toastr?.warning(t); } catch (e) { /* */ } };
+  // 📚 처음부터 정리: always the whole chat (the boxes are only for 🎯)
   el.querySelector('.mb3-fill-go')?.addEventListener('click', () => {
+    const cnt = fillCount(null).total;
+    if (!cnt) { toast(U.fillNone || '그 구간에는 AI 답이 없어요'); return; }
+    if (confirm(String(U.fillAsk || '').replace('{n}', cnt).replace('{c}', Math.ceil(cnt / FILL_N)))) { startFill(); drawFillRow(T); }
+  });
+  // 🎯 구간 정리: only between the two numbers (an empty end = to the last reply); both empty = asks for a number
+  el.querySelector('.mb3-fill-rg')?.addEventListener('click', () => {
     const num = (sel) => { const v = el.querySelector(sel)?.value?.trim(); return v === '' || v == null || isNaN(+v) ? null : Math.max(0, Math.floor(+v)); };
     let a = num('.mb3-fill-a'), b = num('.mb3-fill-b'); if (a != null && b != null && a > b) [a, b] = [b, a];
-    const whole = a == null && b == null, cnt = fillCount(whole ? null : { from: a ?? 0, to: b ?? Infinity }).total;
-    if (!cnt) { try { window.toastr?.warning(U.fillNone || '그 구간에는 AI 답이 없어요'); } catch (e) { /* */ } return; }
-    const ask = whole ? U.fillAsk : String(U.fillAskRange || '').replace('{a}', a ?? 0).replace('{b}', b ?? (ctx().chat || []).length - 1);
-    if (confirm(String(ask || '').replace('{n}', cnt).replace('{c}', Math.ceil(cnt / FILL_N)))) { whole ? startFill() : startFill(a, b); drawFillRow(T); }
+    if (a == null && b == null) { toast(U.fillRangeNeed || '구간 번호를 적어 주세요. 예: #0 ~ #6'); el.querySelector('.mb3-fill-a')?.focus(); return; }
+    const cnt = fillCount({ from: a ?? 0, to: b ?? Infinity }).total;
+    if (!cnt) { toast(U.fillNone || '그 구간에는 AI 답이 없어요'); return; }
+    const ask = String(U.fillAskRange || '').replace('{a}', a ?? 0).replace('{b}', b ?? (ctx().chat || []).length - 1);
+    if (confirm(ask.replace('{n}', cnt).replace('{c}', Math.ceil(cnt / FILL_N)))) { startFill(a ?? 0, b); drawFillRow(T); }
   });
   el.querySelector('.mb3-fill-p')?.addEventListener('click', () => { pauseFill(!f.paused); drawFillRow(T); });
   el.querySelector('.mb3-fill-x')?.addEventListener('click', () => { if (confirm(U.fillStopAsk || '')) { endFill(); kick(500); drawFillRow(T); } });

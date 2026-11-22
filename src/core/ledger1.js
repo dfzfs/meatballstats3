@@ -45,7 +45,10 @@ export function applyGroup(st, events, V) {
       case 'time': {
         if (e.fuzzy) {                                     // "a few days later": a placeholder length, no date until the text names one
           const nom = FUZZY_NOM[e.fuzzy] || FUZZY_NOM.d;
-          if (!st.cal.fz) st.cal.fz = { from: st.cal.n, unit: e.fuzzy, nom }; else st.cal.fz.nom += nom;
+          // a second vague skip before any date: the longer kind decides how far a named date may be ("며칠 뒤 … 몇 주 뒤" = weeks)
+          const RANK = { d: 0, w: 1, mo: 2, y: 3 };
+          if (!st.cal.fz) st.cal.fz = { from: st.cal.n, unit: e.fuzzy, nom };
+          else { st.cal.fz.nom += nom; if ((RANK[e.fuzzy] ?? 0) > (RANK[st.cal.fz.unit] ?? 0)) st.cal.fz.unit = e.fuzzy; }
           st.cal.n += nom; st.fresh.fuzzy = e.fuzzy;
         } else st.cal.n += e.days || 0;
         if (e.tod || e.days || e.fuzzy) st.cal.tod = e.tod || '';

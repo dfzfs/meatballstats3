@@ -1,6 +1,7 @@
 // 🎲 「미정 날짜 정하기」: undated replies and vague weeks get dates by a roll of the dice (no AI), written as the person's dates.
 // The last roll is kept in the chat's store, so ↩ undo still works after the log is closed (until the next roll).
-import { store, save, ledger } from './store.js';
+import { ctx, store, save, ledger } from './store.js';
+import { fingerprint } from '../core/clean.js';
 import { applyFixes, undoFixes } from './fix.js';
 import { placeReplies, rollDates } from '../core/calendar.js';
 
@@ -13,7 +14,11 @@ export function roll() {
     if (!rolls.length) break;
     // a guessed year (no year in the story, none set) is never written down: only month · day, the year stays a guess
     const yr = (d) => (!P.guessed && d.y >= 100 ? `${d.y}년 ` : '');
-    const fx = rolls.map((r) => ({ i: r.i, lines: [`date: ${yr(r.date)}${r.date.m}월 ${r.date.d}일`] }));
+    // a fix rebuilds the reply from its kept answer: a reply whose answer is no longer kept (oldest past 300) but has records is
+    // left alone, so its other lines are never lost
+    const S0 = store(), chat = ctx().chat || [], safe = (i) => { const fp = chat[i] && fingerprint(chat[i]); return !!S0?.raw?.[fp] || !(S0?.ev?.[fp] || []).length; };
+    const fx = rolls.filter((r) => safe(r.i)).map((r) => ({ i: r.i, lines: [`date: ${yr(r.date)}${r.date.m}월 ${r.date.d}일`] }));
+    if (!fx.length) break;
     const u = applyFixes(fx, '🎲');
     if (!u) break;
     undo.unshift(...u); fixes.push(...fx.filter((f) => u.some((x) => x.i === f.i)));

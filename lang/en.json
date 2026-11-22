@@ -948,7 +948,7 @@
     "chatClearTip": "Clears the talk only. Changes stay.",
     "chatClearAsk": "Clear this talk? What was changed stays changed.",
     "fillBtn": "Read from the start",
-    "fillDesc": "Reads again from the first reply, 6 at a time, and rebuilds the record. Give a range to read only that part (empty = all).",
+    "fillDesc": "📚 Rebuild from start: reads every reply again, 6 at a time, and makes the record anew. 🎯 Rebuild range: only between the numbers you enter (empty end = to the last reply). The rest stays.",
     "fillAsk": "Rebuild Meatball's record of this chat from the first reply.\n\n· The current record is cleared and built again. Your ✋ fixes, orders and set dates stay.\n· {n} replies → about {c} AI calls (3 per minute at most).\n· No Meatball note goes to the story AI while it runs. You can pause and go on.\n\nStart?",
     "fillRun": "Reading from the start",
     "fillPaused": "Paused",
@@ -998,7 +998,11 @@
     "legNow": "now",
     "diceUndo": "Undo",
     "diceNone": "Nothing to date: no vague weeks (striped) or undated replies.",
-    "diceDone": "🎲 Rolled dates for {n} replies. Not happy? ↩ Undo · press again to roll only what's left."
+    "diceDone": "🎲 Rolled dates for {n} replies. Not happy? ↩ Undo · press again to roll only what's left.",
+    "fillWholeTip": "Read this whole chat again from the first reply. The range boxes are ignored.",
+    "fillRangeBtn": "Rebuild range",
+    "fillRangeRun": "Rebuilding range",
+    "fillRangeNeed": "Enter the range numbers, e.g. #0 ~ #6"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
