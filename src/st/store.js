@@ -167,8 +167,9 @@ export function openThreads() {
 }
 // v0.9: what special line went out with a reply (and which refusal threads got their "eased" line), kept per reply.
 export function keepSent(fp, sent) {
-  if (!fp || !sent || (!sent.special && !sent.eased?.length && !sent.marks?.length)) return;
-  const S = store(true); S.sent ||= {}; S.sent[fp] = sent;
+  if (!fp || !sent || (!sent.on && !sent.special && !sent.eased?.length && !sent.marks?.length)) return;
+  // on: a note went with this reply (for the 🛡 note-effect count); the rest only when there is something to keep
+  const S = store(true); S.sent ||= {}; S.sent[fp] = sent.special || sent.eased?.length || sent.marks?.length ? sent : { on: 1 };
   const ks = Object.keys(S.sent); if (ks.length > 400) delete S.sent[ks[0]];
   save();
 }

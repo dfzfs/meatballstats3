@@ -82,10 +82,10 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   if (E.GENERATION_AFTER_COMMANDS) eventSource.on(E.GENERATION_AFTER_COMMANDS, async (type, opts, dryRun) => {
     const s = settings();
     if (dryRun || !s.on || QUIET.has(type) || opts?.quiet_prompt) return;
-    if (!s.waitSort || !Q.busy) { refresh(); G.sent = R.lastSent; return; }
+    if (!s.waitSort || !Q.busy) { refresh(); G.sent = { ...R.lastSent, on: !!(lastPut.deep || lastPut.mid || lastPut.now) }; return; }
     let t = null;
     try { t = window.toastr?.info(R.ui.waitingSort, '', { timeOut: 0, extendedTimeOut: 0 }); } catch (e) { /* notice is optional */ }
-    try { await idle(Math.min(Math.max(+s.waitMax || 20, 1), 60) * 1000); refresh(); G.sent = R.lastSent; } finally { try { if (t) window.toastr.clear(t); } catch (e) { /* */ } }
+    try { await idle(Math.min(Math.max(+s.waitMax || 20, 1), 60) * 1000); refresh(); G.sent = { ...R.lastSent, on: !!(lastPut.deep || lastPut.mid || lastPut.now) }; } finally { try { if (t) window.toastr.clear(t); } catch (e) { /* */ } }
   });
   for (const ev of [E.GENERATION_ENDED, E.GENERATION_STOPPED]) eventSource.on(ev, () => { Q.generating = false; G.type = ''; R.pieces = null; kick(); });
   eventSource.on(E.MESSAGE_RECEIVED, (id) => {

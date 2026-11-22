@@ -199,7 +199,7 @@ function sceneRow(c, k, st, L, ui, M) {
   const first = c.es[0].x.i, last = c.es.at(-1).x.i, open = ui.chap === k;
   const its = c.es.flatMap((e) => e.its).filter((it) => !it.dim);
   const top = [...its.filter((it) => HOT.has(it.icon)), ...its.filter((it) => !HOT.has(it.icon))];
-  const icon = top[0]?.icon || '📝', sum = top.slice(0, 2).map((it) => it.title).join(' · ') || R.ui.noChange;
+  const icon = top[0]?.icon || '📝', sum = [...new Set(top.map((it) => it.title))].slice(0, 2).join(' · ') || R.ui.noChange;
   const head = [c.tod, roomOf(c.loc)].filter(Boolean).join(' · ') || rfmt(first, L) || `#${first}`;
   return `<div class="mb3-scene${c.hot ? ' mb3-hot' : ''}${open ? ' mb3-open' : ''}" data-chap="${k}">
     <div class="mb3-sic">${icon}</div><div class="mb3-sb"><div class="mb3-sh">${h(head)}</div><div class="mb3-ss">${h(sum)}</div>
@@ -272,7 +272,8 @@ function replyRuns(st, L) {
   chat.forEach((m, i) => {
     if (m.is_user || skipMsg(m)) return;
     const r = PL.get(i), seen = read.get(i);
-    const k = seen === false ? 'x' : !r ? 'u' : r.approx ? `w:${r.wk}` : `d:${r.key}`;
+    const evs = store()?.ev?.[fingerprint(m)] || [], failed = evs.length && evs.every((e) => e.k === 'drop' && String(e.why).startsWith('skip:'));
+    const k = seen === false ? 'x' : failed ? 'f' : !r ? 'u' : r.approx ? `w:${r.wk}` : `d:${r.key}`;
     const last = runs.at(-1);
     if (last && last.k === k) last.ids.push(i); else runs.push({ k, ids: [i], r });
   });
@@ -286,10 +287,10 @@ function listHtml(st, L, ui, chs = []) {
     return `${y}${o.approx ? '≈ ' : ''}${h(fill(L.fmt.md, { mon: L.mon[o.m - 1], d: o.d }))} <span class="mb3-dim">(${h(String(L.wd[o.wd]).slice(0, 1))})</span>`; };
   return `<div class="mb3-rlist"><div class="mb3-rlh">📜 ${h(U2.replyList || '답 순서대로')}</div>${runs.map((x) => {
     const a = x.ids[0], b = x.ids.at(-1), rg = a === b ? `#${a}` : `#${a}~#${b}`;
-    const what = x.k === 'x' ? `<span class="mb3-dim">${h(U2.notRead || '아직 안 읽음')}</span>` : x.k === 'u' ? `<span class="mb3-dim">${h(U2.undated || '날짜 미정')}</span>` : short(a);
+    const what = x.k === 'f' ? `<span class="mb3-rfail">⚠ ${h(U2.readFailed || '읽기 실패')}</span>` : x.k === 'x' ? `<span class="mb3-dim">${h(U2.notRead || '아직 안 읽음')}</span>` : x.k === 'u' ? `<span class="mb3-dim">${h(U2.undated || '날짜 미정')}</span>` : short(a);
     const sel = ui.sel && x.k === ui.sel ? ' mb3-on' : '';
-    const btn = x.k === 'x' ? `<b class="mb3-rbtn" data-reread="${a}-${b}">🔄 ${h(U2.readThese || '다시 읽기')}</b>` : `<b class="mb3-rbtn" data-setd="${a}" title="${h(U2.setThisDate || '이 답부터 날짜 바꾸기')}">✏️</b>`;
-    const ids = new Set(x.ids), top = x.k === 'x' ? [] : topItems(ids, chs), sum = top[0] ? `<span class="mb3-rs">${h(iconsOf(ids, chs, 3))} ${h(top[0].title)}</span>` : '';
+    const btn = x.k === 'x' || x.k === 'f' ? `<b class="mb3-rbtn" data-reread="${a}-${b}">🔄 ${h(U2.readThese || '다시 읽기')}</b>` : `<b class="mb3-rbtn" data-setd="${a}" title="${h(U2.setThisDate || '이 답부터 날짜 바꾸기')}">✏️</b>`;
+    const ids = new Set(x.ids), top = x.k === 'x' || x.k === 'f' ? [] : topItems(ids, chs), sum = top[0] ? `<span class="mb3-rs">${h(iconsOf(ids, chs, 3))} ${h(top[0].title)}</span>` : '';
     return `<div class="mb3-rrow${sel}${x.k === 'x' ? ' mb3-rx' : ''}"${x.k.length > 1 ? ` data-go="${h(x.k)}"` : ''}><b class="mb3-rr">${rg}</b><span class="mb3-rd">${what}${sum}</span>${btn}</div>`;
   }).join('')}</div>`;
 }
@@ -314,6 +315,19 @@ function rollDice(ui, draw) {
   if (!r) { window.toastr?.info(U2.diceNone || '정할 날짜가 없어요. 흐릿한 주(빗금)나 미정 답이 없어요.'); return; }
   ui.sel = ''; ui.ym = ''; draw();
   window.toastr?.success(fill(U2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요. 마음에 안 들면 ↩ 되돌리기 · 다시 누르면 남은 것만 굴려요.', { n: r.undo.length }));
+}
+// 🛡 Does the note help? Among recent replies: how often ⚠ came with a note and without one. Only a rough sign.
+function effectHtml() {
+  const S = store(), U2 = R.ui2, chat = ctx().chat || [];
+  if (!S) return '';
+  const ai = chat.filter((m) => !m.is_user && !m.is_system && (S.ev?.[fingerprint(m)] || []).length).slice(-100).map(fingerprint);
+  const warned = (fp) => { const g = S.guard?.[fp]; return !!(g?.hits?.length && !g.false); };
+  const a = ai.filter((fp) => S.sent?.[fp]), b = ai.filter((fp) => !S.sent?.[fp]);
+  if (a.length < 5) return '';
+  const bar = (list, label) => { const w = list.filter(warned).length, pct = list.length ? Math.round((w / list.length) * 100) : 0;
+    return `<div class="mb3-efr"><span>${h(label)}</span><i style="--p:${pct}%"></i><b>${list.length ? fill(U2.effRow || '{n}개 중 ⚠ {w} ({p}%)', { n: list.length, w, p: pct }) : '—'}</b></div>`; };
+  return `<div class="mb3-card mb3-eff"><div class="mb3-ch">🛡 ${h(U2.effTitle || '쪽지 효과')} <span class="mb3-dim" style="font-weight:500;font-size:11.5px">· ${h(fill(U2.effSub || '최근 답 {n}개', { n: ai.length }))}</span></div>
+    ${bar(a, U2.effWith || '쪽지 붙음')}${bar(b, U2.effWithout || '쪽지 없음')}<p class="mb3-dim mb3-effn">${h(U2.effNote || '⚠가 적을수록 선을 잘 지킨 거예요. 장면마다 달라서 참고만 해 주세요.')}</p></div>`;
 }
 function flowCard(st, L, chs, ui, M, big) {
   const U2 = R.ui2, M0 = calModel();
@@ -446,7 +460,7 @@ function render(box, ui) {
     const recent = es.slice(-12).reverse().flatMap((e) => e.its.filter((it) => !it.dim).map((it) => ({ it, i: e.x.i }))).sort((a, b) => (HOT.has(b.it.icon) - HOT.has(a.it.icon)) || b.i - a.i).slice(0, 3);
     const now = `<div class="mb3-card mb3-hero">${mascotImg('happy')}<div class="mb3-hl">${h(U.now)} <span class="mb3-talk" data-view="chat">💬 ${h(U2.chatShort || '고쳐 달라고 하기')}</span></div><div class="mb3-hd">${h(date)}</div>${st.cal.tod ? `<span class="mb3-htod">${h(st.cal.tod)}</span>` : ''}
       ${st.loc ? `<div class="mb3-hp" data-view="map" style="cursor:pointer">📍 ${h(st.loc)} ›</div>` : ''}<div class="mb3-hw">${withs.map((n) => { const w = [...st.with].filter((x) => M(x) === n).map((x) => st.wear?.[x]?.v).find(Boolean); return `<span>${avOf(n, all)}${h(n)}${w ? ` · ${h(w)}` : ''}</span>`; }).join('')}</div></div>
-      <div class="mb3-tiles"><div class="mb3-tile mb3-t1"><b>${nSecret}</b><span>🔒 ${h(U2.tSecret || '비밀')}</span></div><div class="mb3-tile mb3-t2"><b>${nRefuse}</b><span>🚫 ${h(U2.tRefuse || '거절 중')}</span></div><div class="mb3-tile mb3-t3"><b>${nWarn}</b><span>⚠ ${h(U2.tWarn || '경고')}</span></div></div>
+      <div class="mb3-tiles"><div class="mb3-tile mb3-t1"><b>${nSecret}</b><span>🔒 ${h(U2.tSecret || '비밀')}</span></div><div class="mb3-tile mb3-t2"><b>${nRefuse}</b><span>🚫 ${h(U2.tRefuse || '거절 중')}</span></div><div class="mb3-tile mb3-t3"><b>${nWarn}</b><span>⚠ ${h(U2.tWarn || '경고')}</span></div></div>${effectHtml()}
       ${card(`${h(U2.recent || '최근 일')} ${more('flow', U2.tabFlow)}`, recent.map(({ it, i }) => `<div class="mb3-rline">${it.icon} ${h(it.title)}<i>#${i}</i></div>`).join('') || `<p class="mb3-dim">${h(U.empty)}</p>`)}`;
     body = `<div class="mb3-grid"><div class="mb3-col1">${now}</div><div class="mb3-col2">
       ${card(`💞 ${h(U2.tabRel || '관계')} ${more('rel')}`, pairs.length ? pairs.slice(0, 2).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('') : `<p class="mb3-dim">${h(U2.relNone)}</p>`)}

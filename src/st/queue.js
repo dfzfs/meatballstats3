@@ -84,7 +84,7 @@ async function tick() {
     if (r.parts) for (const [fp, a] of r.parts) keepRaw(S, fp, a, fp === b.fps.at(-1) ? r : {});   // 처음부터 정리: each reply keeps its own lines
     else keepRaw(S, b.fps.at(-1), answer, r);
     Q.log.lastAnswer = String(answer).slice(0, 2000); Q.log.dropped = r.dropped;
-    if (r.pushed && b.fill) { for (const fp of b.fps) S.ev[fp] ||= []; save(); Q.log.status = `fill-skip:${r.kind}`; }   // 처음부터 정리: a broken answer skips these few, the rest goes on
+    if (r.pushed && b.fill) { skipped(S, b.fps, r.kind); save(); Q.log.status = `fill-skip:${r.kind}`; }   // 처음부터 정리: a broken answer skips these few, the rest goes on
     else if (r.pushed) { Q.pushedKey = key; Q.log.status = `pushed:${r.kind}`; }                      // broken answer: wait for the next reply, no re-call
     else { Q.fails = 0; Q.log.status = 'ok'; if (rel) { const x = absorbRel(S.rel, b, answer, st, R.bp, R.V, R.lang, rel.hidden, st2()); Q.log.dropped = [...r.dropped, ...x.dropped]; }
       try { afterAbsorb(S, b, answer, vbp, falls, gb, habits); } catch (e) { console.warn('[meatball3] guard failed', e); }
@@ -94,7 +94,7 @@ async function tick() {
     console.warn('[meatball3] sort call failed', e);
     const tries = (Q.tries[key] = (Q.tries[key] || 0) + 1);
     if (is429(e)) { Q.coolUntil = Date.now() + COOL; Q.notBefore = Date.now() + WAIT_429; } else if (e.message !== 'timeout') Q.noEffort = true;
-    if (tries >= 2 && b.fill) { Q.fails++; try { const S = store(true); for (const fp of b.fps) S.ev[fp] ||= []; save(); } catch (er) { /* */ } Q.log.status = 'fill-skip:error'; }
+    if (tries >= 2 && b.fill) { Q.fails++; try { const S = store(true); skipped(S, b.fps, 'error'); save(); } catch (er) { /* */ } Q.log.status = 'fill-skip:error'; }
     else if (tries >= 2) { Q.pushedKey = key; Q.fails++; Q.log.status = 'pushed:error'; } else Q.log.status = 'retry';
   } finally { Q.busy = false; R.sorting = false; R.stalled = Q.fails >= 5; try { renderBar(); } catch (e) { /* optional */ } if (Q.log.status === 'retry') kick(GAP); else kick(); }
 }
@@ -126,6 +126,9 @@ function afterAbsorb(S, b, answer, bp, falls, gb, habits = []) {
     else if (h.cls === 'K') { S.lost ||= {}; (S.lost[h.fp] ||= []).push(h.who); }
   }
 }
+// 처음부터 정리 could not read these (a broken answer, or the call failed twice): they are passed over, but marked so the
+// log can show "read failed · 🔄 read again" instead of looking like replies where nothing changed
+function skipped(S, fps, why) { for (const fp of fps) if (!(S.ev[fp] || []).length) S.ev[fp] = [{ k: 'drop', raw: '', why: `skip:${why}` }]; }
 export function addGuard(S, fp, hit) {
   S.guard ||= {};
   const g = (S.guard[fp] ||= { hits: [], done: false, auto: false });

@@ -353,3 +353,20 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-rs { display: block; font-size: 11.5px; color: var(--mbt-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .mb3-rrow.mb3-on .mb3-rs { color: inherit; opacity: .85; }
 .mb3-hero .mb3-talk { color: var(--mbt-ink); background: var(--mbt-card); opacity: .9; }
+/* v0.21 this reply's note, line by line */
+.mb3-pv .mb3-pvh { margin: 12px 0 4px; font-weight: 700; font-size: 13px; }
+.mb3-pv .mb3-pvr { padding: 6px 9px; margin: 4px 0; border: 1px solid var(--SmartThemeBorderColor, #5554); border-radius: 9px; }
+.mb3-pv .mb3-pvt { font-size: 12.5px; word-break: break-word; }
+.mb3-pv .mb3-pvtr { font-size: 12px; opacity: .8; margin-top: 2px; }
+.mb3-pv .mb3-pvtr:empty { display: none; }
+.mb3-pv .mb3-pvw { font-size: 11.5px; opacity: .7; margin-top: 3px; }
+.mb3-pv .mb3-pvx { opacity: .6; text-decoration: line-through; }
+#mb3_settings .mb3-intro { border: 1.5px dashed var(--SmartThemeQuoteColor, #e8a33d); border-radius: 10px; padding: 8px 12px; margin: 4px 0 10px; font-size: .92em; }
+#mb3_settings .mb3-intro ol { margin: 6px 0 6px 18px; padding: 0; } #mb3_settings .mb3-intro li { margin: 2px 0; }
+#mb3_settings .mb3-intro .menu_button { width: auto; display: inline-block; padding: 3px 12px; margin: 0; }
+#mb3_settings .mb3-adv { margin: 8px 0; border: 1px solid var(--SmartThemeBorderColor, #5556); border-radius: 10px; padding: 4px 10px; }
+#mb3_settings .mb3-adv > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+.mb3-rfail { color: #d9536f; font-weight: 600; }
+.mb3-eff { margin-top: 10px; } .mb3-eff .mb3-efr { display: grid; grid-template-columns: 5.5em 1fr auto; gap: 8px; align-items: center; font-size: 12px; margin: 5px 0; }
+.mb3-eff .mb3-efr i { height: 7px; border-radius: 99px; background: linear-gradient(90deg, #e0587c var(--p), var(--mbt-soft) var(--p)); }
+.mb3-eff .mb3-efr b { font-weight: 600; color: var(--mbt-mid); white-space: nowrap; } .mb3-effn { font-size: 11px; margin: 6px 0 0; }
