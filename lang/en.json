@@ -470,7 +470,9 @@
       "fallAuto": "Off: when a fall is ready, 💗 appears in the status line and you decide.",
       "mascot": "The cat at the left of the status line. Off = text only.",
       "director": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat. A separate extension.",
-      "nameMap": "Only for the Korean screen: if a name is translated into a word (Grace → 은혜), write \"English name = shown name\", one per line. Aliases in the lore sheet are added on their own."
+      "nameMap": "Only for the Korean screen: if a name is translated into a word (Grace → 은혜), write \"English name = shown name\", one per line. Aliases in the lore sheet are added on their own.",
+      "theme": "Colours of the log, lore window, director panel and tips.",
+      "font": "Font for Meatball windows only. Fetched once when picked (needs internet)."
     },
     "btnHelp": "What the buttons do",
     "copyBtn": "📋 Copy test report",
@@ -548,7 +550,22 @@
     "allReplies": "All replies",
     "notReadYet": "Not read yet. Meatball reads it shortly.",
     "nameMap": "Name spellings (screen translation)",
-    "nameMapPh": "Grace = 그레이스"
+    "nameMapPh": "Grace = 그레이스",
+    "theme": "Colour theme",
+    "themes": {
+      "gray": "🤍 Light gray",
+      "pink": "🌸 Pink",
+      "matcha": "🍵 Matcha",
+      "dark": "🌙 Dark gray"
+    },
+    "font": "Font",
+    "fonts": {
+      "st": "SillyTavern font",
+      "pretendard": "Pretendard",
+      "suit": "SUIT",
+      "gowun": "Gowun Dodum",
+      "pdh": "Ownglyph PDH (if installed)"
+    }
   },
   "rel": {
     "moves": [
@@ -899,7 +916,23 @@
     "loreDraftTip": "Reads the card and lorebook and drafts a sheet (one AI call). Check and fix it before saving.",
     "loreSaveChatTip": "This chat only. Wins over the character default.",
     "loreSaveCharTip": "Every chat with this character.",
-    "loreTemplateTip": "Puts the example sheet in the box (replaces what is there)."
+    "loreTemplateTip": "Puts the example sheet in the box (replaces what is there).",
+    "tabDash": "Overview",
+    "tabFlow": "Story",
+    "tabRel": "Ties",
+    "tabPeople": "People",
+    "seeAll": "All",
+    "recent": "Recent",
+    "tSecret": "secrets",
+    "tRefuse": "refusing",
+    "tWarn": "warnings",
+    "logTitle": "Meatball log",
+    "logSub": "{n} replies read",
+    "oneReply": "This reply",
+    "relTap2": "Tap a card for the evidence",
+    "relNoFeel": "nothing yet",
+    "relNoTie": "no official tie",
+    "tlGap": "{n} days later"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

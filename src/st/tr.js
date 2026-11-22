@@ -29,6 +29,20 @@ export function glossary() {
 }
 // The name as it should be shown (glossary), or the name itself.
 export const showName = (n) => glossary().get(String(n || '').trim().toLowerCase()) || n;
+// For lists of people: one shown name per person. Glossary first; else an English name whose screen translation is
+// another name already in the list ("Will" shown as "윌" next to "윌") is the same person.
+const HAN = /^[가-힣\s]+$/;
+export function nameMerger(names) {
+  const list = [...new Set((names || []).filter(Boolean))], han = new Set(list.filter((n) => HAN.test(n))), C = load();
+  const map = new Map();
+  for (const n of list) {
+    const g = showName(n);
+    if (g !== n) { map.set(n, g); continue; }
+    if (/[A-Za-z]/.test(n)) { const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; } }
+    map.set(n, n);
+  }
+  return (n) => map.get(n) || showName(n);
+}
 const escRe = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const unmaskN = (s, map) => map.reduce((t, [tok, n]) => t.split(tok).join(n), s);
 function maskNames(text) {

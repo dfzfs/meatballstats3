@@ -11,6 +11,7 @@ import { trLines } from './tr.js';
 import { copyReport } from './report.js';
 import { openLore } from './loreview.js';
 import { enableTips, tipQ } from './tip.js';
+import { applyLook, THEMES, FONTS } from './look.js';
 import { GROUPS, isOn } from '../core/keys.js';
 
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -77,6 +78,8 @@ export function mountUI() {
     <div class="inline-drawer-toggle inline-drawer-header"><b>${h(U.title)}</b><div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div></div>
     <div class="inline-drawer-content">
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
+      <div class="mb3-row mb3-look"><label for="mb3_theme">${h(U.theme)}</label>${desc('theme')}<select id="mb3_theme" class="text_pole">${THEMES.map((k) => `<option value="${k}"${(s.theme || 'gray') === k ? ' selected' : ''}>${h(U.themes[k])}</option>`).join('')}</select>
+        <label for="mb3_font">${h(U.font)}</label>${desc('font')}<select id="mb3_font" class="text_pole">${Object.keys(FONTS).map((k) => `<option value="${k}"${(s.font || '') === k ? ' selected' : ''}>${h(U.fonts[k || 'st'])}</option>`).join('')}</select></div>
       <div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
       <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label>${desc('profile')}<select id="mb3_profile" class="text_pole"><option value=""></option></select></div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
@@ -110,6 +113,9 @@ export function mountUI() {
   document.getElementById('mb3_spark')?.addEventListener('change', (e) => { s.spark = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_gauto')?.addEventListener('change', (e) => { s.guardAuto = e.target.checked; c.saveSettingsDebounced(); });
   document.getElementById('mb3_rarity')?.addEventListener('change', (e) => { s.rarity = +e.target.value || 1; c.saveSettingsDebounced(); refresh(); });
+  applyLook();
+  document.getElementById('mb3_theme')?.addEventListener('change', (e) => { s.theme = e.target.value; c.saveSettingsDebounced(); applyLook(); });
+  document.getElementById('mb3_font')?.addEventListener('change', (e) => { s.font = e.target.value; c.saveSettingsDebounced(); applyLook(); });
   drawDirector();
   for (const [id, k] of [['mb3_vlines', 'vaultLines'], ['mb3_rsteps', 'refuseSteps'], ['mb3_rush', 'rushCall'], ['mb3_human', 'human'], ['mb3_fauto', 'fallAuto'], ['mb3_mascot', 'mascot']]) document.getElementById(id)?.addEventListener('change', (e) => { s[k] = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_tr')?.addEventListener('change', (e) => { s.translate = e.target.checked; c.saveSettingsDebounced(); renderBar(); });
