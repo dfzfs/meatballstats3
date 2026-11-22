@@ -1,7 +1,7 @@
 // Finds the sentence in a reply that supports a value ("linen shirt", "June", "four days"). No model call.
 const STOP = new Set('the a an and or of to in on at with his her their its is was were be been by for from as that this into over under then than'.split(' '));
 const words = (s) => String(s || '').toLowerCase().match(/[a-z]{3,}|[가-힣]{2,}|\d+/g)?.filter((w) => !STOP.has(w)) || [];
-export const sentences = (text) => String(text || '').split(/(?<=[.!?。…"”])\s+|\n+/).map((x) => x.trim()).filter((x) => x.length > 3);
+export const sentences = (text) => String(text || '').replace(/([.!?。…"”])\s+/g, '$1\n').split(/\n+/).map((x) => x.trim()).filter((x) => x.length > 3);
 
 // `who` = names that should appear in the sentence (weighted most), `extra` = more hint words.
 export function findEvidence(text, value, extra = [], who = []) {
