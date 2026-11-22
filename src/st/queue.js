@@ -9,21 +9,21 @@ import { afterSort, renderBar } from './bar.js';
 import { keepFixes } from './fix.js';
 import { FILL_N, endFill } from './fill.js';
 
-const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 3000;   // thinking + answer; only what is used is paid
+const GAP = 20e3, AFTER_REPLY = 3e3, WAIT_429 = 60e3, COOL = 600e3, TIMEOUT = 60e3, MAX_OUT = 8000;   // thinking + answer (a thinking model can spend 3k before writing); only what is used is paid
 export const Q = { rush: false, busy: false, generating: false, lastCall: 0, calls: [], coolUntil: 0, notBefore: 0, fails: 0, pushedKey: '', tries: {}, noEffort: false, timer: null, log: { status: '', dropped: [], lastReq: '', lastAnswer: '' } };
 
 export function kick(delay = AFTER_REPLY) { clearTimeout(Q.timer); Q.timer = setTimeout(tick, delay); }
 export function reset() { clearTimeout(Q.timer); Q.pushedKey = ''; Q.tries = {}; Q.fails = 0; Q.log = { status: '', dropped: [], lastReq: '', lastAnswer: '' }; }
 export const newReply = () => { if (Q.fails >= 5) Q.fails = 4; };          // after 5 failures: one more try per new reply
 
-export async function request(prompt, stop = '</mb>', profile = '') {
+export async function request(prompt, stop = '</mb>', profile = '', maxOut = MAX_OUT) {
   const c = ctx(), s = settings(), pid = profile || s.profile;
   if (pid && c.ConnectionManagerRequestService) {
     const over = { temperature: 0.2, stop: [stop], ...(Q.noEffort ? {} : { reasoning_effort: 'low' }) };
-    const r = await c.ConnectionManagerRequestService.sendRequest(pid, prompt, MAX_OUT, { stream: false, extractData: true, includePreset: false, includeInstruct: false }, over);
+    const r = await c.ConnectionManagerRequestService.sendRequest(pid, prompt, maxOut, { stream: false, extractData: true, includePreset: false, includeInstruct: false }, over);
     return typeof r === 'string' ? r : (r?.content ?? '');
   }
-  return await c.generateRaw({ prompt, responseLength: MAX_OUT });       // no profile chosen: main connection, prompt only
+  return await c.generateRaw({ prompt, responseLength: maxOut });       // no profile chosen: main connection, prompt only
 }
 const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 const is429 = (e) => /429|too many requests|rate.?limit|quota/i.test(`${e?.message} ${e?.cause?.message || e?.cause || ''}`);
