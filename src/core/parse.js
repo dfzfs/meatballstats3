@@ -61,12 +61,14 @@ const pick = (rhs, groups) => groups.findIndex((ws) => ws.some((w) => rhs.toLowe
 export function toEvents(parsed, text, V, scene = [], opts = {}) {
   const ev = [], dropped = [...parsed.dropped], active = opts.active ? new Set(opts.active) : null;
   const notP = new Set((opts.notPeople || []).map((n) => bare(n).toLowerCase()));
-  const ok = (n, raw) => (notP.has(bare(n).toLowerCase()) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
+  // trust: lines the person asked for — no name-in-text or quote checks (they know their story)
+  const ok = (n, raw) => (opts.trust ? true : notP.has(bare(n).toLowerCase()) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
+  const qok = (q, t, min) => !!opts.trust || (!!q && quoteOk(q, t, min));
   const quoteOf = (v) => (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1];
   let cut = null, hasWith = false, moved = false;
   for (const { k, v } of parsed.lines) {
     const raw = `${k}: ${v}`, [lhs, rhs] = eq(v);
-    if (active && !active.has(k)) { dropped.push({ raw, why: 'off' }); continue; }
+    if (active && !active.has(k) && !opts.trust) { dropped.push({ raw, why: 'off' }); continue; }
     if (k === 'cut') { cut = v.split('|')[0].trim(); ev.push({ k }); }
     else if (k === 'with') {
       const parts = splitNames(v).map((p) => ({ sign: p[0], n: bare(p) })).filter((x) => x.n && !notP.has(x.n.toLowerCase()));   // a title or a director is never "with"
@@ -83,7 +85,7 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
       else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: rhs, ...(k === 'wear' && /^[+\-]/.test(rhs) ? { delta: true } : {}), ...(k === 'body' && pick(rhs, [V.healed]) === 0 ? { healed: true } : {}), ...(k === 'body' && pick(rhs.split(/[\s,]/)[0], [V.transient]) === 0 ? { brief: true } : {}) });
     } else if (k === 'gone') {
       const q = (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1], state = ['believed', 'dead', 'left'][pick(rhs, [V.gone.believed, V.gone.dead, V.gone.left])];
-      if (!rhs || !state || !q || !quoteOk(q, text, 8)) dropped.push({ raw, why: 'gone-needs-quote' });
+      if (!rhs || !state || !qok(q, text, 8)) dropped.push({ raw, why: 'gone-needs-quote' });
       else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: state, q: q.slice(0, 120) });
     } else if (k === 'promise' || k === 'call' || k === 'touch') {
       const p = two(lhs, '>');
@@ -102,35 +104,35 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
       else if (ok(lhs, raw)) for (const part of rhs.split(/\s*[,，]\s*(?=[+\-])/)) { const sign = part.trim()[0] === '-' ? '-' : '+'; const v = part.trim().replace(/^[+\-]\s*/, '').slice(0, 60); if (v) ev.push({ k, who: bare(lhs), sign, v }); }
     } else if (k === 'near') {
       const q = (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1], m = v.replace(/\|[^|]*$/, '').match(/^(.+?)\s+[—–-]+\s+([^:：]+)[:：]\s*(.+)$/);
-      if (!m || !q || !quoteOk(q, text, 8)) dropped.push({ raw, why: 'near-needs-quote' });
+      if (!m || !qok(q, text, 8)) dropped.push({ raw, why: 'near-needs-quote' });
       else ev.push({ k, a: m[1].trim().slice(0, 60), rel: m[2].trim().slice(0, 20), b: m[3].trim().slice(0, 60), q: q.slice(0, 120) });
     } else if (k === 'slip') {
       const q = (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1], what = rhs.replace(/\|[^|]*$/, '').trim();
-      if (!what || !q || !quoteOk(q, text, 8)) dropped.push({ raw, why: 'slip-needs-quote' });
+      if (!what || !qok(q, text, 8)) dropped.push({ raw, why: 'slip-needs-quote' });
       else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: what.slice(0, 60), q: q.slice(0, 120) });
     } else if (k === 'role') {
       if (!rhs) dropped.push({ raw, why: 'form' }); else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: rhs.slice(0, 60) });
     } else if (k === 'lie' || k === 'owe') {
       const p = two(lhs, '>'), q = quoteOf(v), what = rhs.replace(/\|[^|]*$/, '').trim(), off = what.startsWith('-');
       if (!p || !what) dropped.push({ raw, why: 'form' });
-      else if (k === 'lie' && !off && (!q || !quoteOk(q, text, 8))) dropped.push({ raw, why: 'lie-needs-quote' });
+      else if (k === 'lie' && !off && (!qok(q, text, 8))) dropped.push({ raw, why: 'lie-needs-quote' });
       else if (ok(p[0], raw) && ok(p[1], raw)) ev.push({ k, a: p[0], b: p[1], v: what.replace(/^[+\-]\s*/, '').slice(0, 80), off, ...(q ? { q: q.slice(0, 120) } : {}) });
     } else if (k === 'refuse') {
       const p = two(lhs, '>'), q = quoteOf(v), what = rhs.replace(/\|[^|]*$/, '').trim();
       if (!p || !what) dropped.push({ raw, why: 'form' });
-      else if (!q || !quoteOk(q, text, 8)) dropped.push({ raw, why: 'refuse-needs-quote' });
+      else if (!qok(q, text, 8)) dropped.push({ raw, why: 'refuse-needs-quote' });
       else if (ok(p[0], raw) && ok(p[1], raw)) ev.push({ k, a: p[0], b: p[1], v: what.slice(0, 60), q: q.slice(0, 120) });
     } else if (k === 'yield' || k === 'press' || k === 'aside') {
       // v0.9: yield and aside must be in what the story wrote (not <user> / <director>); press may come from the person
       const p = two(lhs, '>'), q = quoteOf(v), what = rhs.replace(/\|[^|]*$/, '').trim();
       if (!p || !what) dropped.push({ raw, why: 'form' });
-      else if (!q || !quoteOk(q, text, 8)) dropped.push({ raw, why: `${k}-needs-quote` });
+      else if (!qok(q, text, 8)) dropped.push({ raw, why: `${k}-needs-quote` });
       else if (k !== 'press' && inTag(q, text)) dropped.push({ raw, why: `${k}-in-instruction` });
       else if (ok(p[0], raw) && ok(p[1], raw)) ev.push({ k, a: p[0], b: p[1], v: what.slice(0, 60), q: q.slice(0, 120) });
     } else if (k === 'lead' || k === 'seed') {
       const q = quoteOf(v), what = rhs.replace(/\|[^|]*$/, '').trim();
       if (!what) dropped.push({ raw, why: 'form' });
-      else if (!q || !quoteOk(q, text, 8)) dropped.push({ raw, why: `${k}-needs-quote` });
+      else if (!qok(q, text, 8)) dropped.push({ raw, why: `${k}-needs-quote` });
       else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: what.slice(0, 60), q: q.slice(0, 120), ...(k === 'lead' && inTag(q, text) ? { byUser: true } : {}) });
     } else if (k === 'money') {
       if (!rhs) dropped.push({ raw, why: 'form' }); else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: rhs.slice(0, 40) });

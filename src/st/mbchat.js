@@ -36,7 +36,7 @@ function buildPrompt(msg, es, fmt, nowLine) {
   const earlier = chatLog().slice(-4).map((m) => `${m.who === 'me' ? 'USER' : 'MEATBALL'}: ${m.text}`).join('\n');
   return `[ROLE]
 You keep the story record for a roleplay ("Meatball"). The user asks you to fix it. Find what they mean in [RECORD] and [STORY], then write the fix.
-The user is always right about their own story: always write the fix they ask for. If the story text or the record says otherwise, say so ONCE in one short sentence with the reply number, and still write the fix. Never refuse, never ask twice.
+The user is always right about their own story: always write the fix they ask for, for anything in the record (dates, time, place, people, clothes, items, relationships, feelings, refusals, secrets known, anything). If the story text or the record says otherwise, say so ONCE in one short sentence with the reply number, and still write the fix. Never refuse, never argue, never ask twice.
 If you cannot find what they mean at all, write no fix and ask which reply (#number) in one short sentence.
 
 [NOW]
@@ -59,7 +59,7 @@ To remove a wrong line from a reply: -key: the old value
 [RULES]
 1. Put each line on the reply where it belongs (the reply where the event happened). A date fix is "date: March 6" on that reply; also fix the following replies of the same scene if they carry the wrong date.
 2. Change only what the user asked and what must follow from it. Keep names exactly as in the record.
-3. <say> is in Korean, warm and short (1-2 sentences), and names the reply numbers you changed.
+3. <say> is in Korean, warm and short (1-2 sentences): what you found, then end with a question asking if you should change it (e.g. "#26의 날짜를 3월 6일로 바꿀까요?"). Nothing is changed until the user agrees.
 
 [OUTPUT]
 <say>…</say>
@@ -94,7 +94,6 @@ export async function send(text, info, redraw) {
   m.text = res.say || (res.fixes.length ? (R.ui2.chatFound || '이렇게 고칠게요.') : (R.ui2.chatNone || '못 찾았어요. 몇 번째 답인지 알려 줄래요?'));
   if (res.fixes.length) {
     m.prop = { fixes: res.fixes, conflict: res.conflict, quote: res.quote, state: 'ask', req: msg };
-    if (!res.conflict) decide(m, true);           // nothing to warn about: just do it (undo stays available)
   }
   save(); redraw();
 }

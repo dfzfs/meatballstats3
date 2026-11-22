@@ -3,6 +3,7 @@
 import { ctx, store, save, ledger, ledger2, R } from './store.js';
 import { cleanText, fingerprint } from '../core/clean.js';
 import { absorb, absorbRel } from '../core/bundle.js';
+import { parse, toEvents } from '../core/parse.js';
 import { refresh } from './inject.js';
 import { resolve } from '../core/names.js';
 
@@ -16,37 +17,51 @@ export function reabsorb(i, answer) {
   if (!m || !S) return false;
   const fp = fingerprint(m), prev = [...c.chat.slice(0, i)].reverse().find((x) => x.is_user);
   const b = { text: [prev ? `<user>${cleanText(prev.mes)}</user>` : '', cleanText(m.mes)].filter(Boolean).join('\n\n'), fps: [fp] };
-  const r = absorb(S.ev, b, String(answer), ledger(), R.V);
+  const mbOnly = part(answer, 'mb'), r = absorb(S.ev, b, `<mb>\n${mbOnly.join('\n') || 'none'}\n</mb>`, ledger(), R.V);   // an empty <mb> is fine here
   if (r.pushed) return false;
   absorbRel(S.rel, b, String(answer), ledger(), R.bp, R.V, R.lang, [], ledger2());
   S.raw[fp] = { ...(S.raw[fp] || {}), a: String(answer).slice(0, 2500), t: Date.now() };
   return true;
 }
-function merge(old, fix) {
-  const keyOf = (l) => l.replace(/^-/, '').split(/[:|]/)[0].trim().toLowerCase();
+const keyOf = (l) => l.replace(/^-/, '').split(/[:|]/)[0].trim().toLowerCase();
+const lhsOf = (l) => l.replace(/^-/, '').split('=')[0].trim().toLowerCase();
+const ONE = ['date', 'time', 'loc', 'tie', 'texture', 'with', 'weather', 'mood'];
+// The classifier's own lines for this reply, minus the ones the person replaces or removes.
+function baseOf(old, lines) {
   let mb = part(old, 'mb'), rel = part(old, 'rel');
-  for (const l of fix.lines) {
-    const neg = l.startsWith('-'), body = neg ? l.slice(1).trim() : l, isRel = REL.test(body);
-    const list = isRel ? rel : mb, k = keyOf(body);
-    // one-of keys (date, time, loc, tie ...) replace the old line of the same key and pair
-    const same = (x) => keyOf(x) === k && (!/[>-]/.test(body.split(/[:=]/)[1] || '') || x.split('=')[0] === body.split('=')[0]);
-    const kept = list.filter((x) => (neg ? x !== body && !(same(x) && x.includes(body.split('=').pop().trim())) : !(['date', 'time', 'loc', 'tie', 'texture'].includes(k) && same(x))));
-    if (!neg) kept.push(body);
-    if (isRel) rel = kept; else mb = kept;
+  for (const l of lines) {
+    const body = l.replace(/^-/, '').trim(), k = keyOf(body), lhs = lhsOf(body), neg = l.startsWith('-');
+    const hit = (x) => keyOf(x) === k && (ONE.includes(k) ? (!/[>-]/.test(lhs) || lhsOf(x) === lhs) : (neg ? x.includes(body.split('=').pop().trim()) && lhsOf(x) === lhs : lhsOf(x) === lhs && ['wear', 'role', 'pos', 'body', 'mark'].includes(k)));
+    mb = mb.filter((x) => !hit(x)); rel = rel.filter((x) => !hit(x));
   }
   return `<mb>\n${mb.join('\n') || 'none'}\n</mb>\n<rel>\n${rel.join('\n') || 'none'}\n</rel>`;
 }
+// The person's lines go in as they are: no name-in-text or quote checks.
+function addUser(S, fp, i, lines) {
+  const c = ctx(), m = c.chat?.[i], text = cleanText(m?.mes || '');
+  const mbLines = lines.filter((l) => !l.startsWith('-') && !REL.test(l));
+  if (mbLines.length) {
+    const r = toEvents(parse(`<mb>\n${mbLines.join('\n')}\n</mb>`), text, R.V, ledger().with || [], { trust: true });
+    const list = (S.ev[fp] ||= []), tail = list.filter((e) => e.k === 'dir' || e.k === 'drop');
+    S.ev[fp] = [...list.filter((e) => e.k !== 'dir' && e.k !== 'drop'), ...r.ev.map((e) => ({ ...e, by: 'user', ...(e.k === 'date' ? { force: true } : {}) })), ...tail];
+  }
+  trustRel(S, fp, lines);
+}
+const show = (old, lines) => { const base = baseOf(old, lines), add = lines.filter((l) => !l.startsWith('-'));
+  return base.replace('</mb>', `${add.filter((l) => !REL.test(l)).map((l) => `${l}   ✋`).join('\n')}\n</mb>`).replace('</rel>', `${add.filter((l) => REL.test(l)).map((l) => `${l}   ✋`).join('\n')}\n</rel>`).replace(/\nnone\n(?=.)/g, '\n'); };
 // Apply fixes [{ i, lines }]. Returns the undo list (old answers) or null.
 export function applyFixes(fixes, note = '') {
   const c = ctx(), S = store(true); if (!S) return null;
   const undo = [];
   for (const f of fixes) {
     const m = c.chat?.[f.i]; if (!m || m.is_user || !f.lines?.length) continue;
-    const fp = fingerprint(m), old = S.raw?.[fp]?.a || EMPTY;
-    if (!reabsorb(f.i, merge(old, f))) continue;
-    undo.push({ i: f.i, fp, old, had: S.ufix?.[fp] || null });
-    (S.ufix ||= {})[fp] = { lines: [...(S.ufix?.[fp]?.lines || []), ...f.lines].slice(-20), note: String(note).slice(0, 200), at: Date.now() };
-    markUser(S, fp, f.lines);
+    const fp = fingerprint(m), old = S.raw?.[fp]?.a || EMPTY, had = S.ufix?.[fp] || null;
+    const all = [...(had?.lines || []), ...f.lines].slice(-20);
+    if (!reabsorb(f.i, baseOf(old.replace(/\s+✋$/gm, ''), all))) continue;
+    addUser(S, fp, f.i, all);
+    S.raw[fp].a = show(old.replace(/\s+✋$/gm, ''), all);
+    undo.push({ i: f.i, fp, old, had });
+    (S.ufix ||= {})[fp] = { lines: all, note: String(note).slice(0, 200), at: Date.now() };
     (S.edited ||= {})[fp] = Date.now();
   }
   if (undo.length) { save(); refresh(); }
@@ -54,7 +69,7 @@ export function applyFixes(fixes, note = '') {
 }
 export function undoFixes(undo) {
   const S = store(true); if (!S || !undo) return;
-  for (const u of undo) { reabsorb(u.i, u.old); if (u.had) S.ufix[u.fp] = u.had; else delete S.ufix?.[u.fp]; }
+  for (const u of undo) { const clean = u.old.replace(/\s+✋$/gm, ''); reabsorb(u.i, u.had ? baseOf(clean, u.had.lines) : clean); if (u.had) { addUser(S, u.fp, u.i, u.had.lines); S.ufix[u.fp] = u.had; } else delete S.ufix?.[u.fp]; S.raw[u.fp].a = u.old; }
   save(); refresh();
 }
 // The person's relation lines are taken as they are (the quote and name checks are for the classifier, not for them).
@@ -85,7 +100,8 @@ export function keepFixes(fps) {
   for (const fp of fps) {
     const f = S.ufix[fp]; if (!f) continue;
     const i = (c.chat || []).findIndex((m) => fingerprint(m) === fp); if (i < 0) continue;
-    if (reabsorb(i, merge(S.raw?.[fp]?.a || EMPTY, f))) markUser(S, fp, f.lines);
+    const fresh = (S.raw?.[fp]?.a || EMPTY).replace(/\s+✋$/gm, '');
+    if (reabsorb(i, baseOf(fresh, f.lines))) { addUser(S, fp, i, f.lines); S.raw[fp].a = show(fresh, f.lines); }
   }
   save();
 }
