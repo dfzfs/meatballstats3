@@ -689,7 +689,9 @@
       "hit him",
       "spat on"
     ],
-    "harshLimit": ". One line {a} never crosses, however harsh: {limit}"
+    "harshLimit": ". One line {a} never crosses, however harsh: {limit}",
+    "goalPushLabel": "Direction",
+    "goalPush": "{v} — the user's long-term direction. Do not arrive there. If it fits this scene, take one small step toward it (a look, a choice, a small turn); otherwise ignore it"
   },
   "ui2": {
     "burst": "Allow a long-held feeling to break out",
@@ -1005,7 +1007,9 @@
     "fillRangeNeed": "Enter the range numbers, e.g. #0 ~ #6",
     "readHidden": "Count hidden messages in the record",
     "readHiddenTip": "On: replies and messages hidden in SillyTavern (👁) are read as part of the story — rebuilds, the record and the calendar. The note sent to the story AI is unchanged. For hidden replies already past, run 📚 Rebuild from start or 🎯 Rebuild range. SillyTavern's own narrator / help messages stay out.",
-    "diceDoneChat": "🎲 Rolled dates for {n} replies. Not happy? ↩ Undo below."
+    "diceDoneChat": "🎲 Rolled dates for {n} replies. Not happy? ↩ Undo below.",
+    "fillNext": "Go on from #{n} to the end",
+    "fillNextTip": "The replies after the range you just rebuilt were read on the old record. Reading them again lines them up with the new one."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

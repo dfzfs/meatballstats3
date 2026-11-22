@@ -93,3 +93,31 @@ test('a reply too long for one call keeps its number when its start is cut', () 
   const b = pending(chat, {}, { ...DEFAULTS, fill: 6 });
   assert.ok(b.text.length <= DEFAULTS.maxIn); assert.ok(b.text.startsWith('[#1]\n…'));
 });
+
+test('방향 · 천천히 밀어주기: a spaced, small-step line that the firewall keeps', async () => {
+  const { rows3, firewall } = await import('../src/core/vault.js');
+  const L = en, goal = { who: '', v: 'in the end they choose each other', signs: ['kiss'], goal: true, push: true, shows: '', cover: '', opens: '' };
+  const bp = { vault: [goal], persons: [], avoid: [] }, st1 = { with: ['Jiho', 'Seoyeon'], hist: [] }, st2 = {};
+  const push = (o = {}) => rows3(st1, st2, bp, L, { marks: new Map(), goalEvery: 4, ...o }).filter((r) => r.kind === 'goalPush');
+  const [r] = push();
+  assert.ok(r && r.text.startsWith('- Direction (Jiho & Seoyeon): in the end they choose each other') && /Do not arrive/.test(r.text), r?.text);
+  assert.match(r.mark, /^goal:/);
+  assert.equal(push({ marks: new Map([[r.mark, 2]]) }).length, 0);          // sent 2 replies ago: waits
+  assert.equal(push({ marks: new Map([[r.mark, 4]]) }).length, 1);          // 4 ago: again
+  assert.equal(push({ tail: 'and then the kiss' }).length, 0);              // its words just showed: no push
+  assert.equal(rows3({ with: [], hist: [] }, st2, bp, L, { marks: new Map() }).filter((x) => x.kind === 'goalPush').length, 0);   // nobody on stage
+  const hint = rows3(st1, st2, { ...bp, vault: [{ ...goal, push: false, hint: true }] }, L, { marks: new Map() });
+  assert.ok(hint.some((x) => x.kind === 'goalHint') && !hint.some((x) => x.kind === 'goalPush'));
+  // the firewall drops lines with the direction's words, except the person's own push line
+  const text = `[HEAD]\n${r.text}\n- someone: in the end they choose each other`, mine = (l) => l.startsWith(`- ${L.rel.goalPushLabel}`);
+  const f = firewall(text, bp, mine);
+  assert.ok(f.text.includes('- Direction') && !f.text.includes('- someone'));
+});
+
+test('a record of what happened is not deleted for touching a direction; real secrets still are', async () => {
+  const { quarantine } = await import('../src/core/vault.js');
+  const bp = { vault: [{ who: '', v: 'they choose each other', signs: ['kiss'], goal: true }, { who: 'Jiho', v: 'Jiho is a prince in hiding', signs: ['prince'] }] };
+  const g = { a: [{ k: 'touch', v: 'a kiss at the station' }, { k: 'know', v: 'Seoyeon learns Jiho is a prince' }, { k: 'loc', v: 'station' }] };
+  quarantine(g, ['a'], bp);
+  assert.deepEqual(g.a.map((e) => e.k), ['touch', 'loc']);
+});

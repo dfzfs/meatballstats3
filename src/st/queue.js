@@ -58,7 +58,7 @@ async function tick() {
   const S0 = store(), F = S0?.fill;
   if (F?.paused) { Q.log.status = 'fill-paused'; return; }
   const b = pending(chat, S0?.ev || {}, F ? { ...DEFAULTS, fill: FILL_N, from: F.from, to: F.to } : undefined, S0?.dir);
-  if (!b && F) { if (endFill()) { try { window.toastr?.success(R.ui2?.fillDone || '처음부터 정리 끝!'); } catch (e) { /* */ } } return; }
+  if (!b && F) { if (endFill(true)) { try { window.toastr?.success(R.ui2?.fillDone || '처음부터 정리 끝!'); } catch (e) { /* */ } } return; }
   if (!b || !(b.ready || Q.rush)) return;
   const key = b.fps.join('|');
   if (key === Q.pushedKey || Q.fails >= 5) { Q.log.status = Q.fails >= 5 ? 'stopped' : 'pushed'; return; }   // same request is never sent twice

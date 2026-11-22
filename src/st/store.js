@@ -70,8 +70,10 @@ function withNote(sp, L) {
   return { ...sp, now: [sp.now || L.sp.nowHead, ...rows.map((r) => r.text)].join('\n'), rows: [...(sp.rows || []), ...rows] };
 }
 export function signpost() {
-  const lg = storyLang(), L = R.lang[lg], bp = bpLive(), mine = (l) => l.startsWith(`- ${L.sp.note}:`) || l.startsWith(`- ${L.sp.beat}:`) || l.startsWith(`- ${L.sp.scene}:`) || l.startsWith(`- ${L.sp.timeSkip.split(':')[0]}:`) || l.startsWith(`- ${L.sp.style}:`), dropped = [];
-  const wall = (sp, extra) => { const b = extra ? { ...bp, vault: (bp.vault || []).map((x) => ({ ...x, signs: [...x.signs, ...extra(x)] })) } : bp, out = { ...sp };
+  const lg = storyLang(), L = R.lang[lg], bp = bpLive(), mine = (l) => l.startsWith(`- ${L.sp.note}:`) || l.startsWith(`- ${L.sp.beat}:`) || l.startsWith(`- ${L.sp.scene}:`) || l.startsWith(`- ${L.sp.timeSkip.split(':')[0]}:`) || l.startsWith(`- ${L.sp.style}:`) || l.startsWith(`- ${L.rel.goalPushLabel}`), dropped = [];   // the person's own lines (a 밀어주기 direction too) are never walled
+  // a direction set to 밀어주기 is told to the story AI on purpose: it does not wall other lines
+  const bpW = { ...bp, vault: (bp.vault || []).filter((x) => !x.push) };
+  const wall = (sp, extra) => { const b = extra ? { ...bpW, vault: bpW.vault.map((x) => ({ ...x, signs: [...x.signs, ...extra(x)] })) } : bpW, out = { ...sp };
     for (const k of ['deep', 'mid', 'now']) { const f = firewall(sp[k], b, mine); out[k] = f.text; dropped.push(...f.dropped); } return out; };
   // v0.9 vault firewall, twice: on the text as written (Korean signs and pieces of the secret), and on the English
   // that goes out (the signs' own translations, same cache). The person's own note lines are never dropped.
@@ -86,7 +88,7 @@ function enSign(g) { try { return enLine(g, new Set(), () => {}); } catch (e) { 
 // The lore sheet as it stands now: vault entries that are open (gate, the person's decision, a kept leak) drop out.
 export function bpLive() {
   try {
-    const S = store(), goals = (S?.goals || []).map((g) => ({ who: g.who, v: g.v, signs: g.signs || [], shows: '', cover: '', opens: '', goal: true, hint: !!g.hint }));
+    const S = store(), goals = (S?.goals || []).map((g) => ({ who: g.who, v: g.v, signs: g.signs || [], shows: '', cover: '', opens: '', goal: true, hint: !!g.hint && !g.push, push: !!g.push }));
     const bp = bpAll(S, goals);
     return liveBp(bp, foldVault(ctx().chat || [], S, bp, ledger2(), fingerprint));
   } catch (e) { return R.bp; }
@@ -130,7 +132,7 @@ function signpost0(lg, L) {
       const redo = R.redoLine && Date.now() - R.redoLine.t < 120e3 ? R.redoLine : null;
       const rare = Math.min(3, Math.max(0.5, +s.rarity || 1));
       const fallenNow = new Set(fallState().filter((f) => f.open).map((f) => f.a));
-      y = rows3(st, st2, bp, L, { cue, lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
+      y = rows3(st, st2, bp, L, { cue, tail, goalEvery: Math.round(4 * rare), lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
         threads: s.refuseSteps === false ? [] : threads(chat, st, st2, bp, S, fingerprint, cleanText, R.lang, { lover }),
         ago: sent.ago, jitter: lastAi ? parseInt(fingerprint(lastAi).split('.').at(-1), 10) % 3 === 0 : true, seed: sent.ago });
       if (s.vaultLines === false) y = y.filter((r) => !['vaultCover', 'vaultPov', 'vaultAvoid'].includes(r.kind));
@@ -257,7 +259,7 @@ export function stateFor() {
     guard: S.guard?.[fp] && !S.guard[fp].done ? S.guard[fp].hits : [], note: S.note || '', habits: S.habit?.[fp] || [], sorted: !!(fp && S.ev?.[fp]) };
 }
 // v0.9 destinations (도착점): where the story should end up. Never sent; they become vault entries the guard watches for "rushed".
-export function setGoals(list) { const S = store(true); S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint })); save(); }
+export function setGoals(list) { const S = store(true); S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint && !g.push, push: !!g.push })); save(); }
 // secrets typed in 지시창: guarded exactly like a lore vault line (never sent, signs scanned, firewall, classifier guard)
 export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 8).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200) })).filter((x) => x.who && x.v); save(); }
 export function setNote(text) { const S = store(true); S.note = String(text || '').slice(0, 1200); save(); }

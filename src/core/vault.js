@@ -94,8 +94,10 @@ export function foldPressure(chat, S, bp, fingerprint) {
 }
 
 // Layer 4. Drops stored events that carry a vault sign or a piece of the secret. Mutates the lists; returns what went.
-export function quarantine(groups, fps, bp) {
-  const gone = [];
+// Directions (방향) are not secrets of a character: a record of what really happened (a confession) stays even when it
+// touches a direction's words. Only real vault lines (lore · typed secrets) quarantine records.
+export function quarantine(groups, fps, bp0) {
+  const gone = [], bp = bp0 ? { ...bp0, vault: (bp0.vault || []).filter((x) => !x.goal) } : bp0;
   if (!bp?.vault?.length) return gone;
   for (const fp of fps) {
     const g = groups[fp];
@@ -173,19 +175,29 @@ export function threads(chat, st1, st2, bp, S, fingerprint, cleanText, langs, op
 // Note rows for v0.9, each with a kind (the selector grades them). opts: { cue, user (the person's character name),
 // lover(a, b), threads (from threads()), ago (replies since the last special line), jitter (bool), every (spark gap),
 // interrogate (bool: the person's message digs at someone's secret), redo ({ kind, who, v } after a guard rewrite) }
+const hashOf = (t) => { let x = 0; for (const c of String(t)) x = (x * 31 + c.codePointAt(0)) >>> 0; return x.toString(36); };
 export function rows3(st1, st2, bp, L, opts = {}) {
   const R = L.rel, here = st1.with || [], now = [], cue = opts.cue || '';
   if (!bp) return now;
   const row = (kind, text, src = 'v09', mark) => now.push({ layer: 'now', kind, text: `- ${text}`, src, ...(mark ? { mark } : {}) });
   const runOf = (names) => runLength(st1.hist, (w) => names.every((n) => w.includes(n)));
+  // 방향 · 천천히 밀어주기: the person chose to tell the story AI where it is headed. Every few replies (not every one: told
+  // each time, a model rushes there), only with someone on stage, and not right after the last reply already showed its
+  // words (then it is moving, maybe too fast: the ⚠ guard watches that). One small step at most, never the arrival.
+  const goalPush = (x, who) => {
+    if (!here.length) return;
+    const mk = `goal:${hashOf(x.v)}`, ago = opts.marks?.get(mk) ?? 99, every = Math.max(2, opts.goalEvery || 4);
+    if (ago < every || (x.signs || []).some((s) => hasSign(opts.tail || '', s))) return;
+    row('goalPush', `${R.goalPushLabel}${who ? ` (${who})` : ''}: ${fillAll(R.goalPush, { v: x.v })}`, 'vault', mk);
+  };
   // --- vault (grade 0). Nothing here holds the secret or a sign word.
   for (const x of bp.vault || []) {
-    if (x.goal && !x.who) { if (x.hint && here.length) row('goalHint', fillAll(R.goalHint, { who: here.slice(0, 2).join(' & ') }), 'vault'); continue; }
+    if (x.goal && !x.who) { if (x.push) goalPush(x, here.slice(0, 2).join(' & ')); else if (x.hint && here.length) row('goalHint', fillAll(R.goalHint, { who: here.slice(0, 2).join(' & ') }), 'vault'); continue; }
     const w = whoOf(x.who);
     if (!w.length || !w.every((n) => here.includes(n))) continue;
     const k = runOf(w), other = here.find((n) => !w.includes(n)) || '';
     const pr = opts.pressure?.[x.who] || 0;   // v0.9 step 2: clue pressure — the "may show" line feeds clues, so it stops
-    if (x.goal) { if (x.hint) row('goalHint', fillAll(R.goalHint, { who: x.who }), 'vault'); continue; }
+    if (x.goal) { if (x.push) goalPush(x, x.who); else if (x.hint) row('goalHint', fillAll(R.goalHint, { who: x.who }), 'vault'); continue; }
     if (x.shows && pr === 0 && onBeat(k, opts.showsEvery || 4)) row('vaultShows', fillAll(R.ordVault, { who: x.who, v: x.shows }), 'vault');
     if (w.length === 1 && other && opts.pov !== false && (pr >= 1 || onBeat(k, 3))) row('vaultPov', fillAll(R.vPov, { who: x.who, other }), 'vault');
     if (pr >= 2 && w.length === 1 && other && opts.pov !== false && (k <= 1 || (opts.marks?.get(`suspect:${x.who}`) ?? 99) >= 8)) row('suspect', fillAll(R.vSuspect, { who: x.who, other }), 'vault', `suspect:${x.who}`);
@@ -254,11 +266,11 @@ export function rows3(st1, st2, bp, L, opts = {}) {
 // Caps per grade, one special at most and none right after another, then the whole layer fits maxLines / budget —
 // dropping from the least important grade. Order in the layer: 2, 0, 1, 3 (this reply's own lines nearest the end).
 export const GRADE = { hide: 0, keep: 0, unknown: 0, vaultShows: 0, vaultCover: 0, vaultPov: 0, vaultAvoid: 0, suspect: 0, goalHint: 0,
-  redo: 1, press: 1, refuseAgain: 1, refusePress: 1, refuse: 1, burstNow: 1, refuseHold: 1, harshAfter: 1, regroup: 1,
+  redo: 1, press: 1, goalPush: 1, refuseAgain: 1, refusePress: 1, refuse: 1, burstNow: 1, refuseHold: 1, harshAfter: 1, regroup: 1,
   held: 2, burst: 2, fallBase: 2, tie: 2, leak: 2, channel: 2,
   fallCollapse: 3, fallPull: 3, fallReceive: 3, lead: 3, seed: 3, care: 3, aside: 3, refuseEase: 3, spark: 3, harsh: 3, harshStart: 3 };
 const RANK0 = ['hide', 'keep', 'vaultAvoid', 'suspect', 'unknown', 'vaultCover', 'vaultPov', 'goalHint', 'vaultShows'];   // 모름 ranks high: it was the strongest line in the v0.7 test
-const RANK1 = ['redo', 'press', 'harshAfter', 'refusePress', 'refuseAgain', 'burstNow', 'regroup', 'refuse', 'refuseHold'];
+const RANK1 = ['redo', 'press', 'goalPush', 'harshAfter', 'refusePress', 'refuseAgain', 'burstNow', 'regroup', 'refuse', 'refuseHold'];
 const RANK2 = ['held', 'burst', 'fallBase', 'tie', 'leak', 'channel'];
 const RANK3 = ['fallCollapse', 'fallPull', 'fallReceive', 'lead', 'seed', 'care', 'aside', 'refuseEase', 'spark', 'harsh', 'harshStart'];   // design 8: one special, this order
 export function compose(rows, opts = {}, est = (t) => Math.ceil(t.length / 4)) {
