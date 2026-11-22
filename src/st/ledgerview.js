@@ -6,7 +6,7 @@ import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
 import { refresh } from './inject.js';
 import { fold2, tieOf, trend } from '../core/ledger2.js';
-import { trWatch } from './tr.js';
+import { trWatch, showName } from './tr.js';
 import { mascotImg } from './mascot.js';
 import { settings, ledger2 } from './store.js';
 import { absorb, absorbRel } from '../core/bundle.js';
@@ -212,20 +212,25 @@ function relHtml(st, L, ui) {
   const add = (a, b) => { if (a && b && a !== b) pairs.set(k2(a, b), [a, b].sort()); };
   Object.values(st.pair || {}).forEach((p) => add(p.a, p.b)); Object.values(st2.dir).forEach((d) => add(d.a, d.b));
   [...bp.tie, ...bp.barrier].forEach((x) => add(x.a, x.b));
-  const score = {}; for (const [a, b] of pairs.values()) { score[a] = (score[a] || 0) + 1; score[b] = (score[b] || 0) + 1; }
+  // one circle per person: names that show the same (glossary: "Grace" and "그레이스") are drawn as one
+  const D = (n) => showName(n), score = {}, also = {};
+  for (const [a, b] of pairs.values()) for (const n of [a, b]) { score[D(n)] = (score[D(n)] || 0) + 1; (also[D(n)] ||= new Set()).add(n); }
   const people = Object.keys(score).sort((a, b) => score[b] - score[a]).slice(0, 9);
   if (!people.length) return `<p class="mb3-dim">${h(R.ui2.relNone)}</p>`;
   const W = 640, H = 340, cx = W / 2, cy = H / 2, r = people.length < 3 ? 120 : 130, pos = {};
   people.forEach((n, i) => { const a = (people.length === 2 ? Math.PI : -Math.PI / 2) + (2 * Math.PI * i) / people.length; pos[n] = [cx + r * 1.6 * Math.cos(a), cy + r * Math.sin(a)]; });
   let lines = '';
+  const drawn = new Set();
   for (const [k, [a, b]] of pairs) {
-    if (!pos[a] || !pos[b]) continue;
+    const A = D(a), Bn = D(b), dk = [A, Bn].sort().join('|');
+    if (!pos[A] || !pos[Bn] || A === Bn || drawn.has(dk)) continue;
+    drawn.add(dk);
     const tie = tieOf({ a, b, tie: st.pair?.[k]?.tie || '' }, st2, bp, R.V), da = st2.dir[`${a}>${b}`], db = st2.dir[`${b}>${a}`];
     const col = TEXC[(da?.tex ?? db?.tex ?? da?.cand ?? db?.cand ?? 7)], wall = bp.barrier.some((x) => k2(x.a, x.b) === k);
-    const [x1, y1] = pos[a], [x2, y2] = pos[b], mx = (x1 + x2) / 2, my = (y1 + y2) / 2, on = ui.pair === k;
+    const [x1, y1] = pos[A], [x2, y2] = pos[Bn], mx = (x1 + x2) / 2, my = (y1 + y2) / 2, on = ui.pair === k;
     lines += `<g class="mb3-pair" data-pair="${h(k)}" style="cursor:pointer"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${on ? 4 : 2}"${wall ? ' stroke-dasharray="6 4"' : ''}/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="14"/>${tie ? `<text x="${mx}" y="${my - 6}" text-anchor="middle" class="mb3-svgt">${h(tie.slice(0, 24))}</text>` : ''}</g>`;
   }
-  const nodes = people.map((n) => { const [x, y] = pos[n]; return `<g class="mb3-node" data-who="${h(n)}" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="30" class="mb3-svgc${ui.who === n ? ' mb3-svgon' : ''}"/><text x="${x}" y="${y + 4}" text-anchor="middle" class="mb3-svgt">${h(n.slice(0, 6))}</text></g>`; }).join('');
+  const nodes = people.map((n) => { const [x, y] = pos[n]; return `<g class="mb3-node" data-who="${h([...also[n]][0])}" style="cursor:pointer"><title>${h([...also[n]].join(' · '))}</title><circle cx="${x}" cy="${y}" r="30" class="mb3-svgc${also[n].has(ui.who) ? ' mb3-svgon' : ''}"/><text x="${x}" y="${y + 4}" text-anchor="middle" class="mb3-svgt mb3-notr">${h(n.slice(0, 6))}</text></g>`; }).join('');
   const legend = `<div class="mb3-dim mb3-legend">${L.rel.tex.slice(0, 7).map((t, i) => `<span style="color:${TEXC[i]}">━</span> ${h(t)}`).join(' · ')} · ┅ ${h(R.ui2.wall)}</div>`;
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="mb3-svg">${lines}${nodes}</svg>${legend}${ui.pair ? pairDetail(ui.pair, st, st2, L) : `<p class="mb3-dim">${h(R.ui2.relTap)}</p>`}`;
 }

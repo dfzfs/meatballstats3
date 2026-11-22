@@ -10,6 +10,7 @@ import { openLedger, clearAll } from './ledgerview.js';
 import { trLines } from './tr.js';
 import { copyReport } from './report.js';
 import { openLore } from './loreview.js';
+import { enableTips, tipQ } from './tip.js';
 import { GROUPS, isOn } from '../core/keys.js';
 
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -68,16 +69,18 @@ async function editNote() {
 }
 export function mountUI() {
   const U = R.ui, D = U.d || {}, s = settings(), c = ctx();
-  const desc = (k) => (D[k] ? `<small class="mb3-desc">${h(D[k])}</small>` : '');
-  const btn = (id, label, k) => `<div id="${id}" class="menu_button" title="${h(D[k] || '')}">${h(label)}</div>`;
+  const desc = (k) => tipQ(D[k], h);
+  enableTips();
+  const btn = (id, label, k) => `<div id="${id}" class="menu_button" data-mb3tip="${h(D[k] || '')}">${h(label)}</div>`;
   document.getElementById('extensions_settings2').insertAdjacentHTML('beforeend', `
   <div id="mb3_settings" class="extension_settings"><div class="inline-drawer">
     <div class="inline-drawer-toggle inline-drawer-header"><b>${h(U.title)}</b><div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div></div>
     <div class="inline-drawer-content">
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
       <div class="mb3-row"><label>${h(U.director)}</label> <span id="mb3_dir_box"></span>${desc('director')}</div>
-      <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label><select id="mb3_profile" class="text_pole"><option value=""></option></select>${desc('profile')}</div>
+      <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label>${desc('profile')}<select id="mb3_profile" class="text_pole"><option value=""></option></select></div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
+      <div class="mb3-row mb3-col"><label for="mb3_names">${h(U.nameMap)}</label>${desc('nameMap')}<textarea id="mb3_names" class="text_pole" rows="2" placeholder="${h(U.nameMapPh)}">${h(s.nameMap || '')}</textarea></div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_wait" type="checkbox"${s.waitSort ? ' checked' : ''} /><span>${h(U.waitSort)}</span></label>${desc('wait')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_spark" type="checkbox"${s.spark !== false ? ' checked' : ''} /><span>${h(U.spark)}</span></label>${desc('spark')}</div>
@@ -88,14 +91,14 @@ export function mountUI() {
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_human" type="checkbox"${s.human !== false ? ' checked' : ''} /><span>${h(U.human)}</span></label>${desc('human')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_mascot" type="checkbox"${s.mascot !== false ? ' checked' : ''} /><span>${h(U.mascot)}</span></label>${desc('mascot')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_fauto" type="checkbox"${s.fallAuto ? ' checked' : ''} /><span>${h(U.fallAuto)}</span></label>${desc('fallAuto')}</div>
-      <div class="mb3-row"><label for="mb3_rarity">${h(U.rarity)}</label><select id="mb3_rarity" class="text_pole">${[[2, U.rarityLow], [1, U.rarityMid], [0.6, U.rarityHigh]].map(([v, t]) => `<option value="${v}"${(+s.rarity || 1) === v ? ' selected' : ''}>${h(t)}</option>`).join('')}</select>${desc('rarity')}</div>
+      <div class="mb3-row"><label for="mb3_rarity">${h(U.rarity)}</label>${desc('rarity')}<select id="mb3_rarity" class="text_pole">${[[2, U.rarityLow], [1, U.rarityMid], [0.6, U.rarityHigh]].map(([v, t]) => `<option value="${v}"${(+s.rarity || 1) === v ? ' selected' : ''}>${h(t)}</option>`).join('')}</select></div>
       <div class="mb3-btns">${btn('mb3_ledger', U.ledger, 'ledger')}${btn('mb3_view', U.view, 'view')}${btn('mb3_note', U.noteBtn, 'note')}${btn('mb3_lore_btn', R.ui2.loreBtn, 'lore')}${btn('mb3_date', U.date, 'date')}${btn('mb3_copy', U.copyBtn, 'copy')}</div>
       <details class="mb3-help"><summary>${h(U.btnHelp)}</summary>
         <dl><dt>${h(U.ledger)}</dt><dd>${h(D.ledger)}</dd><dt>${h(U.view)}</dt><dd>${h(D.view)}</dd><dt>${h(U.noteBtn)}</dt><dd>${h(D.note)}</dd><dt>${h(R.ui2.loreBtn)}</dt><dd>${h(D.lore)}</dd><dt>${h(U.date)}</dt><dd>${h(D.date)}</dd><dt>${h(U.copyBtn)}</dt><dd>${h(D.copy)}</dd></dl></details>
-      <details><summary>${h(R.ui2.groupsTitle)}</summary>${desc('groups')}${GROUPS.filter((g) => !g.fixed).map((g) => `<label class="checkbox_label"><input type="checkbox" data-mb3g="${g.id}"${isOn(s.groups, g.id) ? ' checked' : ''} /><span>${h(R.ui2.groups[g.id])}</span></label>`).join('')}
+      <details><summary>${h(R.ui2.groupsTitle)} ${desc('groups')}</summary>${GROUPS.filter((g) => !g.fixed).map((g) => `<label class="checkbox_label"><input type="checkbox" data-mb3g="${g.id}"${isOn(s.groups, g.id) ? ' checked' : ''} /><span>${h(R.ui2.groups[g.id])}</span></label>`).join('')}
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_maker" type="checkbox"${s.maker ? ' checked' : ''} /><span>${h(R.ui2.maker)}</span></label>${desc('maker')}</div></details>
       <div id="mb3_rel_slot"></div>
-      <details class="mb3-danger"><summary>${h(D.delAllSet)}</summary>${desc('delAllSetDesc')}<div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
+      <details class="mb3-danger"><summary>${h(D.delAllSet)} ${desc('delAllSetDesc')}</summary><div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
     </div></div></div>`);
   const on = document.getElementById('mb3_on');
   on.checked = s.on;
@@ -110,6 +113,7 @@ export function mountUI() {
   drawDirector();
   for (const [id, k] of [['mb3_vlines', 'vaultLines'], ['mb3_rsteps', 'refuseSteps'], ['mb3_rush', 'rushCall'], ['mb3_human', 'human'], ['mb3_fauto', 'fallAuto'], ['mb3_mascot', 'mascot']]) document.getElementById(id)?.addEventListener('change', (e) => { s[k] = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_tr')?.addEventListener('change', (e) => { s.translate = e.target.checked; c.saveSettingsDebounced(); renderBar(); });
+  document.getElementById('mb3_names')?.addEventListener('input', (e) => { s.nameMap = e.target.value.slice(0, 2000); c.saveSettingsDebounced(); renderBar(); });
   document.getElementById('mb3_delall')?.addEventListener('click', () => { if (confirm(R.ui.delAllAsk)) clearAll(); });
   document.getElementById('mb3_copy')?.addEventListener('click', copyReport);
   setOpener(openLedger);

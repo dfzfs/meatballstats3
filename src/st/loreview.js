@@ -1,4 +1,5 @@
 // The lore sheet editor (설정집) and the chat-shape switch. Opened only on demand.
+import { tipQ, enableTips } from './tip.js';
 import { ctx, settings, store, save, R, loreText, applyLore, charKey, shape } from './store.js';
 import { request } from './queue.js';
 import { refresh } from './inject.js';
@@ -25,29 +26,36 @@ async function draft() {
 
 export function openLore() {
   const c = ctx(), U = R.ui2, s = settings(), box = document.createElement('div');
-  const cur = loreText(), sh = shape();
+  const cur = loreText(), sh = shape(); enableTips();
   const srcName = { chat: U.loreSrcChat, char: U.loreSrcChar, book: U.loreSrcBook, '': U.loreSrcNone }[cur.src];
   box.innerHTML = `<div class="mb3-view mb3-lore">
-    <details class="mb3-guide" open><summary>${h(U.loreGuideTitle)}</summary><ul>${(U.loreGuide || []).map((x) => `<li>${x}</li>`).join('')}</ul></details>
-    <h4>${h(U.shapeTitle)}</h4>
-    <select id="mb3_shape" class="text_pole">${['auto', 'one', 'novel', 'multi'].map((k) => `<option value="${k}"${sh.set === k ? ' selected' : ''}>${h(U.shape[k])}</option>`).join('')}</select>
-    <small>${h(U.shapeNow)}: ${h(c.name2)} = ${h(sh.charPerson || c.groupId ? U.isPerson : U.isTitle)} · ${h(c.name1)} = ${h(sh.userPerson ? U.isPerson : U.isDirector)}</small>
-    <h4>${h(U.loreTitle)} <small>(${h(srcName)})</small></h4>
-    <small>${h(U.loreHelp)}</small>
+    <p class="mb3-loreintro">${h(U.loreIntro || '')}</p>
+    <div class="mb3-shape"><b>${h(U.shapeTitle)}</b> ${tipQ(U.shapeTip, h)}<select id="mb3_shape" class="text_pole">${['auto', 'one', 'novel', 'multi'].map((k) => `<option value="${k}"${sh.set === k ? ' selected' : ''}>${h(U.shape[k])}</option>`).join('')}</select>
+      <small class="mb3-dim">${h(U.shapeNow)}: ${h(c.name2)} = ${h(sh.charPerson || c.groupId ? U.isPerson : U.isTitle)} · ${h(c.name1)} = ${h(sh.userPerson ? U.isPerson : U.isDirector)}</small></div>
+    <h4>${h(U.loreTitle)} <small class="mb3-dim">(${h(srcName)})</small></h4>
+    <div class="mb3-keys">${(U.loreKeys || []).map(([g, items]) => `<div class="mb3-kg"><span class="mb3-kgt">${h(g)}</span>${items.map(([k, t, ex]) => `<span class="mb3-key" data-mb3tip="${h(`${t}\n예: ${ex}`)}" data-ex="${h(ex)}">${h(k)}</span>`).join('')}</div>`).join('')}</div>
     <textarea id="mb3_lore" class="text_pole" rows="14" style="width:100%;font-family:monospace">${h(cur.text)}</textarea>
     <small id="mb3_lore_check"></small>
     <details class="mb3-tr-box"><summary>${h(R.ui.trShow)}</summary><pre id="mb3_lore_tr" class="mb3-notr"></pre></details>
     <div class="flex-container">
-      <div id="mb3_lore_draft" class="menu_button">${h(U.loreDraft)}</div>
-      <div id="mb3_lore_chat" class="menu_button">${h(U.loreSaveChat)}</div>
-      <div id="mb3_lore_char" class="menu_button">${h(U.loreSaveChar)}</div>
-      <div id="mb3_lore_tpl" class="menu_button">${h(U.loreTemplate)}</div>
+      <div id="mb3_lore_draft" class="menu_button" data-mb3tip="${h(U.loreDraftTip || '')}">${h(U.loreDraft)}</div>
+      <div id="mb3_lore_chat" class="menu_button" data-mb3tip="${h(U.loreSaveChatTip || '')}">${h(U.loreSaveChat)}</div>
+      <div id="mb3_lore_char" class="menu_button" data-mb3tip="${h(U.loreSaveCharTip || '')}">${h(U.loreSaveChar)}</div>
+      <div id="mb3_lore_tpl" class="menu_button" data-mb3tip="${h(U.loreTemplateTip || '')}">${h(U.loreTemplate)}</div>
     </div>
     ${R.bpOn ? `<p><b>⚠ ${h(R.ui2.bpOn)}</b></p>` : ''}
+    <details class="mb3-guide"><summary>${h(U.loreMore || U.loreGuideTitle)}</summary><ul>${(U.loreGuide || []).map((x) => `<li>${x}</li>`).join('')}</ul></details>
   </div>`;
   const ta = box.querySelector('#mb3_lore'), chk = box.querySelector('#mb3_lore_check');
   const check = () => { const bp = readBlueprint(ta.value); chk.textContent = `${U.loreRead}: ${bp.persons.length} ${U.lorePeople} · ${bp.lines} ${U.bpLines}${bp.dropped.length ? ` · ${bp.dropped.length} ${U.bpDrop}: ${bp.dropped.slice(0, 3).map((d) => d.raw.trim().slice(0, 30)).join(' / ')}` : ''}${bp.warn?.length ? ` · ⚠ ${R.ui.vaultWarn}: ${bp.warn.slice(0, 3).map((w) => `${w.who}(${w.field}: ${w.sign})`).join(', ')}` : ''}`; };
   ta.addEventListener('input', check); check();
+  box.querySelectorAll('.mb3-key').forEach((k) => k.addEventListener('click', () => {
+    const ex = k.dataset.ex || '', v = ta.value, at = ta.selectionStart ?? v.length;
+    const lineEnd = v.indexOf('\n', at) === -1 ? v.length : v.indexOf('\n', at);
+    const add = (lineEnd > 0 && v[lineEnd - 1] !== '\n' ? '\n' : '') + ex;
+    ta.value = v.slice(0, lineEnd) + add + v.slice(lineEnd); ta.focus();
+    const pos = lineEnd + add.length; ta.setSelectionRange(pos, pos); check();
+  }));
   box.querySelector('.mb3-tr-box')?.addEventListener('toggle', async (e) => { if (!e.target.open) return; const out = box.querySelector('#mb3_lore_tr'); out.textContent = '…'; out.textContent = (await trLines(ta.value.split('\n'))).join('\n'); });
   box.querySelector('#mb3_shape').addEventListener('change', (e) => { const S = store(true); S.shape = e.target.value; save(); refresh(); });
   box.querySelector('#mb3_lore_chat').addEventListener('click', () => { const S = store(true); S.lore = ta.value; save(); applyLore(); refresh(); window.toastr?.info(U.loreSaved); });

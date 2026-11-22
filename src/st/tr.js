@@ -1,6 +1,6 @@
 // Screen translation (Google, through SillyTavern's own translate endpoint). Everything sent to AI stays English;
 // only what the person reads is turned into Korean. Many lines go in one request; results are cached in this browser.
-import { ctx, settings } from './store.js';
+import { ctx, settings, R } from './store.js';
 
 const KEY = 'mb3_tr_v1', MAX_CHARS = 3500, MAX_KEEP = 3000;
 let cache = null;
@@ -11,10 +11,43 @@ const load = () => {
 };
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify([...load()].slice(-MAX_KEEP))); } catch (e) { /* storage full or off: memory only */ } };
 
+// ── Name glossary: how a name is shown on screen. Google turns names into words ("Grace" → "은혜"), so names are
+// masked before translating and put back as written here. Sources: the lore sheet (an English alias of a person
+// written in Korean → that Korean name) and the person's own list in settings ("Grace = 그레이스", one per line).
+const LATIN = /[A-Za-z]/;
+let gKey = '', gMap = new Map();
+export function glossary() {
+  const bp = R.bp, own = String(settings().nameMap || ''), key = own + '|' + JSON.stringify((bp?.persons || []).map((p) => [p.name, p.alias]));
+  if (key === gKey) return gMap;
+  const m = new Map();
+  for (const p of bp?.persons || []) for (const a of p.alias || []) if (a && a !== p.name && LATIN.test(a) && !LATIN.test(p.name)) m.set(a.toLowerCase(), p.name);
+  for (const line of own.split(/\r?\n/)) {
+    const [l, r] = line.split(/=|→/).map((x) => (x || '').trim());
+    if (l && r) for (const from of l.split(/[,，]/).map((x) => x.trim()).filter(Boolean)) m.set(from.toLowerCase(), r);
+  }
+  gKey = key; gMap = m; return m;
+}
+// The name as it should be shown (glossary), or the name itself.
+export const showName = (n) => glossary().get(String(n || '').trim().toLowerCase()) || n;
+const escRe = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const unmaskN = (s, map) => map.reduce((t, [tok, n]) => t.split(tok).join(n), s);
+function maskNames(text) {
+  const g = glossary(), map = [];
+  if (!g.size) return { s: text, map };
+  let s = text;
+  for (const k of [...g.keys()].sort((a, b) => b.length - a.length)) {
+    const re = new RegExp(`(^|[^A-Za-z0-9_])(${escRe(k)})(?![A-Za-z0-9_])`, 'gi');
+    if (!re.test(s)) continue;
+    const tok = `ZQN${map.length}Q`; map.push([tok, g.get(k)]);
+    s = s.replace(re, (m0, pre) => pre + tok);
+  }
+  return { s, map };
+}
+
 // On when the screen is Korean and the switch is on (default on).
 export const trOn = () => settings().translate !== false && (navigator.language || '').startsWith('ko');
 // Worth translating: has an English word. Korean names inside stay as they are (Google keeps them).
-const need = (s) => /[A-Za-z]{3,}/.test(s);
+const need = (s) => /[A-Za-z]{3,}/.test(String(s).replace(/ZQN\d+Q/g, ''));
 
 async function google(lines) {
   const r = await fetch('/api/translate/google', { method: 'POST', headers: ctx().getRequestHeaders(), body: JSON.stringify({ text: lines.join('\n'), lang: 'ko' }) });
@@ -27,7 +60,8 @@ async function google(lines) {
 export async function trLines(list) {
   const items = list.map((s) => String(s ?? ''));
   if (!trOn()) return items;
-  const C = load(), todo = [...new Set(items.map((x) => x.trim()).filter((s) => s && need(s) && !C.has(s)))];
+  const C = load(), masked = items.map((x) => maskNames(x.trim()));
+  const todo = [...new Set(masked.map((x) => x.s).filter((s) => s && need(s) && !C.has(s)))];
   let i = 0, fails = 0;
   while (i < todo.length && fails < 2) {
     const chunk = [];
@@ -35,11 +69,16 @@ export async function trLines(list) {
     while (i < todo.length && (len + todo[i].length < MAX_CHARS || !chunk.length)) { chunk.push(todo[i]); len += todo[i].length + 1; i++; }
     try {
       const out = await google(chunk.map((s) => s.replace(/\s*\n\s*/g, ' ')));
-      if (out.length === chunk.length) chunk.forEach((s, k) => C.set(s, out[k].trim() || s));
+      if (out.length === chunk.length) chunk.forEach((s, k) => { const v = (out[k].trim() || s).replace(/ZQN\s*(\d+)\s*Q/gi, 'ZQN$1Q'); if ((s.match(/ZQN\d+Q/g) || []).length === (v.match(/ZQN\d+Q/g) || []).length) C.set(s, v); });
     } catch (e) { fails++; console.warn('[meatball3] translate failed', e); }
   }
   persist();
-  return items.map((s) => { const t = s.trim(), v = t && C.get(t); return v ? s.replace(t, v) : s; });
+  return items.map((s, k) => {
+    const t = s.trim(), { s: m, map } = masked[k];
+    if (!t) return s;
+    const v = need(m) ? C.get(m) : m;                              // only names in it: no request needed
+    return v ? s.replace(t, unmaskN(v, map)) : map.length ? s.replace(t, unmaskN(m, map)) : s;
+  });
 }
 
 // Translate the text inside a shown element in place. Skips inputs, code and anything marked .mb3-notr.

@@ -469,7 +469,8 @@
       "human": "From harsh / fall lore lines and records (gave in · lead · aside · seed), rare \"may\" lines: \"need not go along\" after giving in too easily, \"this time first\" after a long stretch led by you, one remark warmer than the tie, old small things and offhand care, and the lines after a fall opens. Counting stays inside Meatball.",
       "fallAuto": "Off: when a fall is ready, 💗 appears in the status line and you decide.",
       "mascot": "The cat at the left of the status line. Off = text only.",
-      "director": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat. A separate extension."
+      "director": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat. A separate extension.",
+      "nameMap": "Only for the Korean screen: if a name is translated into a word (Grace → 은혜), write \"English name = shown name\", one per line. Aliases in the lore sheet are added on their own."
     },
     "btnHelp": "What the buttons do",
     "copyBtn": "📋 Copy test report",
@@ -545,7 +546,9 @@
     "directorErrAny": "Could not install ({n}). Use Extensions › Install extension with https://github.com/dfzfs/meatballinput",
     "pawTip": "Meatball record: see, fix, re-read or clear what Meatball noted for this reply",
     "allReplies": "All replies",
-    "notReadYet": "Not read yet. Meatball reads it shortly."
+    "notReadYet": "Not read yet. Meatball reads it shortly.",
+    "nameMap": "Name spellings (screen translation)",
+    "nameMapPh": "Grace = 그레이스"
   },
   "rel": {
     "moves": [
@@ -787,7 +790,116 @@
       "<b>v0.9 harsh · fall · old things</b> — <b>harsh: A>B = A's attitude toward B</b> (blunt, mocking, pushing away) <b>| limit: the line never crossed</b>; crossing it raises ⚠. <b>fall: A>B = how A shows it once fallen | opens: condition | keeps: what stays even then</b>. Meatball counts the kinds of things the two went through, days and replies; when the condition is confirmed by a quote, 💗 shows in the bar. Pressing it (or auto in settings) lets the character come undone while keeping what is listed in keeps. Switch on the \"old things\" group to have small things from long ago resurface when they overlap the scene. Example: <i>harsh: A>B = pushes back at every word | limit: never hits</i> · <i>fall: A>B = cannot look away | opens: sees B hurt | keeps: the same curt voice</i>",
       "<b>If it is wrong</b> — when the scene's text differs, the text wins. Lines that could not be read are listed under the box."
     ],
-    "loreGuideTitle": "How this window works"
+    "loreGuideTitle": "How this window works",
+    "loreKeys": [
+      [
+        "기본",
+        [
+          [
+            "인물",
+            "등장인물 한 명. 별칭 · 직위 · 특징(늘 그런 겉모습)을 붙일 수 있어요. 별칭에 영어 이름을 적으면 화면 번역에서도 이 이름으로 보여요.",
+            "인물: 깡통 | 별칭: Kkangtong | 특징: 안경 씀, 담배 안 피움"
+          ],
+          [
+            "세계",
+            "이야기 배경 한 줄.",
+            "세계: 현대 서울, 작은 카페"
+          ],
+          [
+            "장소",
+            "자주 나오는 곳. 「>」로 안쪽 장소, 「옆」으로 가까운 곳.",
+            "장소: 카페 > 창가 자리 | 옆: 골목"
+          ]
+        ]
+      ],
+      [
+        "관계",
+        [
+          [
+            "사이",
+            "지금 공식 관계. 한두 번 일로는 안 바뀌어요.",
+            "사이: 깡통-깡캐 = 전 연인, 지금은 친구"
+          ],
+          [
+            "결",
+            "마음의 결. 대사로 말하지 않고 행동 · 거리로만 보여요.",
+            "결: 깡통>깡캐 = 미련"
+          ],
+          [
+            "속",
+            "겉과 다른 속마음. 행동 밑에만 깔려요.",
+            "속: 깡통>깡캐 = 아직 좋아함"
+          ],
+          [
+            "아픈곳",
+            "건드리면 겉이 깨져도 되는 곳. 둘뿐일 때만.",
+            "아픈곳: 깡통>깡캐 = 헤어진 날 얘기"
+          ],
+          [
+            "장벽",
+            "둘 사이 걸림돌. 관계도에 점선으로 보여요.",
+            "장벽: 깡캐-깡돌 = 사귀는 중"
+          ],
+          [
+            "태도",
+            "거친 태도와 절대 안 넘는 선.",
+            "태도: 깡통>깡캐 = 퉁명 | 한계: 손찌검"
+          ],
+          [
+            "빠짐",
+            "충분히 쌓이고 계기가 오면 푹 빠지는 모습. 「남음」은 빠져도 남는 것.",
+            "빠짐: 깡통>깡캐 = 눈을 못 뗌 | 열림: 깡캐가 다치는 걸 본다 | 남음: 말투는 그대로"
+          ],
+          [
+            "애정끔",
+            "연애로 읽으면 안 되는 사람.",
+            "애정끔: 깡돌"
+          ]
+        ]
+      ],
+      [
+        "비밀",
+        [
+          [
+            "금고",
+            "AI가 먼저 말하면 안 되는 비밀. AI에게는 「보임」만 가요. 신호 낱말이 답에 나오면 ⚠.",
+            "금고: 깡통 = 아직 깡캐를 좋아한다 | 신호: 좋아해, 못 잊었 | 보임: 반지만 보면 눈을 피함 | 덮개: 그냥 오래된 친구"
+          ],
+          [
+            "숨김",
+            "A가 B에게 숨기는 것. 들킬 뻔해도 안 들켜요.",
+            "숨김: 깡통>깡캐 = 깡돌을 질투함"
+          ],
+          [
+            "외면",
+            "알아챌 사람이 더 안 캐묻는 이유.",
+            "외면: 깡캐>깡통 = 물으면 친구도 못 할까 봐"
+          ],
+          [
+            "선",
+            "처음부터 안 되는 것. 「풀림」 조건이 일어나야 풀려요.",
+            "선: 깡통 = 깡돌 얘기 들어 주기 | 풀림: 깡캐가 먼저 울며 말함"
+          ],
+          [
+            "깊은속",
+            "잠긴 비밀. 플레이어 화면에도 안 보이다가 조건이 오면 열려요(제작자용).",
+            "깊은속: 깡통 = 이별을 먼저 말한 이유 | 열림: 그날 얘기를 끝까지 함"
+          ],
+          [
+            "모름",
+            "아직 아무도 안 정한 것. 행동만 보이고 누구도 설명 안 해요.",
+            "모름: 깡통 = 그날 어디 갔었는지"
+          ]
+        ]
+      ]
+    ],
+    "loreIntro": "People, ties and secrets, one line each. Only Meatball reads it; it does not go to the AI as is. Hover a word for help, click it to add an example line.",
+    "loreMore": "All details",
+    "shapeTip": "Whether the character slot and your name are people. 1:1 roleplay: both people. Novel: the character slot is the title. Sim: the world. Auto is usually right.",
+    "loreDraftTip": "Reads the card and lorebook and drafts a sheet (one AI call). Check and fix it before saving.",
+    "loreSaveChatTip": "This chat only. Wins over the character default.",
+    "loreSaveCharTip": "Every chat with this character.",
+    "loreTemplateTip": "Puts the example sheet in the box (replaces what is there)."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
