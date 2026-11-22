@@ -6,11 +6,15 @@ import { dateRaw } from './time.js';
 
 const DOY0 = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 const doy = (m, d) => DOY0[m - 1] + d - 1;
-const wdOf = (y, m, d) => new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+// Date.UTC reads years 0-99 as 1900-1999: build the date and set the full year after (stories set in year 50 exist)
+export const utc = (y, m, d) => { const x = new Date(Date.UTC(2000, m - 1, d)); x.setUTCFullYear(y, m - 1, d); return x; };
+export const wdOf = (y, m, d) => utc(y, m, d).getUTCDay();
 export const keyOf = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-export const dimOf = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+export const dimOf = (y, m) => utc(y, m + 1, 0).getUTCDate();
 // Weeks start on Sunday (like the month grid): the key of the Sunday of that date's week.
-export function weekKey(y, m, d) { const t = Date.UTC(y, m - 1, d) - wdOf(y, m, d) * 864e5, x = new Date(t); return keyOf(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate()); }
+export function weekKey(y, m, d) { const x = addDays({ y, m, d }, -wdOf(y, m, d)); return keyOf(x.y, x.m, x.d); }
+export function addDays(o, k) { const x = utc(o.y, o.m, o.d); x.setUTCDate(x.getUTCDate() + k); return { y: x.getUTCFullYear(), m: x.getUTCMonth() + 1, d: x.getUTCDate() }; }
+export const dayDiff = (a, b) => Math.round((utc(b.y, b.m, b.d) - utc(a.y, a.m, a.d)) / 864e5);   // b - a, in days
 
 // A year for a story that never said one: the year closest to `nowY` whose calendar puts that date on that weekday.
 function guessYear(m, d, wd, nowY) {
@@ -51,4 +55,37 @@ export function ranges(ids) {
   const s = [...new Set(ids)].sort((a, b) => a - b), out = [];
   for (const x of s) { const r = out.at(-1); if (r && x - r[1] <= 2) r[1] = x; else out.push([x, x]); }
   return out.map(([a, b]) => (a === b ? `#${a}` : `#${a}~#${b}`)).join(', ');
+}
+
+// 🎲 「미정 날짜 정하기」: no AI, a roll of the dice. Returns [{ i, date: { y, m, d } }] to be written as the person's dates.
+//   no date anywhere yet   → the first read reply gets a random day of the year (the story's year, the set one or this year)
+//   a vague skip («며칠 뒤» · «몇 주 뒤»), i.e. a run of ≈ replies → its first reply gets base + a random gap of that size;
+//   when the text names a date after the run, the gap never goes past it.
+// place = placeReplies(...); tl = st.tl (for which replies were read); rnd = () => [0, 1)
+export function rollDates(place, tl, nowY, rnd = Math.random) {
+  const read = new Map((tl || []).map((t) => [t.i, t.read !== false])), out = [];
+  const R = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+  const list = place.list || [];
+  if (!list.length) {
+    const i = (place.undated || []).find((x) => read.get(x) !== false);
+    if (i == null) return out;
+    const y = place.year0 ?? nowY, m = R(1, 12);
+    return [{ i, date: { y, m, d: R(1, dimOf(y, m)) } }];
+  }
+  let last = null, delta = 0;                      // last: the (possibly moved) date of the reply before; delta: how far the current run moved
+  for (let k = 0; k < list.length; k++) {
+    const r = list[k], at = { y: r.y, m: r.m, d: r.d };
+    if (!r.approx) { delta = 0; last = at; continue; }
+    if (k && list[k - 1].approx) { last = addDays(at, delta); continue; }     // inside a run: follows its first reply
+    if (!last) { last = at; continue; }
+    if (read.get(r.i) === false) { last = at; continue; }
+    // the size the engine used for the skip tells what kind it was: 2 days · 7 · 30 · 365
+    const nom = dayDiff(last, at), [lo, hi] = nom >= 200 ? [300, 600] : nom >= 25 ? [30, 100] : nom >= 6 ? [7, 27] : [2, 6];
+    const next = list.slice(k + 1).find((x) => !x.approx), cap = next ? dayDiff(last, next) : Infinity;
+    const gap = cap < Infinity ? Math.max(1, Math.min(cap, R(Math.min(lo, cap), Math.min(hi, cap)))) : R(lo, hi);
+    const date = addDays(last, gap);
+    out.push({ i: r.i, date });
+    delta = dayDiff(at, date); last = date;
+  }
+  return out;
 }

@@ -40,6 +40,9 @@ const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<':
 export function drawFillRow(T) {
   const el = document.getElementById('mb3_fill_row'); if (!el?.querySelector) return;
   const f = fillState(), { done, total } = fillCount(), U = T || {};
+  // The status line redraws this row on every message: typing «0 ~ 6» and then a redraw used to wipe the boxes, and
+  // the start button then saw two empty boxes = the whole chat. Idle row already there: leave it (and what is typed) alone.
+  if (!f && el.querySelector('.mb3-fill-go')) return;
   el.innerHTML = !f
     ? `<div class="menu_button mb3-fill-go">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
        <span class="mb3-fill-r">#<input class="text_pole mb3-fill-a" type="number" min="0" placeholder="${h(U.fillFirst || '처음')}" /> ~ #<input class="text_pole mb3-fill-b" type="number" min="0" placeholder="${h(U.fillLast || '끝')}" /></span>

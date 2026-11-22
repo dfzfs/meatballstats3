@@ -1,9 +1,9 @@
 // The log: what changed at each reply, and the evidence for it. Built only when opened.
 import { ctx, store, save, ledger, R } from './store.js';
 import { dateAt, fmtDate, span, parseDate } from '../core/time.js';
-import { applyFixes } from './fix.js';
+import { applyFixes, undoFixes } from './fix.js';
 import { startFill } from './fill.js';
-import { placeReplies, ranges, keyOf, weekKey, dimOf } from '../core/calendar.js';
+import { placeReplies, ranges, keyOf, weekKey, dimOf, wdOf, addDays, rollDates } from '../core/calendar.js';
 import { cleanText, fingerprint } from '../core/clean.js';
 import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
@@ -208,7 +208,7 @@ function sceneRow(c, k, st, L, ui, M) {
 }
 // One placement of every reply on the calendar per draw: the log, the calendar and the list all read it (one truth).
 let PL = new Map(), PLACE = { list: [], undated: [], guessed: false };
-const rd = (i) => { const r = PL.get(i); return r ? { y: r.y, m: r.m, d: r.d, wd: new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay(), approx: r.approx } : null; };
+const rd = (i) => { const r = PL.get(i); return r ? { y: r.y, m: r.m, d: r.d, wd: wdOf(r.y, r.m, r.d), approx: r.approx } : null; };
 const rfmt = (i, L, wd = false) => { const o = rd(i); return o ? `${o.approx ? '≈ ' : ''}${fmtDate(o, L, wd)}` : ''; };
 // Calendar: always a real year · month. Every AI reply sits on a date: exact days are coloured by how much happened,
 // a reply inside a vague skip colours its whole week, and replies before any date wait in the 「미정」 tray.
@@ -223,13 +223,18 @@ function calHtml(st, L, M0, chs, ui, big) {
   const U2 = R.ui2, lastR = M0.list.at(-1);
   if (!ui.ym && lastR) ui.ym = `${lastR.y}-${lastR.m}`;
   if (!ui.ym) { const n = new Date(); ui.ym = `${n.getFullYear()}-${n.getMonth() + 1}`; }
-  const [y, m] = ui.ym.split('-').map(Number), len = dimOf(y, m), pad = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
-  const step = (k) => { const d = new Date(Date.UTC(y, m - 1 + k, 1)); return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`; };
+  const [y, m] = ui.ym.split('-').map(Number), len = dimOf(y, m), pad = wdOf(y, m, 1);
+  const step = (k) => { const t = y * 12 + (m - 1) + k; return `${Math.floor(t / 12)}-${(t % 12) + 1}`; };
   const has = M0.months.some(([a, b]) => a === y && b === m) ? '' : ` <span class="mb3-dim">(${h(U2.calEmpty || '기록 없음')})</span>`;
   const opts = M0.months.map(([a, b]) => `<option value="${a}-${b}"${a === y && b === m ? ' selected' : ''}>${h(ymLabel(a, b, L))}</option>`).join('');
   const head = `<div class="mb3-mon"><span data-ym="${step(-1)}">‹</span>${M0.months.length > 1 ? `<select class="mb3-ymsel">${M0.months.some(([a, b]) => a === y && b === m) ? '' : `<option selected>${h(ymLabel(y, m, L))}</option>`}${opts}</select>` : `<b>${h(ymLabel(y, m, L))}</b>`}<span data-ym="${step(1)}">›</span>${has}</div><div class="mb3-ychip${M0.guessed ? ' mb3-yq' : ''}" data-year0="1">📆 ${h(M0.year0 != null ? fill(U2.year0Set || '첫 답 연도 {y}년 · 바꾸기', { y: M0.year0 }) : M0.guessed ? (U2.year0None || '연도를 정해 주세요') : fill(U2.year0Story || '본문 연도 {y}년 · 바꾸기', { y: M0.list[0]?.y }))}</div>`;
-  const wd = L.wd.map((w) => `<div class="mb3-cw">${h(String(w).slice(0, 1))}</div>`).join('');
-  let cells = '<div class="mb3-cc mb3-out"></div>'.repeat(pad), col = pad, row = [];
+  const wd = L.wd.map((w, k) => `<div class="mb3-cw${k === 0 ? ' mb3-sun' : k === 6 ? ' mb3-sat' : ''}">${h(String(w).slice(0, 1))}</div>`).join('');
+  let cells = '<div class="mb3-cc mb3-out"></div>'.repeat(pad), col = pad;
+  // the day's look at a glance (like a phone calendar): up to 2 icons of what happened, the big ones first
+  const iconsOf = (rs) => { const ids = new Set(rs.map((r) => r.i)), seen = new Set();
+    const its = chs.flatMap((c) => c.es.filter((e) => ids.has(e.x.i)).flatMap((e) => e.its)).filter((it) => !it.dim && it.icon);
+    return [...its.filter((it) => HOT.has(it.icon)), ...its.filter((it) => !HOT.has(it.icon))].map((it) => it.icon).filter((x) => !seen.has(x) && seen.add(x)).slice(0, 2).join(''); };
+  const nowK = lastR && !lastR.approx ? lastR.key : '';
   const hotOf = (rs) => { const ids = new Set(rs.map((r) => r.i)); return chs.some((c) => c.hot && c.es.some((e) => ids.has(e.x.i))); };
   const strip = (wk) => { const rs = M0.week.get(wk); if (!rs) return '';
     return `<div class="mb3-wstrip${ui.sel === `w:${wk}` ? ' mb3-sel' : ''}" data-wk="${wk}">≈ ${h(U2.weekSome || '이 주 어딘가')} · ${h(ranges(rs.map((r) => r.i)))}</div>`; };
@@ -237,7 +242,8 @@ function calHtml(st, L, M0, chs, ui, big) {
   for (let d = 1; d <= len; d++) {
     const k = keyOf(y, m, d), rs = M0.day.get(k) || [], wk = weekKey(y, m, d), wkOn = M0.week.has(wk);
     const lv = !rs.length ? '' : rs.length > 4 ? ' mb3-l3' : rs.length > 1 ? ' mb3-l2' : ' mb3-l1';
-    cells += `<div class="mb3-cc${lv}${wkOn ? ' mb3-wkon' : ''}${rs.length && hotOf(rs) ? ' mb3-hotc' : ''}${ui.sel === `d:${k}` ? ' mb3-sel' : ''}${rs.some((r) => r.user) ? ' mb3-mine' : ''}"${rs.length ? ` data-dk="${k}"` : wkOn ? ` data-wk="${wk}"` : ''}>${d}${rs.length && big ? `<i>${h(ranges(rs.map((r) => r.i)))}</i>` : ''}</div>`;
+    const dw = (pad + d - 1) % 7, ic = rs.length && big ? iconsOf(rs) : '';
+    cells += `<div class="mb3-cc${lv}${wkOn ? ' mb3-wkon' : ''}${rs.length && hotOf(rs) ? ' mb3-hotc' : ''}${ui.sel === `d:${k}` ? ' mb3-sel' : ''}${rs.some((r) => r.user) ? ' mb3-mine' : ''}${k === nowK ? ' mb3-now' : ''}${dw === 0 ? ' mb3-sun' : dw === 6 ? ' mb3-sat' : ''}"${rs.length ? ` data-dk="${k}" title="${h(ranges(rs.map((r) => r.i)))}"` : wkOn ? ` data-wk="${wk}"` : ''}><b>${d}</b>${ic ? `<i class="mb3-ic">${h(ic)}</i>` : rs.length && big ? `<i>${rs.length}</i>` : ''}</div>`;
     col++;
     if (col % 7 === 0 || d === len) { cells += strip(wkOfRow); if (d < len) wkOfRow = weekKey(y, m, d + 1); }
   }
@@ -286,6 +292,20 @@ async function setYear0() {
   if (String(v).trim() === '') delete S.year0; else if (Number.isFinite(n)) S.year0 = n; else return false;
   save(); return true;
 }
+// 🎲 Undated replies and vague skips get dates by a roll of the dice (no AI). Rolls again until nothing is left (a story with no
+// date at all first gets a start day; then its vague skips). One undo for the whole roll.
+function rollDice(ui, draw) {
+  const U2 = R.ui2, y0 = store()?.year0 ?? null, nowY = new Date().getFullYear(), undo = [];
+  for (let k = 0; k < 4; k++) {
+    const P = placeReplies(ledger(), nowY, y0), rolls = rollDates(P, ledger().tl, nowY);
+    if (!rolls.length) break;
+    const u = applyFixes(rolls.map((r) => ({ i: r.i, lines: [`date: ${r.date.y >= 100 ? `${r.date.y}년 ` : ''}${r.date.m}월 ${r.date.d}일`] })), '🎲');
+    if (!u) break; undo.unshift(...u);
+  }
+  if (!undo.length) { window.toastr?.info(U2.diceNone || '정할 날짜가 없어요. 흐릿한 주(빗금)나 미정 답이 없어요.'); return; }
+  ui._dice = undo; ui.sel = ''; ui.ym = ''; draw();
+  window.toastr?.success(fill(U2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요. 마음에 안 들면 ↩ 되돌리기 · 다시 누르면 남은 것만 굴려요.', { n: undo.length }));
+}
 function flowCard(st, L, chs, ui, M, big) {
   const U2 = R.ui2, M0 = calModel();
   if (!M0.list.length && !M0.undated.length) return `<p class="mb3-dim">${h(R.ui.empty)}</p>`;
@@ -295,14 +315,14 @@ function flowCard(st, L, chs, ui, M, big) {
   const picked = !ui.sel ? M0.undated.map((i) => ({ i })) : ui.sel.startsWith('d:') ? M0.day.get(ui.sel.slice(2)) : M0.week.get(ui.sel.slice(2));
   const ids = new Set(picked.map((r) => r.i));
   let title = U2.undated || '날짜 미정';
-  if (ui.sel.startsWith('d:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number); title = fmtDate({ y, m, d, wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay() }, L); }
-  else if (ui.sel.startsWith('w:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number), e = new Date(Date.UTC(y, m - 1, d + 6)), md = (mm, dd) => fill(L.fmt.md, { mon: L.mon[mm - 1], d: dd });
-    title = fill(U2.weekOf || '{a}~{b} 사이 어딘가', { a: md(m, d), b: md(e.getUTCMonth() + 1, e.getUTCDate()) }); }
-  const scenes = chs.map((c, k) => [c, k]).filter(([c]) => c.es.some((e) => ids.has(e.x.i))).reverse();
+  if (ui.sel.startsWith('d:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number); title = fmtDate({ y, m, d, wd: wdOf(y, m, d) }, L); }
+  else if (ui.sel.startsWith('w:')) { const [y, m, d] = ui.sel.slice(2).split('-').map(Number), e = addDays({ y, m, d }, 6), md = (mm, dd) => fill(L.fmt.md, { mon: L.mon[mm - 1], d: dd });
+    title = fill(U2.weekOf || '{a}~{b} 사이 어딘가', { a: md(m, d), b: md(e.m, e.d) }); }
+  const scenes = chs.map((c, k) => [c, k]).filter(([c]) => c.es.some((e) => ids.has(e.x.i)));
   const noRec = [...ids].filter((i) => !chs.some((c) => c.es.some((e) => e.x.i === i)));
-  const top = `<div class="mb3-caltop"><span class="mb3-fillday" data-mb3tip="${h(U2.fillDatesTip || '')}">🗓 ${h(U2.fillDates || '미정 날짜 정하기')}</span></div>`;
+  const top = `<div class="mb3-caltop">${ui._dice ? `<span class="mb3-diceundo">↩ ${h(U2.diceUndo || '되돌리기')}</span>` : ''}<span class="mb3-fillday" data-mb3tip="${h(U2.fillDatesTip || '')}">🎲 ${h(U2.fillDates || '미정 날짜 정하기')}</span></div>`;
   return `<div class="mb3-flow${big ? ' mb3-big mb3-flow3' : ''}"><div class="mb3-calbox">${top}${calHtml(st, L, M0, chs, ui, big)}
-    <div class="mb3-leg"><span><b class="mb3-l1"></b>${h(U2.legLow || '조금')}</span><span><b class="mb3-l3"></b>${h(U2.legHigh || '많이')}</span><span><b class="mb3-legwk"></b>${h(U2.legWeek || '그 주 어딘가')}</span><span><b class="mb3-legdot"></b>${h(U2.legBig || '큰 일')}</span><span><b class="mb3-legmine"></b>${h(U2.legMine || '정한 날짜')}</span><span class="mb3-dpen" data-setdate="1">✏️ ${h(U2.setDate || '날짜 정하기')}</span></div></div>
+    <div class="mb3-leg"><span><b class="mb3-l1"></b>${h(U2.legL1 || '답 1개')}</span><span><b class="mb3-l2"></b>${h(U2.legL2 || '2~4')}</span><span><b class="mb3-l3"></b>${h(U2.legL3 || '5개+')}</span><span><b class="mb3-legnow"></b>${h(U2.legNow || '지금')}</span><span><b class="mb3-legwk"></b>${h(U2.legWeek || '그 주 어딘가')}</span><span><b class="mb3-legdot"></b>${h(U2.legBig || '큰 일')}</span><span><b class="mb3-legmine"></b>${h(U2.legMine || '정한 날짜')}</span><span class="mb3-dpen" data-setdate="1">✏️ ${h(U2.setDate || '날짜 정하기')}</span></div></div>
     ${big ? listHtml(st, L, ui) : ''}<div class="mb3-daybox"><div class="mb3-dtitle">📅 ${h(title)} <span class="mb3-dim">· ${h(ranges([...ids]))}</span></div>${scenes.slice(0, big ? 99 : 2).map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}${!big && scenes.length > 2 ? `<div class="mb3-more2" data-view="flow">+${scenes.length - 2} ›</div>` : ''}${noRec.length ? `<div class="mb3-dim mb3-norec">${h(ranges(noRec))} · ${h(U2.noRecord || '기록할 변화 없음 · 또는 아직 안 읽음')}</div>` : ''}</div></div>`;
 }
 function pairsOf(st, st2, bp, M) {
@@ -468,7 +488,7 @@ export function openLedger(at = null) {
       if (cb.matches('.mb3-cyes')) chatDecide(m, true); else if (cb.matches('.mb3-cno')) chatDecide(m, false); else chatUndo(m);
       renderBar(); draw(); return;
     }
-    const t = ev.target.closest('[data-view],[data-dk],[data-wk],[data-ym],[data-go],.mb3-fillday,[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
+    const t = ev.target.closest('[data-view],[data-dk],[data-wk],[data-ym],[data-go],.mb3-fillday,.mb3-diceundo,[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
     if (!t || !box.contains(t)) return;
     if (t.matches('.mb3-go')) { ev.preventDefault(); document.querySelector(`#chat .mes[mesid="${t.dataset.i}"]`)?.scrollIntoView({ block: 'start' }); return; }
     if (t.matches('.mb3-why')) { ev.preventDefault(); ev.stopPropagation(); ui.open.has(t.dataset.fp) ? ui.open.delete(t.dataset.fp) : ui.open.add(t.dataset.fp); draw(); return; }
@@ -483,7 +503,8 @@ export function openLedger(at = null) {
     else if (t.dataset.wk) { ui.sel = `w:${t.dataset.wk}`; ui.chap = -1; }
     else if (t.dataset.ym) { ui.ym = t.dataset.ym; }
     else if (t.dataset.go) { const g = t.dataset.go, r = PLACE.list.find((x) => (x.approx ? `w:${x.wk}` : `d:${x.key}`) === g); ui.sel = g; ui.chap = -1; if (r) ui.ym = `${r.y}-${r.m}`; }
-    else if (t.matches('.mb3-fillday')) { ui.view = 'chat'; draw(); chatSend(`🗓 ${R.ui2.fillDates || '미정 날짜 정하기'}`, ui._info, draw, { dates: true, auto: true }); return; }
+    else if (t.matches('.mb3-fillday')) { rollDice(ui, draw); return; }
+    else if (t.matches('.mb3-diceundo')) { undoFixes(ui._dice); ui._dice = null; ui.sel = ''; draw(); return; }
     else if (t.matches('.mb3-more')) ui.shown += 8;
     else if (t.dataset.pair != null) { ui.pair = ui.pair === t.dataset.pair ? '' : t.dataset.pair; ui.view = 'rel'; }
     else if (t.dataset.who != null) { ui.who = t.dataset.who; ui.view = 'people'; }
