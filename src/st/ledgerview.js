@@ -98,7 +98,7 @@ function items(x, text, st, U, L) {
     if (dateLine?.r === 'jump' && dateLine.text.d == null) ev.push(rule('monthOnly', {}));
     const fz = x.fuzzy ? L.span.fuzzy[x.fuzzy] || L.span.fuzzy.d : '';
     if (fz) ev.push(rule('fuzzy', { s: fz }));
-    out.push({ icon: '⏩', title: fill(U.passedLine, { s: fz || span(x.passed, L), a: fmtDate(x.was || {}, L, false) || '?', b: rfmt(x.i, L) || '?' }), ev });
+    out.push({ icon: '⏩', title: fill(U.passedLine, { s: fz || span(x.passed, L), a: fmtDate(x.was || {}, L, false) || prevFmt(x.i, L) || '?', b: rfmt(x.i, L) || '?' }), ev });
   }
   for (const d of x.dates) {
     if (d.force) out.push({ icon: '✋', title: fill(U.dateSet, { d: fmtDate(d.after, L) }), ev: [['user', U.why.userDate]] });
@@ -219,6 +219,8 @@ const iconsOf = (ids, chs, n = 2) => { const seen = new Set(); return topItems(i
 // One placement of every reply on the calendar per draw: the log, the calendar and the list all read it (one truth).
 let PL = new Map(), PLACE = { list: [], undated: [], guessed: false };
 const rd = (i) => { const r = PL.get(i); return r ? { y: r.y, m: r.m, d: r.d, wd: wdOf(r.y, r.m, r.d), approx: r.approx } : null; };
+// the date of the reply before (≈ when it sat in a vague week): the start of a skip that began inside another skip
+const prevFmt = (i, L) => { const r = [...PLACE.list].reverse().find((x) => x.i < i); return r ? rfmt(r.i, L) : ''; };
 const rfmt = (i, L, wd = false) => { const o = rd(i); return o ? `${o.approx ? '≈ ' : ''}${fmtDate(o, L, wd)}` : ''; };
 // Calendar: always a real year · month. Every AI reply sits on a date: exact days are coloured by how much happened,
 // a reply inside a vague skip colours its whole week, and replies before any date wait in the 「미정」 tray.
@@ -237,7 +239,7 @@ function calHtml(st, L, M0, chs, ui, big) {
   const step = (k) => { const t = y * 12 + (m - 1) + k; return `${Math.floor(t / 12)}-${(t % 12) + 1}`; };
   const has = M0.months.some(([a, b]) => a === y && b === m) ? '' : ` <span class="mb3-dim">(${h(U2.calEmpty || '기록 없음')})</span>`;
   const opts = M0.months.map(([a, b]) => `<option value="${a}-${b}"${a === y && b === m ? ' selected' : ''}>${h(ymLabel(a, b, L))}</option>`).join('');
-  const head = `<div class="mb3-mon"><span data-ym="${step(-1)}">‹</span>${M0.months.length > 1 ? `<select class="mb3-ymsel">${M0.months.some(([a, b]) => a === y && b === m) ? '' : `<option selected>${h(ymLabel(y, m, L))}</option>`}${opts}</select>` : `<b>${h(ymLabel(y, m, L))}</b>`}<span data-ym="${step(1)}">›</span>${has}</div><div class="mb3-ychip${M0.guessed ? ' mb3-yq' : ''}" data-year0="1">📆 ${h(M0.year0 != null ? fill(U2.year0Set || '첫 답 연도 {y}년 · 바꾸기', { y: M0.year0 }) : M0.guessed ? (U2.year0None || '연도를 정해 주세요') : fill(U2.year0Story || '본문 연도 {y}년 · 바꾸기', { y: M0.list[0]?.y }))}</div>`;
+  const head = `<div class="mb3-mon"><span data-ym="${step(-1)}">‹</span>${M0.months.length > 1 ? `<select class="mb3-ymsel">${M0.months.some(([a, b]) => a === y && b === m) ? '' : `<option selected>${h(ymLabel(y, m, L))}</option>`}${opts}</select>` : `<b>${h(ymLabel(y, m, L))}</b>`}<span data-ym="${step(1)}">›</span>${has}</div><div class="mb3-ychip${M0.guessed ? ' mb3-yq' : ''}" data-year0="1">📆 ${h(M0.year0 != null ? fill(U2.year0Set || '첫 답 연도 {y}년 · 바꾸기', { y: M0.year0 }) : M0.guessed || M0.list[0]?.y == null ? (U2.year0None || '연도를 정해 주세요') : fill(U2.year0Story || '본문 연도 {y}년 · 바꾸기', { y: M0.list[0]?.y }))}</div>`;
   const wd = L.wd.map((w, k) => `<div class="mb3-cw${k === 0 ? ' mb3-sun' : k === 6 ? ' mb3-sat' : ''}">${h(String(w).slice(0, 1))}</div>`).join('');
   let cells = '<div class="mb3-cc mb3-out"></div>'.repeat(pad), col = pad;
   const nowK = lastR && !lastR.approx ? lastR.key : '';

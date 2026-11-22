@@ -230,7 +230,7 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .mb3-cw { text-align: center; font-size: 10.5px; color: var(--mbt-dim); }
 .mb3-cc { aspect-ratio: 1; max-height: 44px; border-radius: 9px; background: var(--mbt-soft); color: var(--mbt-dim); font-size: 11.5px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-.mb3-flow:not(.mb3-big) .mb3-cc { max-height: 30px; border-radius: 7px; font-size: 10.5px; }
+.mb3-flow:not(.mb3-big) .mb3-cc { aspect-ratio: auto; height: 30px; max-height: none; border-radius: 7px; font-size: 10.5px; }
 .mb3-cc i { font-style: normal; font-size: 8.5px; opacity: .8; }
 .mb3-cc.mb3-out { background: none; }
 .mb3-cc.mb3-l1 { background: var(--mbt-acc2); color: var(--mbt-ink); }
@@ -352,3 +352,4 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-ym.mb3-on { outline: 2px solid var(--mbt-ink); outline-offset: -1px; }
 .mb3-rs { display: block; font-size: 11.5px; color: var(--mbt-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .mb3-rrow.mb3-on .mb3-rs { color: inherit; opacity: .85; }
+.mb3-hero .mb3-talk { color: var(--mbt-ink); background: var(--mbt-card); opacity: .9; }

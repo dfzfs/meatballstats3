@@ -24,7 +24,9 @@ export function pending(chat, ev, cfg = DEFAULTS, dirs = null) {
     const picked = new Set(pick.map((r) => r.i));
     // every picked reply starts with its number, so each line of the answer can go back to the reply it happened in
     const wrapF = (r) => (r.m.is_user ? `<user>${r.t}</user>` : `${picked.has(r.i) ? `[#${r.i}]\n` : ''}${dirs?.[fingerprint(r.m)]?.t ? `<director>${String(dirs[fingerprint(r.m)].t).trim()}</director>\n\n${r.t}` : r.t}`);
-    const text = rows.filter((r) => r.i > before && r.i <= pick.at(-1).i).map(wrapF).join('\n\n').slice(-cfg.maxIn);
+    let text = rows.filter((r) => r.i > before && r.i <= pick.at(-1).i).map(wrapF).join('\n\n');
+    // too long for one call: the start is cut, but the first reply keeps its number (its lines still find their reply)
+    if (text.length > cfg.maxIn) { text = text.slice(-cfg.maxIn); const mk = `[#${pick[0].i}]`; if (!text.includes(mk)) text = `${mk}\n…${text.slice(mk.length + 2)}`; }
     return { text, fps: pick.map((r) => fingerprint(r.m)), ids: pick.map((r) => r.i), catchUp: false, ready: true, fill: true, start: before + 1 };
   }
   let lastDone = -1;

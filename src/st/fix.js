@@ -49,29 +49,55 @@ function addUser(S, fp, i, lines) {
 }
 const show = (old, lines) => { const base = baseOf(old, lines), add = lines.filter((l) => !l.startsWith('-'));
   return base.replace('</mb>', `${add.filter((l) => !REL.test(l)).map((l) => `${l}   ✋`).join('\n')}\n</mb>`).replace('</rel>', `${add.filter((l) => REL.test(l)).map((l) => `${l}   ✋`).join('\n')}\n</rel>`).replace(/\nnone\n(?=.)/g, '\n'); };
-// Apply fixes [{ i, lines }]. Returns the undo list (old answers) or null.
+// Apply fixes [{ i, lines }]. Returns the undo list or null. Each undo entry carries an exact copy of that reply's record before.
+const clone = (x) => (x === undefined ? undefined : JSON.parse(JSON.stringify(x)));
+const put = (o, k, v) => { if (!o) return; if (v === undefined) delete o[k]; else o[k] = v; };
 export function applyFixes(fixes, note = '') {
   const c = ctx(), S = store(true); if (!S) return null;
   const undo = [];
   for (const f of fixes) {
     const m = c.chat?.[f.i]; if (!m || m.is_user || !f.lines?.length) continue;
-    const fp = fingerprint(m), old = S.raw?.[fp]?.a || EMPTY, had = S.ufix?.[fp] || null;
-    // a new date replaces the old one the person (or 🗓) set on this reply; other lines add up
+    const fp = fingerprint(m), kept = S.raw?.[fp], old = kept?.a || EMPTY, had = S.ufix?.[fp] || null;
+    const snap = { ev: clone(S.ev[fp]), rel: clone(S.rel?.[fp]), raw: clone(kept), edited: S.edited?.[fp] };
+    // a new date replaces the old one the person (or 🎲) set on this reply; other lines add up
     const newDate = f.lines.some((l) => /^date\s*:/i.test(l)), keep = (had?.lines || []).filter((l) => !(newDate && /^date\s*:/i.test(l)));
     const all = [...keep, ...f.lines].slice(-20);
-    if (!reabsorb(f.i, baseOf(old.replace(/\s+✋$/gm, ''), all))) continue;
-    addUser(S, fp, f.i, all);
-    S.raw[fp].a = show(old.replace(/\s+✋$/gm, ''), all);
-    undo.push({ i: f.i, fp, old, had });
+    // Only the newest 300 classifier answers are kept. For an older reply the record is still there but its answer is not:
+    // rebuilding from nothing would wipe it, so the person's lines go on top of the record as it is.
+    const lost = (!kept || kept.partial) && (S.ev[fp] || []).some((e) => !e.by && e.k !== 'dir' && e.k !== 'drop');
+    if (lost) {
+      let list = (S.ev[fp] || []).filter((e) => e.by !== 'user');        // the person's lines are put back from `all` below
+      for (const l of all.filter((x) => x.startsWith('-'))) {             // "-with: 지호": drop the classifier's line it names
+        const k = keyOf(l), v = l.replace(/^-/, '').split(/[:：]/).slice(1).join(':').trim();
+        list = list.filter((e) => !(e.k === k && (!v || JSON.stringify(e).includes(v))));
+      }
+      S.ev[fp] = list;
+      addUser(S, fp, f.i, all);
+      (S.raw ||= {})[fp] = { a: show(EMPTY, all), t: Date.now(), partial: true };
+    } else {
+      if (!reabsorb(f.i, baseOf(old.replace(/\s+✋$/gm, ''), all))) continue;
+      addUser(S, fp, f.i, all);
+      S.raw[fp].a = show(old.replace(/\s+✋$/gm, ''), all);
+    }
+    undo.push({ i: f.i, fp, old, had, snap });
     (S.ufix ||= {})[fp] = { lines: all, note: String(note).slice(0, 200), at: Date.now() };
     (S.edited ||= {})[fp] = Date.now();
   }
   if (undo.length) { save(); refresh(); }
   return undo.length ? undo : null;
 }
+// Undo in the order given (the newest change first): each reply gets back exactly what it had. Entries made before v0.19
+// have no copy and are rebuilt from the old answer as before.
 export function undoFixes(undo) {
   const S = store(true); if (!S || !undo) return;
-  for (const u of undo) { const clean = u.old.replace(/\s+✋$/gm, ''); reabsorb(u.i, u.had ? baseOf(clean, u.had.lines) : clean); if (u.had) { addUser(S, u.fp, u.i, u.had.lines); S.ufix[u.fp] = u.had; } else delete S.ufix?.[u.fp]; S.raw[u.fp].a = u.old; }
+  for (const u of undo) {
+    if (u.snap) {
+      put(S.ev, u.fp, clone(u.snap.ev)); put((S.rel ||= {}), u.fp, clone(u.snap.rel)); put((S.raw ||= {}), u.fp, clone(u.snap.raw)); put((S.edited ||= {}), u.fp, u.snap.edited);
+      if (u.had) (S.ufix ||= {})[u.fp] = u.had; else delete S.ufix?.[u.fp];
+      continue;
+    }
+    const clean = u.old.replace(/\s+✋$/gm, ''); reabsorb(u.i, u.had ? baseOf(clean, u.had.lines) : clean); if (u.had) { addUser(S, u.fp, u.i, u.had.lines); S.ufix[u.fp] = u.had; } else delete S.ufix?.[u.fp]; S.raw[u.fp].a = u.old;
+  }
   save(); refresh();
 }
 // Free words -> the nearest of the engine's kinds (only for its rules; never shown). null = leave the kind alone.

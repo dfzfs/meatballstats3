@@ -2,12 +2,11 @@
 // looks for it in its record and the story, then fixes every place it touches. It never argues: if the story says
 // otherwise it says so once, in the same card, and one tap applies it anyway. One AI call per message, small context.
 import { ctx, store, save, ledger, R, settings } from './store.js';
-import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
+import { cleanText, fingerprint } from '../core/clean.js';
 import { keysBlock } from '../core/keys.js';
 import { request } from './queue.js';
 import { applyFixes, undoFixes } from './fix.js';
 import { roll, forgetRoll } from './dice.js';
-import { placeReplies } from '../core/calendar.js';
 
 const YES = /^\s*(응+|ㅇㅇ+|ㅇ|네|예|그래|바꿔|고쳐|해\s*줘|ok|okay|yes|y)(?=$|[\s!.~ㅋㅎ요줘])/i;
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -110,43 +109,6 @@ line
 </fix>
 (one <fix> per reply; nothing when there is nothing to change)`;
 }
-// 「미정 날짜 정하기」: every AI reply gets a date. Replies with a date keep it; the ones with none (or only "a few days
-// later") get one picked from the story's clues. Only the reply where a new day starts needs a line.
-function buildDates(info) {
-  const y0 = store()?.year0 ?? null, P = placeReplies(info.st, new Date().getFullYear(), y0), chat = ctx().chat || [], at = new Map(P.list.map((r) => [r.i, r]));
-  const ex = (i) => cleanText(chat[i]?.mes || '').replace(/\s+/g, ' ').slice(0, 260);
-  const rows = chat.map((m, i) => [m, i]).filter(([m]) => !m.is_user && !skipMsg(m)).map(([, i]) => {
-    const r = at.get(i), d = r ? `${r.y}-${String(r.m).padStart(2, '0')}-${String(r.d).padStart(2, '0')}` : '';
-    const state = !r ? 'UNKNOWN' : r.approx ? `ABOUT ${d} (vague skip, exact day unknown)` : r.user ? `${d} (set by the user: keep)` : d;
-    return `#${i} [${state}] ${ex(i)}`;
-  }).join('\n');
-  return `[ROLE]
-You keep the story calendar for a roleplay ("Meatball"). Every reply must sit on a real date (year, month, day).
-Give a date to every reply marked UNKNOWN or ABOUT. Keep the dates that are already there.
-
-[REPLIES] oldest first: #number [date now] start of the reply
-${rows}
-
-[HOW]
-- Use the story's clues: weekdays, seasons, weather, holidays, "the next morning", "three days later", school or work days.
-- Stay consistent with the known dates around it; time never goes backwards unless the reply is a flashback.
-- No clue at all: the same day as the reply before, or the next day when the text clearly starts a new day.
-- If the story has no date anywhere, pick a believable start date (season and weekday from the clues).
-- ${y0 != null ? `The year of the first reply is ${y0} (the user set it). Count on from it.` : 'Write no year unless the story itself names one (the user sets the year).'}
-- ABOUT: pick the most likely exact day in that week.
-
-[RULES]
-1. Write a date line only on the reply where a new day starts (the replies after it on the same day follow it). Also write one on every ABOUT reply.
-2. <say> is in Korean, plain, 1-2 sentences: how many replies got a date and from when to when. Never mention lists or English terms.
-
-[OUTPUT]
-<say>…</say>
-<conflict>no</conflict>
-<fix #number>
-date: Month D${y0 != null ? ', YYYY' : ''}
-</fix>
-(one <fix> per reply that needs a line)`;
-}
 function parse(ans) {
   const say = (ans.match(/<say>([\s\S]*?)<\/say>/) || [])[1]?.trim() || '';
   const conflict = /<conflict>\s*yes/i.test(ans);
@@ -165,19 +127,18 @@ export async function send(text, info, redraw, opts = {}) {
   if (!opts.check && /날짜|date/i.test(msg) && /미정|정해|채워|알아서|주사위|fill|decide|roll|dice/i.test(msg)) {
     const r = roll();
     if (!r) push({ who: 'mb', text: R.ui2.diceNone || '정할 날짜가 없어요.', at: Date.now() });
-    else push({ who: 'mb', text: fill(R.ui2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요.', { n: r.undo.length }), at: Date.now(), prop: { fixes: r.fixes, state: 'done', undo: r.undo, req: msg, dice: true } });
+    else push({ who: 'mb', text: fill(R.ui2.diceDoneChat || '🎲 답 {n}개의 날짜를 주사위로 정했어요. 마음에 안 들면 아래 ↩ 되돌리기.', { n: r.undo.length }), at: Date.now(), prop: { fixes: r.fixes, state: 'done', undo: r.undo, req: msg, dice: true } });
     save(); redraw(); return;
   }
-  if (!opts.check && !opts.dates && last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
+  if (!opts.check && last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
   const wait = push({ who: 'mb', text: '…', wait: true, at: Date.now() }); redraw();
   let res;
-  try { res = parse(String(await request(opts.dates ? buildDates(info) : opts.check ? buildCheck(info.es, info.fmt, info.nowLine) : buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>', settings().chatProfile || '') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
+  try { res = parse(String(await request(opts.check ? buildCheck(info.es, info.fmt, info.nowLine) : buildPrompt(msg, info.es, info.fmt, info.nowLine), '</never>', settings().chatProfile || '') || '')); } catch (e) { res = null; console.warn('[meatball3] chat failed', e); }
   const S = store(true), m = S.mbchat.find((x) => x.at === wait.at && x.wait) || wait; delete m.wait;
   if (!res || (!res.say && !res.fixes.length)) { m.text = R.ui2.chatFail || '지금은 대답을 못 했어요. 잠깐 뒤에 다시 말해 줄래요?'; save(); redraw(); return; }
   m.text = res.say || (res.fixes.length ? (R.ui2.chatFound || '이렇게 고칠게요.') : (R.ui2.chatNone || '못 찾았어요. 몇 번째 답인지 알려 줄래요?'));
   if (res.fixes.length) {
     m.prop = { fixes: res.fixes, conflict: res.conflict, quote: res.quote, state: 'ask', req: msg };
-    if (opts.dates && opts.auto) decide(m, true);   // the 🗓 button itself was the yes: put the dates in (undo stays offered)
   }
   save(); redraw();
 }

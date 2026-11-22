@@ -1004,7 +1004,8 @@
     "fillRangeRun": "Rebuilding range",
     "fillRangeNeed": "Enter the range numbers, e.g. #0 ~ #6",
     "readHidden": "Count hidden messages in the record",
-    "readHiddenTip": "On: replies and messages hidden in SillyTavern (👁) are read as part of the story — rebuilds, the record and the calendar. The note sent to the story AI is unchanged. For hidden replies already past, run 📚 Rebuild from start or 🎯 Rebuild range. SillyTavern's own narrator / help messages stay out."
+    "readHiddenTip": "On: replies and messages hidden in SillyTavern (👁) are read as part of the story — rebuilds, the record and the calendar. The note sent to the story AI is unchanged. For hidden replies already past, run 📚 Rebuild from start or 🎯 Rebuild range. SillyTavern's own narrator / help messages stay out.",
+    "diceDoneChat": "🎲 Rolled dates for {n} replies. Not happy? ↩ Undo below."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

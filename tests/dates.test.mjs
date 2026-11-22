@@ -87,3 +87,9 @@ test('👁 hidden replies count only when the option is on; SillyTavern notices 
   assert.deepEqual(pending(chat, {}, { ...DEFAULTS, fill: 6 }).ids, [1, 2]);
   HIDDEN.read = false; assert.deepEqual(pending(chat, {}, { ...DEFAULTS, fill: 6 }).ids, [2]);
 });
+
+test('a reply too long for one call keeps its number when its start is cut', () => {
+  const long = '가'.repeat(70000), chat = [{ is_user: true, mes: 'u', name: 'U' }, { is_user: false, mes: long, name: 'N' }];
+  const b = pending(chat, {}, { ...DEFAULTS, fill: 6 });
+  assert.ok(b.text.length <= DEFAULTS.maxIn); assert.ok(b.text.startsWith('[#1]\n…'));
+});

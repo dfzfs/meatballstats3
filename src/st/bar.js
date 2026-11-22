@@ -36,7 +36,7 @@ function draw() {
   const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   const parts = [date || '📅 ?', st.cal.tod, st.loc && `📍 ${st.loc}`, who && `👥 ${who}`, passed].filter(Boolean);
-  if (F) { const n = fillCount(); parts.unshift(`📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`); }
+  if (F) { const n = fillCount(); parts.unshift(`📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : F.from != null ? R.ui2?.fillRangeRun || '구간 정리 중' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`); }
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
   const face = R.sorting ? 'think' : g ? 'surprise' : fr.length ? 'party' : R.stalled ? 'sad' : 'idle';
   el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${parts.map(h).join('<span class="mb3-sep">·</span>').replace(/^📅 /, '')}`;
