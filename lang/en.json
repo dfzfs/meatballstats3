@@ -468,7 +468,8 @@
       "rarity": "Gap for special lines (sparks) and the vault \"may show\" line. Rarely = twice the gap, Often = a bit more often.",
       "human": "From harsh / fall lore lines and records (gave in · lead · aside · seed), rare \"may\" lines: \"need not go along\" after giving in too easily, \"this time first\" after a long stretch led by you, one remark warmer than the tie, old small things and offhand care, and the lines after a fall opens. Counting stays inside Meatball.",
       "fallAuto": "Off: when a fall is ready, 💗 appears in the status line and you decide.",
-      "mascot": "The cat at the left of the status line. Off = text only."
+      "mascot": "The cat at the left of the status line. Off = text only.",
+      "director": "The 🎬 button left of the input: order · secret · direction · name swap · rules. Off = not loaded."
     },
     "btnHelp": "What the buttons do",
     "copyBtn": "📋 Copy test report",
@@ -527,7 +528,10 @@
     "fallAuto": "Open the fall without asking when it is ready",
     "mascot": "Meatball cat",
     "mascotTip": "Poke it! Its face shows the state: thinking · surprised (⚠) · party (💗) · sad (sorting keeps failing)",
-    "otherMeatball": "Another Meatball status extension (Meatball Stats / Meatball Lite) is on too. If both add notes, the story gets the same things twice. Keep one per chat."
+    "otherMeatball": "Another Meatball status extension (Meatball Stats / Meatball Lite) is on too. If both add notes, the story gets the same things twice. Keep one per chat.",
+    "director": "🎬 Director panel",
+    "directorTip": "The 🎬 button left of the input: orders, secrets, direction, name swap and your rules, never kept in the chat.",
+    "directorOff": "Director panel off. Reload to remove it fully."
   },
   "rel": {
     "moves": [

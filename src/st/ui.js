@@ -75,6 +75,7 @@ export function mountUI() {
     <div class="inline-drawer-toggle inline-drawer-header"><b>${h(U.title)}</b><div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div></div>
     <div class="inline-drawer-content">
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_on" type="checkbox" /><span>${h(U.on)}</span></label>${desc('on')}</div>
+      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_director" type="checkbox"${s.director !== false ? ' checked' : ''} /><span>${h(U.director)}</span></label>${desc('director')}</div>
       <div class="mb3-row"><label for="mb3_profile">${h(U.profile)}</label><select id="mb3_profile" class="text_pole"><option value=""></option></select>${desc('profile')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_tr" type="checkbox"${s.translate !== false ? ' checked' : ''} /><span>${h(D.translateLabel)}</span></label>${desc('translate')}</div>
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_bar_on" type="checkbox" /><span>${h(U.bar)}</span></label>${desc('bar')}</div>
@@ -106,6 +107,11 @@ export function mountUI() {
   document.getElementById('mb3_spark')?.addEventListener('change', (e) => { s.spark = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_gauto')?.addEventListener('change', (e) => { s.guardAuto = e.target.checked; c.saveSettingsDebounced(); });
   document.getElementById('mb3_rarity')?.addEventListener('change', (e) => { s.rarity = +e.target.value || 1; c.saveSettingsDebounced(); refresh(); });
+  document.getElementById('mb3_director')?.addEventListener('change', (e) => {
+    s.director = e.target.checked; c.saveSettingsDebounced();
+    if (s.director) R.loadDirector?.();
+    else { document.getElementById('mbd_btn')?.remove(); document.getElementById('mbd_wrap')?.remove(); window.toastr?.info(U.directorOff); }
+  });
   for (const [id, k] of [['mb3_vlines', 'vaultLines'], ['mb3_rsteps', 'refuseSteps'], ['mb3_rush', 'rushCall'], ['mb3_human', 'human'], ['mb3_fauto', 'fallAuto'], ['mb3_mascot', 'mascot']]) document.getElementById(id)?.addEventListener('change', (e) => { s[k] = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_tr')?.addEventListener('change', (e) => { s.translate = e.target.checked; c.saveSettingsDebounced(); renderBar(); });
   document.getElementById('mb3_delall')?.addEventListener('click', () => { if (confirm(R.ui.delAllAsk)) clearAll(); });
