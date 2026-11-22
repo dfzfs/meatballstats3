@@ -969,7 +969,7 @@
     "loreBooksNone": "No lorebooks",
     "dayRange": "day {a}–{b}",
     "fillDates": "Fill in missing dates",
-    "fillDatesTip": "No AI — a roll of the dice. With no date at all, a random start day is picked; each vague skip (\"a few days / weeks later\", striped weeks) gets a random length of that size (days 2–6 · weeks 1–4 · months 1–3), never past a date the text names later. ↩ Undo takes it all back.",
+    "fillDatesTip": "No AI — a roll of the dice. With no date at all, a random start day is picked; each vague reply (\"a few days / weeks later\") gets a random day inside the striped week the calendar shows for it, never past a date the text names later. ↩ Undo takes it all back.",
     "calEmpty": "nothing recorded",
     "yearGuess": "year guessed",
     "yearGuessTip": "The story names no year: the nearest year whose weekdays match is shown. Set it with \"Set date\" or the Meatball chat.",

@@ -59,8 +59,8 @@ export function ranges(ids) {
 
 // 🎲 「미정 날짜 정하기」: no AI, a roll of the dice. Returns [{ i, date: { y, m, d } }] to be written as the person's dates.
 //   no date anywhere yet   → the first read reply gets a random day of the year (the story's year, the set one or this year)
-//   a vague skip («며칠 뒤» · «몇 주 뒤»), i.e. a run of ≈ replies → its first reply gets base + a random gap of that size;
-//   when the text names a date after the run, the gap never goes past it.
+//   a vague skip («며칠 뒤» · «몇 주 뒤»), i.e. a run of ≈ replies → its first reply gets a random day of the striped week
+//   the calendar shows for it, after the day before and never past a date the text names later.
 // place = placeReplies(...); tl = st.tl (for which replies were read); rnd = () => [0, 1)
 export function rollDates(place, tl, nowY, rnd = Math.random) {
   const read = new Map((tl || []).map((t) => [t.i, t.read !== false])), out = [];
@@ -79,11 +79,12 @@ export function rollDates(place, tl, nowY, rnd = Math.random) {
     if (k && list[k - 1].approx) { last = addDays(at, delta); continue; }     // inside a run: follows its first reply
     if (!last) { last = at; continue; }
     if (read.get(r.i) === false) { last = at; continue; }
-    // the size the engine used for the skip tells what kind it was: 2 days · 7 · 30 · 365
-    const nom = dayDiff(last, at), [lo, hi] = nom >= 200 ? [300, 600] : nom >= 25 ? [30, 100] : nom >= 6 ? [7, 27] : [2, 6];
-    const next = list.slice(k + 1).find((x) => !x.approx), cap = next ? dayDiff(last, next) : Infinity;
-    const gap = cap < Infinity ? Math.max(1, Math.min(cap, R(Math.min(lo, cap), Math.min(hi, cap)))) : R(lo, hi);
-    const date = addDays(last, gap);
+    // a day inside the striped week the calendar shows for it (Sun–Sat), after the day before and not past a date the text names later
+    const [wy, wm, wdd] = r.wk.split('-').map(Number), next = list.slice(k + 1).find((x) => !x.approx);
+    const days = [0, 1, 2, 3, 4, 5, 6].map((j) => addDays({ y: wy, m: wm, d: wdd }, j))
+      .filter((x) => dayDiff(last, x) >= 1 && (!next || dayDiff(x, next) >= 0));
+    const date0 = days.length ? days[R(0, days.length - 1)] : at;
+    const date = date0;
     out.push({ i: r.i, date });
     delta = dayDiff(at, date); last = date;
   }
