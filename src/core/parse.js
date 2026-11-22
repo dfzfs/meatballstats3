@@ -7,7 +7,7 @@ export function parse(t) {
   const lines = [], dropped = [];
   const body = String(t || '').replace(/^[\s\S]*?<mb>/i, '').replace(/<\/mb>[\s\S]*$/i, '').replace(/<rel>[\s\S]*$/i, '');
   for (const raw of body.split(/\r?\n/)) {
-    const m = raw.trim().replace(/^[-*•]\s*/, '').match(/^([a-zA-Z]+)\s*[:：]\s*(.+)$/);
+    const m = raw.trim().replace(/^[-*•]\s*/, '').replace(/^\[?#\s*\d+\]?\s*[:.)]?\s*/, '').match(/^([a-zA-Z]+)\s*[:：]\s*(.+)$/);   // a «#12» reply number in front is not part of the line
     if (!m) { if (raw.trim() && !/^none$/i.test(raw.trim())) dropped.push({ raw, why: 'form' }); continue; }
     const k = m[1].toLowerCase(), v = m[2].trim();
     if (!KEYS.includes(k)) { dropped.push({ raw, why: 'key' }); continue; }

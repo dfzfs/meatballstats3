@@ -78,7 +78,8 @@ async function tick() {
     const live = new Set((ctx().chat || []).map(fingerprint));
     if (ctx().getCurrentChatId?.() !== chatId || !b.fps.every((fp) => live.has(fp))) return;    // rerolled or chat switched meanwhile: discard
     const S = store(true), hint = hintOf(S, b), r = absorb(S.ev, b, answer, st, R.V, hint, opts);
-    keepRaw(S, b.fps.at(-1), answer, r);
+    if (r.parts) for (const [fp, a] of r.parts) keepRaw(S, fp, a, fp === b.fps.at(-1) ? r : {});   // 처음부터 정리: each reply keeps its own lines
+    else keepRaw(S, b.fps.at(-1), answer, r);
     Q.log.lastAnswer = String(answer).slice(0, 2000); Q.log.dropped = r.dropped;
     if (r.pushed && b.fill) { for (const fp of b.fps) S.ev[fp] ||= []; save(); Q.log.status = `fill-skip:${r.kind}`; }   // 처음부터 정리: a broken answer skips these few, the rest goes on
     else if (r.pushed) { Q.pushedKey = key; Q.log.status = `pushed:${r.kind}`; }                      // broken answer: wait for the next reply, no re-call

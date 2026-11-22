@@ -6,11 +6,13 @@ import { cleanText, fingerprint } from '../core/clean.js';
 import { keysBlock } from '../core/keys.js';
 import { request } from './queue.js';
 import { applyFixes, undoFixes } from './fix.js';
+import { roll, forgetRoll } from './dice.js';
 import { placeReplies } from '../core/calendar.js';
 
 const YES = /^\s*(응+|ㅇㅇ+|ㅇ|네|예|그래|바꿔|고쳐|해\s*줘|ok|okay|yes|y)(?=$|[\s!.~ㅋㅎ요줘])/i;
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export const chatLog = () => { const S = store(); return S?.mbchat || []; };
+const fill = (t, o) => String(t).replace(/\{(\w+)\}/g, (_, k) => o[k] ?? '');
 const push = (m) => { const S = store(true); (S.mbchat ||= []).push(m); if (S.mbchat.length > 30) S.mbchat.splice(0, S.mbchat.length - 30); save(); return m; };
 
 // What Meatball wrote, one line per reply: "#26 (March 7 · noon · flower shop): refused to help pick a gift"
@@ -159,7 +161,13 @@ export async function send(text, info, redraw, opts = {}) {
   const log = chatLog(), last = [...log].reverse().find((m) => m.who === 'mb' && m.prop);
   push({ who: 'me', text: msg.slice(0, 600), at: Date.now() });
   // "응 / 바꿔" right after a question: apply it, no call
-  if (!opts.check && !opts.dates && /날짜|date/i.test(msg) && /미정|정해|채워|알아서|fill|decide/i.test(msg)) opts = { ...opts, dates: true };   // asked in words: same job, still asks first
+  // "날짜 정해 줘" in words: the same 🎲 as the button (no AI). The roll is shown with its undo, like any other change.
+  if (!opts.check && /날짜|date/i.test(msg) && /미정|정해|채워|알아서|주사위|fill|decide|roll|dice/i.test(msg)) {
+    const r = roll();
+    if (!r) push({ who: 'mb', text: R.ui2.diceNone || '정할 날짜가 없어요.', at: Date.now() });
+    else push({ who: 'mb', text: fill(R.ui2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요.', { n: r.undo.length }), at: Date.now(), prop: { fixes: r.fixes, state: 'done', undo: r.undo, req: msg, dice: true } });
+    save(); redraw(); return;
+  }
   if (!opts.check && !opts.dates && last && last.prop.state === 'ask' && YES.test(msg)) { decide(last, true); push({ who: 'mb', text: R.ui2.chatDone || '바꿨어요!', at: Date.now() }); redraw(); return; }
   const wait = push({ who: 'mb', text: '…', wait: true, at: Date.now() }); redraw();
   let res;
@@ -181,7 +189,7 @@ export function decide(m, yes) {
   const undo = applyFixes(m.prop.fixes, m.prop.req);
   m.prop.state = undo ? 'done' : 'failed'; m.prop.undo = undo || null; save();
 }
-export function undo(m) { if (m?.prop?.state !== 'done') return; undoFixes(m.prop.undo); m.prop.state = 'undone'; save(); }
+export function undo(m) { if (m?.prop?.state !== 'done') return; undoFixes(m.prop.undo); m.prop.state = 'undone'; if (m.prop.dice) forgetRoll(); save(); }
 
 // A fix line in plain words: "texture: A>B=lingering" -> "A → B: 미련"
 function human(l) {

@@ -1,9 +1,10 @@
 // The log: what changed at each reply, and the evidence for it. Built only when opened.
 import { ctx, store, save, ledger, R } from './store.js';
 import { dateAt, fmtDate, span, parseDate } from '../core/time.js';
-import { applyFixes, undoFixes } from './fix.js';
+import { applyFixes } from './fix.js';
 import { startFill } from './fill.js';
-import { placeReplies, ranges, keyOf, weekKey, dimOf, wdOf, addDays, rollDates } from '../core/calendar.js';
+import { placeReplies, ranges, keyOf, weekKey, dimOf, wdOf, addDays } from '../core/calendar.js';
+import { roll, undoRoll, lastRoll } from './dice.js';
 import { cleanText, fingerprint } from '../core/clean.js';
 import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
@@ -292,21 +293,11 @@ async function setYear0() {
   if (String(v).trim() === '') delete S.year0; else if (Number.isFinite(n)) S.year0 = n; else return false;
   save(); return true;
 }
-// 🎲 Undated replies and vague skips get dates by a roll of the dice (no AI). Rolls again until nothing is left (a story with no
-// date at all first gets a start day; then its vague skips). One undo for the whole roll.
 function rollDice(ui, draw) {
-  const U2 = R.ui2, y0 = store()?.year0 ?? null, nowY = new Date().getFullYear(), undo = [];
-  for (let k = 0; k < 4; k++) {
-    const P = placeReplies(ledger(), nowY, y0), rolls = rollDates(P, ledger().tl, nowY);
-    if (!rolls.length) break;
-    // a guessed year (no year in the story, none set) is never written down: only month · day, the year stays a guess
-    const yr = (d) => (!P.guessed && d.y >= 100 ? `${d.y}년 ` : '');
-    const u = applyFixes(rolls.map((r) => ({ i: r.i, lines: [`date: ${yr(r.date)}${r.date.m}월 ${r.date.d}일`] })), '🎲');
-    if (!u) break; undo.unshift(...u);
-  }
-  if (!undo.length) { window.toastr?.info(U2.diceNone || '정할 날짜가 없어요. 흐릿한 주(빗금)나 미정 답이 없어요.'); return; }
-  ui._dice = undo; ui.sel = ''; ui.ym = ''; draw();
-  window.toastr?.success(fill(U2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요. 마음에 안 들면 ↩ 되돌리기 · 다시 누르면 남은 것만 굴려요.', { n: undo.length }));
+  const U2 = R.ui2, r = roll();
+  if (!r) { window.toastr?.info(U2.diceNone || '정할 날짜가 없어요. 흐릿한 주(빗금)나 미정 답이 없어요.'); return; }
+  ui.sel = ''; ui.ym = ''; draw();
+  window.toastr?.success(fill(U2.diceDone || '🎲 답 {n}개의 날짜를 주사위로 정했어요. 마음에 안 들면 ↩ 되돌리기 · 다시 누르면 남은 것만 굴려요.', { n: r.undo.length }));
 }
 function flowCard(st, L, chs, ui, M, big) {
   const U2 = R.ui2, M0 = calModel();
@@ -322,7 +313,7 @@ function flowCard(st, L, chs, ui, M, big) {
     title = fill(U2.weekOf || '{a}~{b} 사이 어딘가', { a: md(m, d), b: md(e.m, e.d) }); }
   const scenes = chs.map((c, k) => [c, k]).filter(([c]) => c.es.some((e) => ids.has(e.x.i)));
   const noRec = [...ids].filter((i) => !chs.some((c) => c.es.some((e) => e.x.i === i)));
-  const top = `<div class="mb3-caltop">${ui._dice ? `<span class="mb3-diceundo">↩ ${h(U2.diceUndo || '되돌리기')}</span>` : ''}<span class="mb3-fillday" data-mb3tip="${h(U2.fillDatesTip || '')}">🎲 ${h(U2.fillDates || '미정 날짜 정하기')}</span></div>`;
+  const top = `<div class="mb3-caltop">${lastRoll() ? `<span class="mb3-diceundo">↩ ${h(U2.diceUndo || '되돌리기')}</span>` : ''}<span class="mb3-fillday" data-mb3tip="${h(U2.fillDatesTip || '')}">🎲 ${h(U2.fillDates || '미정 날짜 정하기')}</span></div>`;
   return `<div class="mb3-flow${big ? ' mb3-big mb3-flow3' : ''}"><div class="mb3-calbox">${top}${calHtml(st, L, M0, chs, ui, big)}
     <div class="mb3-leg"><span><b class="mb3-l1"></b>${h(U2.legL1 || '답 1개')}</span><span><b class="mb3-l2"></b>${h(U2.legL2 || '2~4')}</span><span><b class="mb3-l3"></b>${h(U2.legL3 || '5개+')}</span><span><b class="mb3-legnow"></b>${h(U2.legNow || '지금')}</span><span><b class="mb3-legwk"></b>${h(U2.legWeek || '그 주 어딘가')}</span><span><b class="mb3-legdot"></b>${h(U2.legBig || '큰 일')}</span><span><b class="mb3-legmine"></b>${h(U2.legMine || '정한 날짜')}</span><span class="mb3-dpen" data-setdate="1">✏️ ${h(U2.setDate || '날짜 정하기')}</span></div></div>
     ${big ? listHtml(st, L, ui) : ''}<div class="mb3-daybox"><div class="mb3-dtitle">📅 ${h(title)} <span class="mb3-dim">· ${h(ranges([...ids]))}</span></div>${scenes.slice(0, big ? 99 : 2).map(([c, k]) => sceneRow(c, k, st, L, ui, M)).join('')}${!big && scenes.length > 2 ? `<div class="mb3-more2" data-view="flow">+${scenes.length - 2} ›</div>` : ''}${noRec.length ? `<div class="mb3-dim mb3-norec">${h(ranges(noRec))} · ${h(U2.noRecord || '기록할 변화 없음 · 또는 아직 안 읽음')}</div>` : ''}</div></div>`;
@@ -506,7 +497,7 @@ export function openLedger(at = null) {
     else if (t.dataset.ym) { ui.ym = t.dataset.ym; }
     else if (t.dataset.go) { const g = t.dataset.go, r = PLACE.list.find((x) => (x.approx ? `w:${x.wk}` : `d:${x.key}`) === g); ui.sel = g; ui.chap = -1; if (r) ui.ym = `${r.y}-${r.m}`; }
     else if (t.matches('.mb3-fillday')) { rollDice(ui, draw); return; }
-    else if (t.matches('.mb3-diceundo')) { undoFixes(ui._dice); ui._dice = null; ui.sel = ''; draw(); return; }
+    else if (t.matches('.mb3-diceundo')) { undoRoll(); ui.sel = ''; draw(); return; }
     else if (t.matches('.mb3-more')) ui.shown += 8;
     else if (t.dataset.pair != null) { ui.pair = ui.pair === t.dataset.pair ? '' : t.dataset.pair; ui.view = 'rel'; }
     else if (t.dataset.who != null) { ui.who = t.dataset.who; ui.view = 'people'; }
