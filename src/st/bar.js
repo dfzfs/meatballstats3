@@ -1,4 +1,5 @@
 // The person's view: one status line above the input, and short notices. Never inside the chat text.
+import { showName } from './tr.js';
 import { ctx, settings, store, save, ledger, R, decide, fallState, bpLive } from './store.js';
 import { dateAt, fmtDate, span, nowDate } from '../core/time.js';
 import { refresh } from './inject.js';
@@ -29,7 +30,7 @@ function draw() {
   const st = ledger(), L = R.lang[uiLang()], U = R.ui;
   if (!st.classified && !lastGuard()) { el.style.display = 'none'; return; }
   const date = nowDate(st.cal, L);
-  const who = st.with.slice(0, 4).join(', ') + (st.with.length > 4 ? ` +${st.with.length - 4}` : '');
+  const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   const parts = [date || '📅 ?', st.cal.tod, st.loc && `📍 ${st.loc}`, who && `👥 ${who}`, passed].filter(Boolean);
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
