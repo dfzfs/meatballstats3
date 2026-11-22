@@ -26,7 +26,7 @@ export function readBlueprint(text) {
     const eq = main.indexOf('='), lhs = (eq < 0 ? main : main.slice(0, eq)).trim(), v = eq < 0 ? '' : main.slice(eq + 1).trim();
     const bad = () => bp.dropped.push({ raw, why: 'form' });
     const list = (s) => String(s || '').split(/[,，]/).map((x) => x.trim()).filter(Boolean);
-    if (k === 'world') bp.world.push(m[2].trim().slice(0, 200));
+    if (k === 'world') bp.world.push(m[2].trim());
     else if (k === 'person') bp.persons.push({ name: lhs, alias: list(extra.alias), role: extra.role || '', traits: list(extra.traits), pers: extra.pers || '', bg: extra.bg || '' });
     else if (k === 'place') bp.places.push({ path: lhs, near: extra.near || '' });
     else if (k === 'noromance') bp.noromance.push(lhs);
@@ -68,15 +68,15 @@ function capLines(head, lines, max, lg) {
   for (const l of lines) { if (estTokens([head, ...out, l].join('\n'), lg) > max) break; out.push(l); }
   return out.length ? `${head}\n${out.join('\n')}\n\n` : '';
 }
-export function loreSurface(bp, L, lg, max = 150) {
+export function loreSurface(bp, L, lg, max = Infinity) {   // Meatball's own call: every person, no cut
   if (!bp) return '';
-  const W = L.lore, lines = [...bp.world.slice(0, 1).map((w) => `${W.world}: ${w}`),
+  const W = L.lore, lines = [...bp.world.map((w) => `${W.world}: ${w}`),
     ...bp.persons.map((p) => [p.name + (p.alias.length ? ` (${p.alias.join(', ')})` : ''), p.role, p.traits.join(', ')].filter(Boolean).join(' · '))];
   return capLines(W.head, lines, max, lg);
 }
-export function loreDeep(bp, L, lg, max = 400) {
+export function loreDeep(bp, L, lg, max = Infinity) {
   if (!bp) return '';
-  const W = L.lore, lines = [...bp.world.slice(0, 2).map((w) => `${W.world}: ${w}`),
+  const W = L.lore, lines = [...bp.world.map((w) => `${W.world}: ${w}`),
     ...bp.persons.map((p) => [p.name + (p.alias.length ? ` (${p.alias.join(', ')})` : ''), p.role, p.traits.join(', '), p.pers, p.bg].filter(Boolean).join(' · ')),
     ...bp.tie.map((x) => `${x.a}–${x.b}: ${x.v}`), ...bp.barrier.map((x) => `${x.a}–${x.b}: ${W.barrier} ${x.v}`), ...bp.sore.map((x) => `${x.a} → ${x.b}: ${W.sore} ${x.v}`)];
   return capLines(W.headDeep, lines, max, lg);
