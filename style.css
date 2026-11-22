@@ -288,3 +288,7 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-cchk { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
 .mb3-cchk .mb3-ccheck { cursor: pointer; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--mbt-line, #ddd); background: var(--mbt-card, #fff); white-space: nowrap; }
 .mb3-cchk .mb3-dim { flex: 1; min-width: 0; }
+.mb3-lore .mb3-books { margin: 8px 0; }
+.mb3-lore .mb3-books summary { cursor: pointer; }
+.mb3-lore .mb3-books-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; padding: 6px 2px; }
+.mb3-lore .mb3-books-q { margin: 0 0 4px; }

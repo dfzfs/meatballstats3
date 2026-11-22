@@ -6,6 +6,7 @@ import { cleanText, fingerprint } from '../core/clean.js';
 import { Q, kick } from './queue.js';
 import { refresh } from './inject.js';
 import { renderBar } from './bar.js';
+import { tipQ } from './tip.js';
 
 export const FILL_N = 6;
 export const fillState = () => store()?.fill || null;
@@ -40,9 +41,9 @@ export function drawFillRow(T) {
   const el = document.getElementById('mb3_fill_row'); if (!el?.querySelector) return;
   const f = fillState(), { done, total } = fillCount(), U = T || {};
   el.innerHTML = !f
-    ? `<div class="menu_button mb3-fill-go" title="${h(U.fillDesc || '')}">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
+    ? `<div class="menu_button mb3-fill-go">📚 ${h(U.fillBtn || '처음부터 정리')}</div>
        <span class="mb3-fill-r">#<input class="text_pole mb3-fill-a" type="number" min="0" placeholder="${h(U.fillFirst || '처음')}" /> ~ #<input class="text_pole mb3-fill-b" type="number" min="0" placeholder="${h(U.fillLast || '끝')}" /></span>
-       <span class="mb3-dim">${h(U.fillDesc || '')}</span>`
+       ${tipQ(U.fillDesc || '', h)}`
     : `<b>📚 ${h(f.paused ? U.fillPaused || '정리 멈춤' : U.fillRun || '처음부터 정리 중')}${f.from != null ? ` (#${f.from}~#${f.to === Infinity || f.to == null ? '' : f.to})` : ''} ${done}/${total}</b>
        <div class="menu_button mb3-fill-p">${h(f.paused ? U.fillGo || '이어 하기' : U.fillPause || '멈추기')}</div><div class="menu_button mb3-fill-x">${h(U.fillStop || '그만두기')}</div>`;
   el.querySelector('.mb3-fill-go')?.addEventListener('click', () => {

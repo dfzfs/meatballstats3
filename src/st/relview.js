@@ -5,6 +5,7 @@ import { refresh } from './inject.js';
 import { kick } from './queue.js';
 import { trend, tieOf } from '../core/ledger2.js';
 import { trWatch } from './tr.js';
+import { tipQ } from './tip.js';
 import { stamp } from '../core/time.js';
 
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -33,8 +34,8 @@ function table() {
 export function mountRelUI() {
   const box = document.querySelector('#mb3_settings .inline-drawer-content'), U = R.ui2, s = settings(), c = ctx();
   if (!box || document.getElementById('mb3_stage2')) return;
-  const D = R.ui.d || {}, desc = (k) => (D[k] ? `<small class="mb3-desc">${h(D[k])}</small>` : '');
-  const html = `<div class="mb3-row"><label class="checkbox_label"><input id="mb3_stage2" type="checkbox" /><span>${h(U.stage2)}</span></label>${desc('stage2')}</div><div class="mb3-row"><label class="checkbox_label"><input id="mb3_burst" type="checkbox" /><span>${h(U.burst)}</span></label>${desc('burst')}</div><div class="mb3-btns"><div id="mb3_rel" class="menu_button" title="${h(D.rel || '')}">${h(U.relBtn)}</div><div id="mb3_threads" class="menu_button" title="${h(D.threads || '')}">${h(R.ui.threadsBtn)}</div><div id="mb3_vaults" class="menu_button" title="${h(D.vaults || '')}">${h(R.ui.vaultsBtn)}</div></div>`;
+  const D = R.ui.d || {}, desc = (k) => tipQ(D[k], h);
+  const html = `<div class="mb3-row"><label class="checkbox_label"><input id="mb3_stage2" type="checkbox" /><span>${h(U.stage2)}</span></label>${desc('stage2')}</div><div class="mb3-row"><label class="checkbox_label"><input id="mb3_burst" type="checkbox" /><span>${h(U.burst)}</span></label>${desc('burst')}</div><div class="mb3-btns"><div id="mb3_rel" class="menu_button" data-mb3tip="${h(D.rel || '')}">${h(U.relBtn)}</div><div id="mb3_threads" class="menu_button" data-mb3tip="${h(D.threads || '')}">${h(R.ui.threadsBtn)}</div><div id="mb3_vaults" class="menu_button" data-mb3tip="${h(D.vaults || '')}">${h(R.ui.vaultsBtn)}</div></div>`;
   const slot = document.getElementById('mb3_rel_slot');
   if (slot) slot.innerHTML = html; else box.insertAdjacentHTML('beforeend', html);
   const cb = document.getElementById('mb3_stage2');

@@ -776,7 +776,7 @@
     "loreGuide": [
       "<b>What the sheet is</b> — the story's ground (people, ties, secrets), one \"key: value\" per line. Only the classifier reads it; it is not passed to the main model as is. Meatball builds each reply's \"lines and leak level\" from the ties written here (tie · texture · inner · sore · hide).",
       "<b>Where it is saved</b> — \"Save to this chat\" keeps it for this chat only; \"Save as character default\" for every chat with this character. This chat's wins. With neither, a lorebook entry titled \"meatball lore\" in the character's book is read (keep that entry switched off: Meatball still reads it and the main model does not).",
-      "<b>Draft</b> — one AI call, only when pressed (the classifier's connection profile). It reads the card's description, personality and scenario plus the character's lorebook entries (except ones mentioning Meatball), up to 24,000 characters, and is told to write only what the source states. The result is appended below and saved nowhere until you press a save button. The draft is always in English (both Korean and English keys are read). A Korean sheet is fine: the classifier reads it as is, and it is turned into English only where it goes into the main model's note (names kept).",
+      "<b>Draft</b> — one AI call, only when pressed (the classifier's connection profile). It reads the card's description, personality and scenario plus the entries of the lorebooks you tick under 📚 (any book in SillyTavern; disabled entries and ones mentioning Meatball are left out), up to 24,000 characters, and is told to write only what the source states. The result is appended below and saved nowhere until you press a save button. The draft is always in English (both Korean and English keys are read). A Korean sheet is fine: the classifier reads it as is, and it is turned into English only where it goes into the main model's note (names kept).",
       "<b>Lines that matter most</b> — tie · texture · inner · sore · hide · deep. With them, lines and leak level go in before any record builds up.",
       "<b>New in v0.7</b> — <b>hide: A>B = what</b> (what A keeps from B; every reply while both are here: \"may come close, is not seen\") · <b>unknown: Name = what</b> (not decided by anyone yet, you included; every reply: \"behavior only, nobody guesses or explains\"; the classifier does not guess a cause either) · <b>channel: Name = voice, hands</b> (where that person's feeling leaks; added when an inner or texture line comes).",
       "<b>v0.8 vault · sparks · lines</b> — <b>vault: Name (or A-B) = what stays hidden | signs: words that give it away (Korean and English) | shows: what may show | opens: when</b>. The hidden part never reaches the main model; only \"shows\" does. Note lines holding a sign are dropped by code; a new reply holding a sign, or the guard catching \"revealed / settled / rushed\" with a quote, puts ⚠ in the status line. Put where the story should end up (e.g. they fall in love) in the vault too: hidden = the destination, signs = confess, kiss…, shows = the stage now (e.g. only deniable moments). · <b>self: Name = hums while working, loves sweets</b> (sparks: the old self slips once) · <b>line: Name = coming into the back room</b> (when the person's message touches the line or runs ahead of the tie, a refusal is allowed in that reply).",
@@ -890,7 +890,7 @@
     "loreIntro": "People, ties and secrets, one line each. Only Meatball reads it; it does not go to the AI as is. Hover a word for help, click it to add an example line.",
     "loreMore": "All details",
     "shapeTip": "Whether the character slot and your name are people. 1:1 roleplay: both people. Novel: the character slot is the title. Sim: the world. Auto is usually right.",
-    "loreDraftTip": "Reads the card and lorebook and drafts a sheet (one AI call). Check and fix it before saving.",
+    "loreDraftTip": "Reads the card and the lorebooks you picked and drafts a sheet (one AI call). Check and fix it before saving.",
     "loreSaveChatTip": "This chat only. Wins over the character default.",
     "loreSaveCharTip": "Every chat with this character.",
     "loreTemplateTip": "Puts the example sheet in the box (replaces what is there).",
@@ -962,7 +962,11 @@
     "fillFirst": "first",
     "fillLast": "last",
     "fillNone": "No AI reply in that range",
-    "fillAskRange": "Rebuild Meatball's record from #{a} to #{b}.\n\n· Only that range is cleared and read again. The rest, your ✋ fixes and orders stay.\n· {n} replies → about {c} AI calls.\n· No Meatball note goes to the story AI while it runs.\n\nStart?"
+    "fillAskRange": "Rebuild Meatball's record from #{a} to #{b}.\n\n· Only that range is cleared and read again. The rest, your ✋ fixes and orders stay.\n· {n} replies → about {c} AI calls.\n· No Meatball note goes to the story AI while it runs.\n\nStart?",
+    "loreBooks": "Lorebooks the draft reads",
+    "loreBooksTip": "Pick any lorebook in SillyTavern for the draft. The character's and the chat's are ticked at first. Remembered per character.",
+    "loreBooksFind": "Find by name",
+    "loreBooksNone": "No lorebooks"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",
