@@ -56,7 +56,9 @@ export function applyFixes(fixes, note = '') {
   for (const f of fixes) {
     const m = c.chat?.[f.i]; if (!m || m.is_user || !f.lines?.length) continue;
     const fp = fingerprint(m), old = S.raw?.[fp]?.a || EMPTY, had = S.ufix?.[fp] || null;
-    const all = [...(had?.lines || []), ...f.lines].slice(-20);
+    // a new date replaces the old one the person (or 🗓) set on this reply; other lines add up
+    const newDate = f.lines.some((l) => /^date\s*:/i.test(l)), keep = (had?.lines || []).filter((l) => !(newDate && /^date\s*:/i.test(l)));
+    const all = [...keep, ...f.lines].slice(-20);
     if (!reabsorb(f.i, baseOf(old.replace(/\s+✋$/gm, ''), all))) continue;
     addUser(S, fp, f.i, all);
     S.raw[fp].a = show(old.replace(/\s+✋$/gm, ''), all);

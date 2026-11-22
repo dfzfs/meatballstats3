@@ -901,7 +901,7 @@
     "legLow": "조금",
     "legHigh": "많이",
     "legBig": "큰 일",
-    "setDate": "날짜 정하기",
+    "setDate": "고른 날 날짜 바꾸기",
     "fixWord": {
       "date": "날짜",
       "time": "시간",
@@ -942,7 +942,20 @@
     "undated": "날짜 미정",
     "legWeek": "그 주 어딘가",
     "noRecord": "기록할 변화 없음 · 또는 아직 안 읽음",
-    "legMine": "정한 날짜"
+    "legMine": "정한 날짜",
+    "replyList": "답 순서대로",
+    "notRead": "아직 안 읽음",
+    "readThese": "다시 읽기",
+    "readTheseAsk": "#{a}~#{b}를 다시 읽을까요? (AI 약 {c}번)",
+    "setThisDate": "이 답부터 날짜 바꾸기",
+    "setDateOf": "#{i}의 날짜",
+    "setDateHint": "예: 2월 24일 · February 24 · 1524년 3월 2일. 뒤의 답들은 이 날짜를 따라가요.",
+    "dateBad": "날짜로 못 읽었어요. 예: 2월 24일",
+    "year0Title": "첫 답(#{i})의 연도",
+    "year0Hint": "숫자만 적어요. 비우면 본문에 나온 연도를 따라요.",
+    "year0Set": "첫 답 연도 {y}년 · 바꾸기",
+    "year0None": "연도를 정해 주세요",
+    "year0Story": "본문 연도 {y}년 · 바꾸기"
   },
   "lore": {
     "head": "[평소 설정] 이야기 밖 설정이다. 지금 장면과 다르면 [지금 상태]와 [새 글]이 이긴다.",

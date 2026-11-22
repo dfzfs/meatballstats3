@@ -937,7 +937,7 @@
     "legLow": "a little",
     "legHigh": "a lot",
     "legBig": "big event",
-    "setDate": "Set date",
+    "setDate": "Change the picked day's date",
     "fixWord": {
       "date": "date",
       "time": "time",
@@ -978,7 +978,20 @@
     "undated": "no date yet",
     "legWeek": "that week",
     "noRecord": "nothing to record · or not read yet",
-    "legMine": "date set"
+    "legMine": "date set",
+    "replyList": "Replies in order",
+    "notRead": "not read yet",
+    "readThese": "Read",
+    "readTheseAsk": "Read #{a}–#{b} again? (about {c} AI calls)",
+    "setThisDate": "Change the date from this reply",
+    "setDateOf": "Date of #{i}",
+    "setDateHint": "e.g. February 24 · March 2, 1524. The replies after it follow.",
+    "dateBad": "Could not read that as a date. e.g. February 24",
+    "year0Title": "Year of the first reply (#{i})",
+    "year0Hint": "Numbers only. Empty = follow the story.",
+    "year0Set": "First reply's year {y} · change",
+    "year0None": "Set the year",
+    "year0Story": "Story year {y} · change"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

@@ -19,7 +19,8 @@ function guessYear(m, d, wd, nowY) {
   return nowY;
 }
 
-export function placeReplies(st, nowY = new Date().getFullYear()) {
+// year0: the year the person set for the first dated reply (wins over the story's and the guess)
+export function placeReplies(st, nowY = new Date().getFullYear(), year0 = null) {
   const tl = st.tl || [], A = st.tlAnchor;
   const out = [], undated = [];
   let year = null, guessed = false, prev = null;
@@ -27,16 +28,19 @@ export function placeReplies(st, nowY = new Date().getFullYear()) {
     let md = t.md && t.md.m != null ? t.md : null;
     if (!md && A && t.n <= A.n) { const r = dateRaw({ ...A, fz: null }, t.n); if (r.m != null) md = r; }   // before the first date: counted back from it
     if (!md) { undated.push(t.i); continue; }
+    // the year: one the reply names itself; else carried on, +1 when the date wraps (December -> January, or a date set
+    // set more than half a year "before" the last one: time only goes forward; a few days back is a correction)
     if (year == null) {
-      if (md.y != null) year = md.y;
+      if (t.yx != null) year = t.yx; else if (md.y != null) year = md.y;
       else { year = guessYear(md.m, md.d, md.wd, nowY); guessed = true; }
-    } else if (md.y != null) { year = md.y; guessed = false; }
-    else if (prev && doy(md.m, md.d) + 180 < doy(prev.m, prev.d)) year += 1;   // December -> January: the next year
+    } else if (t.yx != null) year = t.yx;
+    else if (prev && doy(md.m, md.d) + 180 < doy(prev.m, prev.d)) year += 1;
     const d = Math.min(md.d, dimOf(year, md.m));
     out.push({ i: t.i, n: t.n, y: year, m: md.m, d, key: keyOf(year, md.m, d), wk: weekKey(year, md.m, d), approx: !!t.fz, read: t.read, user: t.user });
     prev = md;
   }
-  return { list: out, undated, guessed };
+  if (year0 != null && out.length) { const k = year0 - out[0].y; if (k) for (const r of out) { r.y += k; r.d = Math.min(r.d, dimOf(r.y, r.m)); r.key = keyOf(r.y, r.m, r.d); r.wk = weekKey(r.y, r.m, r.d); } guessed = false; }
+  return { list: out, undated, guessed, year0 };
 }
 // "#3", "#3~#7", "#3~#7, #12"
 export function ranges(ids) {

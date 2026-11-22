@@ -111,7 +111,7 @@ line
 // 「미정 날짜 정하기」: every AI reply gets a date. Replies with a date keep it; the ones with none (or only "a few days
 // later") get one picked from the story's clues. Only the reply where a new day starts needs a line.
 function buildDates(info) {
-  const P = placeReplies(info.st), chat = ctx().chat || [], at = new Map(P.list.map((r) => [r.i, r]));
+  const y0 = store()?.year0 ?? null, P = placeReplies(info.st, new Date().getFullYear(), y0), chat = ctx().chat || [], at = new Map(P.list.map((r) => [r.i, r]));
   const ex = (i) => cleanText(chat[i]?.mes || '').replace(/\s+/g, ' ').slice(0, 260);
   const rows = chat.map((m, i) => [m, i]).filter(([m]) => !m.is_user && !m.is_system).map(([, i]) => {
     const r = at.get(i), d = r ? `${r.y}-${String(r.m).padStart(2, '0')}-${String(r.d).padStart(2, '0')}` : '';
@@ -129,7 +129,8 @@ ${rows}
 - Use the story's clues: weekdays, seasons, weather, holidays, "the next morning", "three days later", school or work days.
 - Stay consistent with the known dates around it; time never goes backwards unless the reply is a flashback.
 - No clue at all: the same day as the reply before, or the next day when the text clearly starts a new day.
-- If the story has no date anywhere, pick a believable start date (season and weekday from the clues) and a year.
+- If the story has no date anywhere, pick a believable start date (season and weekday from the clues).
+- ${y0 != null ? `The year of the first reply is ${y0} (the user set it). Count on from it.` : 'Write no year unless the story itself names one (the user sets the year).'}
 - ABOUT: pick the most likely exact day in that week.
 
 [RULES]
@@ -140,7 +141,7 @@ ${rows}
 <say>…</say>
 <conflict>no</conflict>
 <fix #number>
-date: Month D, YYYY
+date: Month D${y0 != null ? ', YYYY' : ''}
 </fix>
 (one <fix> per reply that needs a line)`;
 }
