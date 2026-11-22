@@ -125,9 +125,9 @@ export function mountUI() {
 }
 
 // 🎬 지시창 is its own extension: this button installs it from GitHub (the same as Install extension with the address).
-const DIRECTOR_REPO = 'https://github.com/dfzfs/meatball-director';
+const DIRECTOR_REPO = 'https://github.com/dfzfs/meatballinput';
 const hasDirector = () => !!window.__mbDirector || !!document.getElementById('mbd_btn')
-  || [...document.querySelectorAll('script[src]')].some((e) => /third-party\/meatball-director\//i.test(e.src));
+  || [...document.querySelectorAll('script[src]')].some((e) => /third-party\/(meatballinput|meatball-director)\//i.test(e.src));
 let dirFresh = false;
 function drawDirector() {
   const box = document.getElementById('mb3_dir_box'); if (!box) return;

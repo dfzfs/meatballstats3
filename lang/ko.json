@@ -510,7 +510,7 @@
       "404": "이 실리태번은 확장 설치가 꺼져 있어요",
       "500": "내려받지 못했어요. 인터넷이나 git 설치를 확인하고 다시 해 보세요"
     },
-    "directorErrAny": "설치하지 못했어요 ({n}). 확장 › Install extension에 https://github.com/dfzfs/meatball-director 를 직접 넣어 보세요"
+    "directorErrAny": "설치하지 못했어요 ({n}). 확장 › Install extension에 https://github.com/dfzfs/meatballinput 를 직접 넣어 보세요"
   },
   "rel": {
     "moves": [
