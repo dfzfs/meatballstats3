@@ -1,5 +1,5 @@
 // The ledger is never stored: it is folded from the stored events every time.
-import { fingerprint } from './clean.js';
+import { fingerprint, skipMsg } from './clean.js';
 import { newState, applyGroup } from './ledger1.js';
 import { dateRaw, isFuzzy } from './time.js';
 
@@ -10,7 +10,7 @@ export function fold(chat, ev, V, pre) {
   if (pre?.length) applyGroup(st, pre, V);        // lines a person entered before anything was sorted
   st.tl = [];                                     // every AI reply, read or not: its story day and the date the engine had then (for the calendar)
   chat.forEach((m, i) => {
-    if (m.is_system) return;
+    if (skipMsg(m)) return;
     const g = ev[fingerprint(m)];
     if (!g) { if (!m.is_user) tlPush(st, i, false); return; }
     applyGroup(st, g, V);

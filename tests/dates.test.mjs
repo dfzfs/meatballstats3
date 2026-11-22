@@ -77,3 +77,13 @@ test('the date rules go only into 처음부터 정리 prompts', () => {
     assert.doesNotMatch(buildPrompt(prompts, { text: 'x' }, st, { en, ko }, [], { lang }).prompt, /처음부터 정리: 날짜|Rebuild from the start/);
   }
 });
+
+test('👁 hidden replies count only when the option is on; SillyTavern notices never', async () => {
+  const { HIDDEN, skipMsg } = await import('../src/core/clean.js');
+  const hidden = { is_system: true, is_user: false, mes: '숨긴 답', name: 'N' }, note = { is_system: true, mes: '/sys 해설', extra: { type: 'narrator' } };
+  HIDDEN.read = false; assert.equal(skipMsg(hidden), true);
+  HIDDEN.read = true; assert.equal(skipMsg(hidden), false); assert.equal(skipMsg(note), true);
+  const chat = [{ is_user: true, mes: 'u', name: 'U' }, hidden, { is_user: false, mes: '보이는 답', name: 'N' }];
+  assert.deepEqual(pending(chat, {}, { ...DEFAULTS, fill: 6 }).ids, [1, 2]);
+  HIDDEN.read = false; assert.deepEqual(pending(chat, {}, { ...DEFAULTS, fill: 6 }).ids, [2]);
+});

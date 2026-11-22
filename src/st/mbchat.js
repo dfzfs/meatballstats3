@@ -2,7 +2,7 @@
 // looks for it in its record and the story, then fixes every place it touches. It never argues: if the story says
 // otherwise it says so once, in the same card, and one tap applies it anyway. One AI call per message, small context.
 import { ctx, store, save, ledger, R, settings } from './store.js';
-import { cleanText, fingerprint } from '../core/clean.js';
+import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
 import { keysBlock } from '../core/keys.js';
 import { request } from './queue.js';
 import { applyFixes, undoFixes } from './fix.js';
@@ -115,7 +115,7 @@ line
 function buildDates(info) {
   const y0 = store()?.year0 ?? null, P = placeReplies(info.st, new Date().getFullYear(), y0), chat = ctx().chat || [], at = new Map(P.list.map((r) => [r.i, r]));
   const ex = (i) => cleanText(chat[i]?.mes || '').replace(/\s+/g, ' ').slice(0, 260);
-  const rows = chat.map((m, i) => [m, i]).filter(([m]) => !m.is_user && !m.is_system).map(([, i]) => {
+  const rows = chat.map((m, i) => [m, i]).filter(([m]) => !m.is_user && !skipMsg(m)).map(([, i]) => {
     const r = at.get(i), d = r ? `${r.y}-${String(r.m).padStart(2, '0')}-${String(r.d).padStart(2, '0')}` : '';
     const state = !r ? 'UNKNOWN' : r.approx ? `ABOUT ${d} (vague skip, exact day unknown)` : r.user ? `${d} (set by the user: keep)` : d;
     return `#${i} [${state}] ${ex(i)}`;

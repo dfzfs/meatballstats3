@@ -18,6 +18,11 @@ function fnv(s) {
 // Fingerprint = speaker side + name hash + body hash + length. No swipe numbers.
 export const fpOfText = (isUser, name, mes) => `${isUser ? 'u' : 'a'}.${fnv(String(name || ''))}.${fnv(String(mes || ''))}.${String(mes || '').length}`;
 const cache = new WeakMap();
+// SillyTavern marks a hidden message (👁 · /hide) as a system message. Its own notices (narrator · help · comments) carry
+// extra.type, a hidden reply does not. With HIDDEN.read on, hidden replies count as part of the story (record, calendar).
+export const HIDDEN = { read: false };
+export const isHiddenMsg = (m) => !!m?.is_system && !m.extra?.type && !!String(m.mes || '').trim();
+export const skipMsg = (m) => !!m?.is_system && !(HIDDEN.read && isHiddenMsg(m));
 export function fingerprint(m) {
   const c = cache.get(m);
   if (c && c.mes === m.mes) return c.fp;

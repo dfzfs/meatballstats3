@@ -9,7 +9,7 @@ import { keepFixes } from './src/st/fix.js';
 import { store as store3 } from './src/st/store.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
-import { fingerprint } from './src/core/clean.js';
+import { fingerprint, HIDDEN } from './src/core/clean.js';
 import { R } from './src/st/store.js';
 
 // The hidden instruction of the generation in flight. It lives only in the outgoing prompt, so it is caught there
@@ -62,6 +62,7 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
 
 (async function init() {
   try { await loadResources(new URL('.', import.meta.url)); } catch (e) { console.error('[meatball3] could not load text files', e); return; }
+  HIDDEN.read = !!settings().readHidden;   // 👁 hidden messages counted in the record (set before anything is read)
   fetch(new URL('manifest.json', import.meta.url)).then((r) => r.json()).then((j) => { R.version = j.version; }).catch(() => {});
   const { eventSource, event_types: E } = ctx();
   const changed = () => { refresh(); renderBar(); kick(); };

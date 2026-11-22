@@ -1002,7 +1002,9 @@
     "fillWholeTip": "Read this whole chat again from the first reply. The range boxes are ignored.",
     "fillRangeBtn": "Rebuild range",
     "fillRangeRun": "Rebuilding range",
-    "fillRangeNeed": "Enter the range numbers, e.g. #0 ~ #6"
+    "fillRangeNeed": "Enter the range numbers, e.g. #0 ~ #6",
+    "readHidden": "Count hidden messages in the record",
+    "readHiddenTip": "On: replies and messages hidden in SillyTavern (👁) are read as part of the story — rebuilds, the record and the calendar. The note sent to the story AI is unchanged. For hidden replies already past, run 📚 Rebuild from start or 🎯 Rebuild range. SillyTavern's own narrator / help messages stay out."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

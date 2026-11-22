@@ -5,7 +5,7 @@ import { applyFixes } from './fix.js';
 import { startFill } from './fill.js';
 import { placeReplies, ranges, keyOf, weekKey, dimOf, wdOf, addDays } from '../core/calendar.js';
 import { roll, undoRoll, lastRoll } from './dice.js';
-import { cleanText, fingerprint } from '../core/clean.js';
+import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
 import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
 import { refresh } from './inject.js';
@@ -268,7 +268,7 @@ function calHtml(st, L, M0, chs, ui, big) {
 function replyRuns(st, L) {
   const chat = ctx().chat || [], read = new Map((st.tl || []).map((x) => [x.i, x.read])), runs = [];
   chat.forEach((m, i) => {
-    if (m.is_user || m.is_system) return;
+    if (m.is_user || skipMsg(m)) return;
     const r = PL.get(i), seen = read.get(i);
     const k = seen === false ? 'x' : !r ? 'u' : r.approx ? `w:${r.wk}` : `d:${r.key}`;
     const last = runs.at(-1);

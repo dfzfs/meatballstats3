@@ -13,7 +13,7 @@ import { findSkip } from '../core/hint.js';
 
 const KEY = 'meatball_status3';   // not 'meatball3': the 1st build (meatballstats3) uses that slot
 const DEFAULTS = Object.freeze({ mascot: true, on: true, profile: '', bar: true, stage2: true, burst: true, groups: {}, loreByChar: {}, maker: false, waitSort: false, waitMax: 20,
-  translate: true, spark: true, guardAuto: false, vaultLines: true, refuseSteps: true, rushCall: true, rarity: 1, human: true, fallAuto: false });   // everything sent to AI is English (always); only the screen is translated (Google)
+  translate: true, spark: true, guardAuto: false, vaultLines: true, refuseSteps: true, rushCall: true, rarity: 1, human: true, fallAuto: false, readHidden: false });   // everything sent to AI is English (always); only the screen is translated (Google)
 export const ctx = () => SillyTavern.getContext();
 export const R = { habits: [], pieces: null, lang: null, V: null, prompts: null, deep: null, ui: null, ui2: null, bp: emptyBlueprint(), bpOn: false, loreSrc: '', bookLore: '' };     // loaded text resources
 

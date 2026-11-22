@@ -4,7 +4,7 @@ import { drawFillRow } from './fill.js';
 import { Q, kick } from './queue.js';
 import { refresh } from './inject.js';
 import { parseDate, fmtDate, dateAt } from '../core/time.js';
-import { fingerprint } from '../core/clean.js';
+import { fingerprint, HIDDEN } from '../core/clean.js';
 import { lookalikes } from '../core/names.js';
 import { renderBar, setOpener } from './bar.js';
 import { openLedger, clearAll } from './ledgerview.js';
@@ -104,6 +104,7 @@ export function mountUI() {
       <div class="mb3-row"><label class="checkbox_label"><input id="mb3_maker" type="checkbox"${s.maker ? ' checked' : ''} /><span>${h(R.ui2.maker)}</span></label>${desc('maker')}</div></details>
       <div id="mb3_rel_slot"></div>
       <div class="mb3-row mb3-fill" id="mb3_fill_row"></div>
+      <div class="mb3-row"><label class="checkbox_label"><input id="mb3_hidden" type="checkbox"${s.readHidden ? ' checked' : ''} /><span>👁 ${h(R.ui2.readHidden || '숨긴 메시지도 기록에 넣기')}</span></label>${tipQ(R.ui2.readHiddenTip || '', h)}</div>
       <details class="mb3-danger"><summary>${h(D.delAllSet)} ${desc('delAllSetDesc')}</summary><div id="mb3_delall" class="menu_button">⚠ ${h(D.delAllSet)}</div></details>
     </div></div></div>`);
   const on = document.getElementById('mb3_on');
@@ -126,6 +127,8 @@ export function mountUI() {
   document.getElementById('mb3_delall')?.addEventListener('click', () => { if (confirm(R.ui.delAllAsk)) clearAll(); });
   document.getElementById('mb3_copy')?.addEventListener('click', copyReport);
   drawFillRow(R.ui2);
+  HIDDEN.read = !!s.readHidden;
+  document.getElementById('mb3_hidden')?.addEventListener('change', (e) => { s.readHidden = HIDDEN.read = e.target.checked; c.saveSettingsDebounced(); refresh(); renderBar(); drawFillRow(R.ui2); });
   setOpener(openLedger);
   document.getElementById('mb3_ledger').addEventListener('click', openLedger);
   const setProfile = (p) => { s.profile = p?.id || ''; c.saveSettingsDebounced(); };

@@ -1,5 +1,5 @@
 // Batches: which replies are waiting to be sorted, and the text that goes to the classifier.
-import { cleanText, fingerprint, langOf } from './clean.js';
+import { cleanText, fingerprint, langOf, skipMsg } from './clean.js';
 import { knownNames } from './names.js';
 import { parse, brokenKind, toEvents } from './parse.js';
 import { stateText } from './signpost.js';
@@ -12,7 +12,7 @@ export const DEFAULTS = { minChars: 1500, maxReplies: 3, maxIn: 60000, catchUp: 
 // Returns null when nothing waits. { text, fps, ready, catchUp }: fps = fingerprints of the waiting replies (events attach to the last).
 // dirs: { fingerprint: hidden instruction that produced that reply } — put just before the reply as <director>…</director>.
 export function pending(chat, ev, cfg = DEFAULTS, dirs = null) {
-  const rows = chat.map((m, i) => ({ m, i, t: m.is_system ? '' : cleanText(m.mes) })).filter((r) => r.t);
+  const rows = chat.map((m, i) => ({ m, i, t: skipMsg(m) ? '' : cleanText(m.mes) })).filter((r) => r.t);
   const ai = rows.filter((r) => !r.m.is_user);
   // 「처음부터 정리」: the next few unread replies from the start, in order (the text stays under maxIn)
   if (cfg.fill) {

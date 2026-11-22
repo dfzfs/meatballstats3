@@ -1,7 +1,7 @@
 // Stage 2: relationships. Reads only the "rel" events, never touches the stage-1 ledger.
 import { inText, resolve, bare } from './names.js';
 import { quoteOk } from './parse.js';
-import { estTokens } from './clean.js';
+import { estTokens, skipMsg } from './clean.js';
 import { dateAt, fmtDate, span } from './time.js';
 import { emptyBlueprint } from './blueprint.js';
 
@@ -74,7 +74,7 @@ export function fold2(chat, rel, fingerprint) {
   const st = newState2();
   try {
     for (const m of chat) {
-      const g = m.is_system ? null : rel[fingerprint(m)];
+      const g = skipMsg(m) ? null : rel[fingerprint(m)];
       if (!g) continue;
       st.read++;
       const clash = g.some((e) => e.k === 'mv' && e.mv === 4);

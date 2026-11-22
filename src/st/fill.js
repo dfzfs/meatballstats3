@@ -2,7 +2,7 @@
 // The record is rebuilt from scratch; the person's ✋ fixes, director notes and set dates stay and are put back on top.
 // While it runs, no note goes to the story AI (the record is still behind the story). Pause / go on any time.
 import { ctx, store, save } from './store.js';
-import { cleanText, fingerprint } from '../core/clean.js';
+import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
 import { Q, kick } from './queue.js';
 import { refresh } from './inject.js';
 import { renderBar } from './bar.js';
@@ -11,7 +11,7 @@ import { tipQ } from './tip.js';
 export const FILL_N = 6;
 export const fillState = () => store()?.fill || null;
 export const filling = () => { const f = fillState(); return !!f && !f.paused; };
-const inRange = (f) => (m, i) => !m.is_user && !m.is_system && cleanText(m.mes) && i >= (f?.from ?? 0) && i <= (f?.to ?? Infinity);
+const inRange = (f) => (m, i) => !m.is_user && !skipMsg(m) && cleanText(m.mes) && i >= (f?.from ?? 0) && i <= (f?.to ?? Infinity);
 export function fillCount(f = fillState()) {
   const S = store(), ai = (ctx().chat || []).filter(inRange(f));
   return { done: ai.filter((m) => S?.ev?.[fingerprint(m)]).length, total: ai.length };
