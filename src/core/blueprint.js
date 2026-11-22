@@ -6,11 +6,11 @@ const KEY = { '인물': 'person', person: 'person', '애정끔': 'noromance', no
   '숨김': 'hide', hide: 'hide', '결': 'texture', texture: 'texture', '속': 'inner', inner: 'inner', '아픈곳': 'sore', '아픈 곳': 'sore', sore: 'sore', '깊은속': 'deep', '깊은 속': 'deep', deep: 'deep',
   '세계': 'world', world: 'world', '장소': 'place', place: 'place', '모름': 'unknown', unknown: 'unknown', '통로': 'channel', channel: 'channel',
   '금고': 'vault', vault: 'vault', '본모습': 'self', self: 'self', '선': 'line', line: 'line', '외면': 'avoid', avoid: 'avoid',
-  '혐성': 'harsh', harsh: 'harsh', '빠짐': 'fall', fall: 'fall' };
+  '태도': 'harsh', '혐성': 'harsh', harsh: 'harsh', '빠짐': 'fall', fall: 'fall' };
 const EXTRA = { '별칭': 'alias', alias: 'alias', '열림': 'opens', opens: 'opens', '직위': 'role', '신분': 'role', role: 'role', '특징': 'traits', traits: 'traits',
   '성격': 'pers', personality: 'pers', '배경': 'bg', background: 'bg', '옆': 'near', near: 'near',
   '신호': 'signs', '금지신호': 'signs', signs: 'signs', '보임': 'shows', '보여도됨': 'shows', shows: 'shows',
-  '덮개': 'cover', cover: 'cover', '풀림': 'release', release: 'release', '한계': 'limit', limit: 'limit', '간지': 'keeps', keeps: 'keeps' };
+  '덮개': 'cover', cover: 'cover', '풀림': 'release', release: 'release', '한계': 'limit', limit: 'limit', '남음': 'keeps', '간지': 'keeps', keeps: 'keeps' };
 const pairOf = (lhs, sep) => { const p = lhs.split(sep).map((x) => x.trim()); return p.length === 2 && p[0] && p[1] ? p : null; };
 
 export const emptyBlueprint = () => ({ world: [], persons: [], places: [], noromance: [], tie: [], barrier: [], hide: [], keep: [], unknown: [], channel: [], vault: [], self: [], line: [], avoid: [], harsh: [], fall: [], warn: [], texture: [], inner: [], sore: [], deep: [], dropped: [], lines: 0 });
@@ -42,7 +42,7 @@ export function readBlueprint(text) {
     else if (k === 'self') { if (lhs && v) bp.self.push({ who: lhs, v }); else { bad(); continue; } }
     else if (k === 'line') { if (lhs && v) bp.line.push({ who: lhs, v, release: extra.release || '' }); else { bad(); continue; } }
     // v0.9 외면: B>A = why B does not dig into A's secret (a motive, not a ban)
-    // v0.9 혐성: A>B = A's attitude toward B | 한계: the line it never crosses · 빠짐: A>B = how A shows it once fallen | 열림 | 간지
+    // v0.9 태도: A>B = A's attitude toward B | 한계: the line it never crosses · 빠짐: A>B = how A shows it once fallen | 열림 | 남음
     else if (k === 'harsh') { const p = pairOf(lhs, '>'); if (p && v) bp.harsh.push({ a: p[0], b: p[1], v, limit: extra.limit || '' }); else { bad(); continue; } }
     else if (k === 'fall') { const p = pairOf(lhs, '>'); if (p && v) bp.fall.push({ a: p[0], b: p[1], how: v, opens: extra.opens || '', keeps: extra.keeps || '' }); else { bad(); continue; } }
     else if (k === 'avoid') { const p = pairOf(lhs, '>'); if (p && v) bp.avoid.push({ b: p[0], a: p[1], v }); else { bad(); continue; } }
