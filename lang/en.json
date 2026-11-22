@@ -547,7 +547,7 @@
     },
     "font": "Font",
     "fonts": {
-      "st": "Default (system font)",
+      "st": "SillyTavern font",
       "pretendard": "Pretendard",
       "suit": "SUIT",
       "gowun": "Gowun Dodum",

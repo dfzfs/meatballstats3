@@ -471,7 +471,7 @@ function render(box, ui) {
   ui._info = { st, es, nowLine: [fmtDate(dateAt(st.cal), L), st.cal.tod, st.loc].filter(Boolean).join(' · ') || '-', fmt: (e) => [rfmt(e.x.i, L), e.x.tod, roomOf(e.x.loc)].filter(Boolean).join(' · ') || '-' };
   box.innerHTML = `<div class="mb3-log2" data-th="${h(settings().theme || 'gray')}">
     <div class="mb3-top2">${mascotImg('idle')}<div><div class="mb3-tt">${h(U2.logTitle || '미트볼 일지')}</div><div class="mb3-dim">${h(fill(U2.logSub || '답 {n}개 읽음', { n: es.length }))}</div></div>
-    </div><div class="mb3-seg">${tabs.filter(([k]) => MAIN_TABS.has(k) || ui.moreTabs || ui.view === k).map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}${ui.moreTabs || !MAIN_TABS.has(ui.view) ? '' : `<b class="mb3-segmore" data-moretabs="1" title="${h(U2.moreTabs || '더 보기')}">⋯</b>`}</div>
+    <div class="mb3-seg">${tabs.filter(([k]) => MAIN_TABS.has(k) || ui.moreTabs || ui.view === k).map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}${ui.moreTabs || !MAIN_TABS.has(ui.view) ? '' : `<b class="mb3-segmore" data-moretabs="1" title="${h(U2.moreTabs || '더 보기')}">⋯</b>`}</div></div>
     ${body}</div>`;
 }
 
