@@ -50,6 +50,9 @@ export function build(st, L, lg, B = BUDGET) {
   // mid: date line first, then one line per person in the scene
   const dateStr = nowDate(cal, L);   // no date clue yet: say nothing ("since the story began" is false on chats installed mid-story)
   const pl = placeLine(st);
+  // v0.28: a figure in the outer place (a floor, a room number) that the last replies kept writing: the room alone is enough
+  const outer = pl.here.match(/^(.*?)\s*\((.*)\)$/);
+  if (outer && (B.worn || []).some((w) => w && outer[2].toLowerCase().includes(String(w).toLowerCase()))) pl.here = outer[1];
   let mid = [row('mid', join(dateStr, cal.tod, pl.here, st.weather, st.mood), cal.src || 'time')];
   if (pl.around.length) mid.push(row('mid', `${S.nearby}: ${pl.around.join(' · ')}`, 'near'));
   const plain = [];

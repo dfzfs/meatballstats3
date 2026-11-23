@@ -33,7 +33,7 @@ export function buildReport() {
   let sp = null;
   try { sp = s.on ? signpost() : null; } catch (e) { add(`signpost error: ${e.message}`); }
   add('## Signpost as sent to the main model', sp ? `(~${sp.tokens} tokens)` : '(off)');
-  if (sp) for (const k of ['deep', 'mid', 'now']) add(`### ${k}`, sp[k] || '—');
+  if (sp) for (const k of ['deep', 'mid', 'now', 'dir']) add(`### ${k}`, sp[k] || '—');
   add('');
 
   add('## Ledger now',

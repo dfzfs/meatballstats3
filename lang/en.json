@@ -1,6 +1,6 @@
 {
   "sp": {
-    "deepHead": "[STORY RECORD · BACKGROUND] What has been settled so far. Unless told otherwise, stay consistent with it. Do not copy or explain it. Characters know only what they know.",
+    "deepHead": "[STORY RECORD · BACKGROUND] Settled so far; it is here only so that nothing contradicts it. It is not material for this reply: most replies touch none of it. Knowing shows in how characters act — they do not recite it, list shared history or bring up old events to prove they remember. Figures (years, counts, floors, dates) are for accuracy and stay unsaid once the story has stated them. The user's direction can change it. Characters know only what they know.",
     "midHead": "[STATE AT THE END OF THE LAST REPLY · REFERENCE] The starting point for this reply. If the user asks to change the time, place or scene, follow that; otherwise continue from here. Props, numbers and dates already written: use only when needed, do not repeat them.",
     "nowHead": "[THIS REPLY · LINES AND LEAK LEVEL] What changed after the last reply and the lines to keep in this one. The user's instruction comes first. How to write the scene is free. Do not turn this note into dialogue or explain it.",
     "dead": "dead",
@@ -25,10 +25,10 @@
     "owe": "{a} owes {b}: {v}",
     "money": "money",
     "dayUnknown": "exact day unknown",
-    "note": "Director's note",
+    "note": "Standing",
     "beat": "This reply",
     "scene": "This scene",
-    "timeSkip": "Time skip: {s} since the last reply. Open this reply after that gap and let the passing of time show",
+    "timeSkip": "Time skip: {s}. This reply opens after that gap — its very first sentence is already there, with the new time (and the place, if it changed) made plain. The previous scene is over: do not finish it, answer its last line or pick up its last gesture. What happened in between gets one passing line at most; then the new moment is written as a scene of its own",
     "style": "Style",
     "redo": "REWRITE — the version before this one was rejected for this. This version must fix it (the rest may stay as it was)",
     "sceneStart": "Get into it in this reply: a line or two of lead-up at most, then it happens on the page. Do not spend the reply on getting there",
@@ -37,6 +37,13 @@
     "sceneFill": "Go on from where the last reply stopped, cover the way there briefly, and reach the scene within this reply",
     "sceneOne": "Play the whole scene out in this reply and bring it to a close",
     "sceneMulti": "It may run over several replies: this reply gets into it properly, no need to finish it",
+    "jumpAsSaid": "as far as the direction says",
+    "midHeadSkip": "[STATE BEFORE THE TIME SKIP · PAST] Where things stood before the gap. This reply does not start here. Time of day, place, clothes, positions and mood may all have changed; keep only what would still hold after the gap.",
+    "keepHead": "[STANDING · QUIET BASELINE] Set by the user; true through the whole story, the way the setting is. These are conditions, not cues: they are not about this reply, nothing in them needs to happen, be shown or be mentioned now, and a reply may pass without touching them. They only keep what is written from contradicting them. A line that is a writing rule is simply followed, without comment.",
+    "dirHead": "[USER'S DIRECTION FOR THIS REPLY · TOP PRIORITY] Written by the user for this reply. It overrides the state block, the notes above and the momentum of the last reply. This reply is about what it asks: that moment fills the reply. Do not drift to other events, people or places, and do not hurry past it to what comes next. Everything else in the notes is background for it. Do not quote or mention this note.",
+    "sceneAfterSkip": "It takes place after the time skip: open on it directly",
+    "worn": "Written several times in the last replies: {list}. The reader has it. This reply does not state these figures again; if one is needed, a plain word stands in (then, that long, upstairs)",
+    "recall": "The last replies kept reaching back — memories, old events, how long it has been. This reply stays in the present: nobody recalls, cites or sums up the past; what a character knows shows only in what they do now",
     "reach": "How far to write"
   },
   "wd": [

@@ -21,6 +21,19 @@ export function findSkip(text) {
   return null;
 }
 
+// A jump in time asked for in plain words that findSkip has no day count for ("몇 시간 뒤", "a while later", "타임스킵").
+// Only for the wording of the note (the story must open after the gap); the calendar is not touched.
+// text '' = a jump was asked for, without saying how far.
+export function findJump(text) {
+  const s = String(text || '');
+  let m = s.match(/(?:\d{1,2}|한|두|세|네|몇|반)\s*시간\s*(?:뒤|후|이 지나|이 흐|지나)|잠시 ?후|얼마 ?(?:뒤|후)|한참 ?(?:뒤|후)|시간이 ?(?:흘러|지나|흐른)/);
+  if (m) return { text: m[0] };
+  m = s.match(/\b(?:(?:an?|one|two|three|four|five|six|a few|several|a couple of|\d{1,2}) hours? later|half an hour later|hours later|later that (?:day|night|evening|afternoon)|some time later|a while later)\b/i);
+  if (m) return { text: m[0] };
+  if (/타임 ?스킵|시간 ?(?:넘김|넘기|넘겨|건너뛰|스킵)|time[- ]?skip|skip (?:ahead|forward)|fast[- ]forward|jump (?:ahead|forward)/i.test(s)) return { text: '' };
+  return null;
+}
+
 // Prompt messages the director sees as "this turn": everything after the last assistant message,
 // minus this extension's own blocks (they may share a message with other injections, so only the block is cut).
 // skip = text already kept elsewhere (the person's own message, which is in the chat).

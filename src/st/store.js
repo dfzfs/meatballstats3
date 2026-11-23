@@ -10,7 +10,8 @@ import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
 import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
 import { estTokens } from '../core/clean.js';
-import { findSkip } from '../core/hint.js';
+import { findSkip, findJump } from '../core/hint.js';
+import { wornOf } from '../core/worn.js';
 
 const KEY = 'meatball_status3';   // not 'meatball3': the 1st build (meatballstats3) uses that slot
 const DEFAULTS = Object.freeze({ mascot: true, on: true, profile: '', bar: true, stage2: true, burst: true, groups: {}, loreByChar: {}, maker: false, waitSort: false, waitMax: 20,
@@ -69,27 +70,50 @@ function withNote(sp, L) {
   const beat = split(R.pieces?.beat), scene = split(R.pieces?.scene), redo = split(R.pieces?.redo), reach = split(R.pieces?.reach);   // reach: how far past the person's message (지시창, every reply)   // v0.26.1: a rewrite's reason goes last, nearest the reply
   // a time skip typed in plain words ("사흘 뒤") gets the same strong line as one picked from a menu
   const typed = !R.pieces?.time?.text && R.pieces ? findSkip([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
-  const tt = R.pieces?.time?.text || typed?.text || '', time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
+  // v0.28: a jump with no day count ("몇 시간 뒤", "타임스킵") gets the same line; the calendar is not touched by it
+  const jump = !R.pieces?.time?.text && !typed && R.pieces ? findJump([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
+  const tt = R.pieces?.time?.text || typed?.text || (jump ? jump.text || L.sp.jumpAsSaid : ''), time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
   const lines = noteLines(), style = (R.pieces?.rules || []).map((t) => `${L.sp.style}: ${t}`);
   // v0.26.2 「이 장면 동안」: the story kept writing only the lead-up. The first reply with it gets into the scene;
   // the replies after carry it on from where the last stopped (never set it up again)
   // v0.26.3: the person picks how (지시창): jump to it or get there from here · one reply or several (kept until changed)
   const SM = R.pieces?.sceneMode, SH = R.pieces?.sceneHow;
   // v0.26.4: the 지시창 sends the words for the picked kinds (entry · length · focus); they win when present
-  const sceneHow = SH && (SH.start || SH.going) ? [(R.pieces?.sceneN || 0) > 0 ? SH.going || L.sp.sceneGoing : SH.start || L.sp.sceneStart, SH.focus].filter(Boolean).join('. ')
+  // v0.28: with a time skip, "pick up exactly where the last reply stopped" would pull the reply back: the skip wins
+  const sceneHow = tt ? L.sp.sceneAfterSkip
+    : SH && (SH.start || SH.going) ? [(R.pieces?.sceneN || 0) > 0 ? SH.going || L.sp.sceneGoing : SH.start || L.sp.sceneStart, SH.focus].filter(Boolean).join('. ')
     : (R.pieces?.sceneN || 0) > 0 ? L.sp.sceneGoing
     : SM ? `${SM.enter === 'fill' ? L.sp.sceneFill : L.sp.sceneSkip}. ${SM.len === 'one' ? L.sp.sceneOne : L.sp.sceneMulti}` : L.sp.sceneStart;
-  if (!lines.length && !beat.length && !scene.length && !time.length && !style.length && !redo.length && !reach.length) return sp;
-  const rows = [...lines.map((t) => ({ layer: 'now', text: `- ${L.sp.note}: ${t}`, src: 'note' })), ...style.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...scene.map((t, k) => ({ layer: 'now', text: `- ${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`, src: 'note' })),
-    ...time.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...reach.map((t) => ({ layer: 'now', text: `- ${L.sp.reach}: ${t}`, src: 'note' })), ...beat.map((t) => ({ layer: 'now', text: `- ${L.sp.beat}: ${t}`, src: 'note' })), ...redo.map((t) => ({ layer: 'now', text: `- ${L.sp.redo}: ${t}`, src: 'note' }))];
-  return { ...sp, now: [sp.now || L.sp.nowHead, ...rows.map((r) => r.text)].join('\n'), rows: [...(sp.rows || []), ...rows] };
+  // v0.28 worn figures / reaching back: only while the last replies are doing it (see core/worn.js). A style line that
+  // asks for the past to be remembered is the person's own choice: the "stay in the present" line stays out then.
+  const W = R.wornNow || { nums: [], recall: false }, wantsPast = style.some((t) => /remember|memor|recall|기억|회상/i.test(t));
+  const worn = [...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...(W.recall && !wantsPast ? [L.sp.recall] : [])];
+  const row = (layer, text, src = 'note') => ({ layer, text: `- ${text}`, src });
+  // v0.28: three places instead of one.
+  //  · 📌 계속 (standing lines) -> background block: a condition that is always true, not something for this reply
+  //  · style · how far · worn -> stay with this reply's lines
+  //  · time skip · scene · this reply · rewrite -> their own block at the very bottom, after the person's message
+  const keep = lines.map((t) => row('deep', `${L.sp.note}: ${t}`));
+  const nowRows = [...worn.map((t) => row('now', t, 'worn')), ...style.map((t) => row('now', t)), ...reach.map((t) => row('now', `${L.sp.reach}: ${t}`))];
+  const dirRows = [...time.map((t) => row('now', t)), ...scene.map((t, k) => row('now', `${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`)),
+    ...beat.map((t) => row('now', `${L.sp.beat}: ${t}`)), ...redo.map((t) => row('now', `${L.sp.redo}: ${t}`))];
+  if (!keep.length && !nowRows.length && !dirRows.length) return sp;
+  const text = (cur, head, rows) => (rows.length ? [cur || head, ...rows.map((r) => r.text)].join('\n') : cur || '');
+  return { ...sp,
+    deep: keep.length ? [sp.deep, text('', L.sp.keepHead, keep)].filter(Boolean).join('\n\n') : sp.deep,
+    // a time skip: the state block is where things stood before the gap, not where this reply starts
+    mid: tt && sp.mid ? String(sp.mid).replace(L.sp.midHead, L.sp.midHeadSkip) : sp.mid,
+    now: text(sp.now, L.sp.nowHead, nowRows), dir: text('', L.sp.dirHead, dirRows),
+    rows: [...(sp.rows || []), ...keep, ...nowRows, ...dirRows] };
 }
 export function signpost() {
   const lg = storyLang(), L = R.lang[lg], bp = bpLive(), mine = (l) => l.startsWith(`- ${L.sp.note}:`) || l.startsWith(`- ${L.sp.beat}:`) || l.startsWith(`- ${L.sp.scene}:`) || l.startsWith(`- ${L.sp.timeSkip.split(':')[0]}:`) || l.startsWith(`- ${L.sp.style}:`) || l.startsWith(`- ${L.sp.redo}:`) || l.startsWith(`- ${L.sp.reach}:`) || l.startsWith(`- ${L.rel.goalPushLabel}`), dropped = [];   // the person's own lines (a 밀어주기 direction too) are never walled
+  // v0.28: what the last six replies kept repeating (figures, reaching back) — counted once per note
+  try { R.wornNow = wornOf((ctx().chat || []).filter((m) => !m.is_user && !m.is_system && m.mes).slice(-6).map((m) => cleanText(m.mes).slice(-6000))); } catch (e) { R.wornNow = { nums: [], recall: false }; }
   // a direction set to 밀어주기 is told to the story AI on purpose: it does not wall other lines
   const bpW = { ...bp, vault: (bp.vault || []).filter((x) => !x.push) };
   const wall = (sp, extra) => { const b = extra ? { ...bpW, vault: bpW.vault.map((x) => ({ ...x, signs: [...x.signs, ...extra(x)] })) } : bpW, out = { ...sp };
-    for (const k of ['deep', 'mid', 'now']) { const f = firewall(sp[k], b, mine); out[k] = f.text; dropped.push(...f.dropped); } return out; };
+    for (const k of ['deep', 'mid', 'now', 'dir']) { if (sp[k] == null) continue; const f = firewall(sp[k], b, mine); out[k] = f.text; dropped.push(...f.dropped); } return out; };
   // v0.9 vault firewall, twice: on the text as written (Korean signs and pieces of the secret), and on the English
   // that goes out (the signs' own translations, same cache). The person's own note lines are never dropped.
   const sp = wall(toEnglish(withNote(wall(signpost0(lg, L)), L)), (x) => x.signs.map((g) => enSign(g)).filter(Boolean));
@@ -126,15 +150,16 @@ function toEnglish(sp) {
     const st = ledger(), names = new Set([...Object.keys(st.names?.seen || {}), ...(st.with || []), ...(R.bp?.persons || []).flatMap((p) => [p.name, ...(p.alias || [])])]);
     const again = () => import('./inject.js').then((m) => m.refresh()).catch(() => {});
     const fix = (t) => (t ? t.split('\n').map((l) => enLine(l, names, again)).join('\n') : t);
-    return { ...sp, deep: fix(sp.deep), mid: fix(sp.mid), now: fix(sp.now) };
+    return { ...sp, deep: fix(sp.deep), mid: fix(sp.mid), now: fix(sp.now), dir: fix(sp.dir) };
   } catch (e) { return sp; }
 }
 function signpost0(lg, L) {
   const st = ledger();
   R.lastSent = { special: '', eased: [] };
-  if (!settings().stage2) return { lg, ...build(st, L, lg) };
+  const B0 = { ...BUDGET, worn: R.wornNow?.nums || [] };
+  if (!settings().stage2) return { lg, ...build(st, L, lg, B0) };
   try {
-    const st2 = ledger2(), bp = bpLive(), sp = build(st, L, lg, { ...BUDGET, tieOf: (p) => tieOf(p, st2, bp, R.V) });
+    const st2 = ledger2(), bp = bpLive(), sp = build(st, L, lg, { ...B0, tieOf: (p) => tieOf(p, st2, bp, R.V) });
     if (!st.classified) return { lg, ...sp };
     const chat = ctx().chat || [], S = store(), s = settings();
     const last = chat.at(-1), cue = [last?.is_user ? cleanText(last.mes) : '', String(R.pieces?.beat || ''), String(R.pieces?.scene || '')].filter(Boolean).join('\n');
@@ -172,12 +197,17 @@ function signpost0(lg, L) {
       // a fallen direction's base line takes the place of its leak line
       for (const f of falls.filter((f) => f.open)) x.now = x.now.filter((r) => !(r.kind === 'leak' && r.text.startsWith(`- ${f.a} → ${f.b}:`)));
     } catch (e) { console.warn('[meatball3] v0.9 step 2-3 rows failed', e); }
-    const c = compose([...x.now, ...y, ...z.now], { lastSpecial: foldSent(chat, S, fingerprint).ago === 0 }, (t) => estTokens(t, lg));
+    // v0.28: a direction for this reply (지시창: this reply · scene · time skip) is the one thing the reply is about, so the
+    // optional "may" lines (spark, lead, aside, care …) stay out and cannot pull it elsewhere; the guard lines stay.
+    // While the last replies keep reaching back, the memory seed stays out too.
+    const P = R.pieces, focus = !!(P && (String(P.beat || '').trim() || String(P.scene || '').trim() || P.time?.text));
+    const zNow = R.wornNow?.recall ? z.now.filter((r) => r.kind !== 'seed') : z.now;
+    const c = compose([...x.now, ...y, ...zNow], { lastSpecial: foldSent(chat, S, fingerprint).ago === 0, ...(focus ? { caps: { 3: 0 } } : {}) }, (t) => estTokens(t, lg));
     R.lastSent = { special: c.special?.kind || '', eased: c.rows.filter((r) => String(r.src).startsWith('ease:')).map((r) => r.src.slice(5)), marks: c.rows.filter((r) => r.mark).map((r) => r.mark), let: [...(R.letLast || [])] };
     const add = (cur, head, rows) => (rows.length ? [cur || head, ...rows.map((r) => r.text)].join('\n') : cur);
     const deepRows = [...x.deep, ...z.deep.filter((r) => r.kind !== 'seedBg' || c.rows.some((q) => q.kind === 'seed'))];   // a seed's content only with its line
     return { lg, ...sp, deep: add(sp.deep, L.sp.deepHead, deepRows), now: add(sp.now, L.sp.nowHead, c.rows), rows: [...sp.rows, ...deepRows, ...c.rows] };
-  } catch (e) { console.warn('[meatball3] stage 2 failed, stage 1 only', e); return { lg, ...build(st, L, lg) }; }
+  } catch (e) { console.warn('[meatball3] stage 2 failed, stage 1 only', e); return { lg, ...build(st, L, lg, B0) }; }
 }
 // v0.9: the refusal threads still open now (same rules the note uses: gates, lovers, the person's own closing).
 export function openThreads() {
