@@ -19,11 +19,11 @@ const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<':
 
 // 📝 This reply's note: every line that goes to the story AI right now, with why it is there (and what was walled off).
 // The raw note as sent (with its translation) stays underneath, folded.
-const LAYER_I = { deep: '📚', mid: '📍', now: '✳️' };
+const LAYER_I = { deep: '📚', keep: '📌', mid: '📍', now: '✳️', dir: '🎯' };
 function whyOf(r, L, W) {
   const sp = L.sp || {}, t = String(r.text || '');
   if (r.src === 'note') {
-    for (const [pre, k] of [[sp.note, 'note'], [sp.beat, 'beat'], [sp.scene, 'scene'], [sp.style, 'style'], [String(sp.timeSkip || '').split(':')[0], 'timeSkip']])
+    for (const [pre, k] of [[sp.note, 'note'], [sp.beat, 'beat'], [sp.scene, 'scene'], [sp.style, 'style'], [sp.reach, 'reach'], [sp.redo, 'redo'], [String(sp.timeSkip || '').split(':')[0], 'timeSkip']])
       if (pre && t.startsWith(`- ${pre}`)) return W[k] || '';
     return W.note || '';
   }
@@ -39,8 +39,9 @@ async function view() {
   const pairs = lookalikes(st.names).map((p) => p.join(' ≈ ')).join(', ');
   const rows = (sp?.rows || []).filter((r) => r.text && /^- |^[^\[]/.test(r.text));
   const walled = R.walled || [];
-  const order = ['deep', 'mid', 'now'], byL = order.map((k) => [k, rows.filter((r) => r.layer === k)]).filter(([, a]) => a.length);
-  const list = byL.map(([k, a]) => `<div class="mb3-pvh">${LAYER_I[k]} ${h(U2[`layer_${k}`] || k)} <span class="mb3-dim">· ${h(U2[`layerTip_${k}`] || '')}</span></div>${a.map((r, n) => `<div class="mb3-pvr"><div class="mb3-pvt">${h(r.text.replace(/^- /, ''))}</div><div class="mb3-pvtr" data-k="${k}" data-n="${n}"></div>${whyOf(r, L, W) ? `<div class="mb3-pvw">↳ ${h(whyOf(r, L, W))}</div>` : ''}</div>`).join('')}`).join('');
+  // v0.29: groups in the order they sit in the prompt (top → very end), each with a small place tag
+  const order = ['deep', 'mid', 'now', 'dir'], groups = ['deep', 'keep', 'mid', 'now', 'dir'], byL = groups.map((k) => [k, rows.filter((r) => r.layer === k)]).filter(([, a]) => a.length);
+  const list = byL.map(([k, a]) => `<div class="mb3-pvh">${LAYER_I[k]} ${h(U2[`layer_${k}`] || k)} <span class="mb3-dim">· ${h(U2[`layerTip_${k}`] || '')}</span>${U2[`layerPos_${k}`] ? `<span class="mb3-pvpos">${h(U2[`layerPos_${k}`])}</span>` : ''}</div>${a.map((r, n) => `<div class="mb3-pvr mb3-pv-${k}"><div class="mb3-pvt">${h(r.text.replace(/^- /, ''))}</div><div class="mb3-pvtr" data-k="${k}" data-n="${n}"></div>${whyOf(r, L, W) ? `<div class="mb3-pvw">↳ ${h(whyOf(r, L, W))}</div>` : ''}</div>`).join('')}`).join('');
   const off = !sp ? `<pre>${h(U.off)}</pre>` : !rows.length ? `<p class="mb3-dim">${h(U2.previewNone || '이번 답에는 붙는 줄이 없어요.')}</p>` : '';
   const html = `<div class="mb3-view mb3-pv">
     <h4>📝 ${h(U2.previewTitle || '이번 답에 붙는 쪽지')}</h4><small>${h(U2.previewSub || '본편 AI가 다음 답을 쓸 때 몰래 붙는 줄과, 왜 들어갔는지예요.')}${sp ? ` · ${sp.tokens} ${h(U.tokens)}` : ''}</small>

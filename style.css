@@ -730,3 +730,44 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .popup:has(> .popup-body .mb3-log2) .menu_button.popup-button-ok { background: var(--mbt-acc) !important; color: var(--mbt-onacc, #fff) !important; border-color: transparent !important; }
 .mb3-log2 .mb3-scards:has(> :only-child) { columns: 1; max-width: 680px; margin-left: auto; margin-right: auto; }
 .mb3-sother { gap: 4px; } .mb3-sother .mb3-subh { margin: 0; } .mb3-sother .mb3-glist { margin-top: 6px; }
+
+/* v0.29 · status line: a quiet glass pill. Warnings are chips, numbers line up, and a long line scrolls sideways
+   instead of being cut off. Colours come from the SillyTavern theme, so it sits in any theme. */
+#mb3_bar { display: flex; align-items: center; gap: 6px; font-size: .84em; line-height: 1.5; opacity: 1; padding: 4px 14px 4px 8px; margin: 0 2px 4px; border-radius: 999px;
+  color: var(--SmartThemeBodyColor, inherit); font-variant-numeric: tabular-nums; letter-spacing: -.005em;
+  background: var(--black30a, rgba(0,0,0,.25));
+  background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #1c1c1c) 74%, transparent);
+  border: 1px solid var(--SmartThemeBorderColor, #5556);
+  border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, #888) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 1px 6px rgba(0,0,0,.12);
+  overflow-x: auto; overflow-y: hidden; text-overflow: clip; scrollbar-width: none; overscroll-behavior-x: contain;
+  transition: border-color .2s ease, box-shadow .2s ease; }
+#mb3_bar::-webkit-scrollbar { display: none; }
+#mb3_bar:hover { border-color: color-mix(in srgb, var(--SmartThemeQuoteColor, #e0a040) 55%, transparent); box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+#mb3_bar:focus-visible { outline: 2px solid var(--SmartThemeQuoteColor, #e0a040); outline-offset: 2px; }
+#mb3_bar .mb3-bline { flex: 1 0 auto; white-space: nowrap; opacity: .92; }
+#mb3_bar .mb3-sep { opacity: .32; margin: 0 5px; }
+#mb3_bar .mb3-bp { border-radius: 6px; padding: 0 3px; }
+#mb3_bar .mb3-cat { flex: none; height: 1.75em; margin: -3px 0; transition: transform .15s ease; }
+#mb3_bar .mb3-cat:hover { transform: scale(1.12) rotate(-4deg); }
+#mb3_bar .mb3-guard, #mb3_bar .mb3-fall, #mb3_bar .mb3-worn { --c: #ffb347; flex: none; display: inline-flex; align-items: center; gap: 3px; margin: 0; padding: 0 9px; border-radius: 999px; font-size: .93em; font-weight: 600; white-space: nowrap; cursor: pointer;
+  color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); border: 1px solid color-mix(in srgb, var(--c) 42%, transparent); transition: background .15s ease, transform .15s ease; }
+#mb3_bar .mb3-fall { --c: #ff8fb1; }
+#mb3_bar .mb3-worn { --c: #8fc3ff; font-weight: 500; }
+#mb3_bar .mb3-guard:hover, #mb3_bar .mb3-fall:hover, #mb3_bar .mb3-worn:hover { background: color-mix(in srgb, var(--c) 28%, transparent); transform: translateY(-1px); }
+#mb3_bar .mb3-guard { animation: mb3Chip 2.4s ease-in-out 3; }
+@keyframes mb3Chip { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, #ffb347 22%, transparent); } }
+@media (prefers-reduced-motion: reduce) { #mb3_bar, #mb3_bar * { animation: none !important; transition: none !important; } }
+@media (max-width: 760px) { #mb3_bar { border-radius: 14px; padding: 4px 10px 4px 6px; } }
+/* 🔁 popup */
+.mb3-wpop { text-align: left; line-height: 1.55; }
+.mb3-wpop p { margin: 10px 0; }
+.mb3-wchip { display: inline-block; padding: 1px 10px; margin: 3px 2px 0 0; border-radius: 999px; font-size: .92em; background: color-mix(in srgb, currentColor 10%, transparent); }
+/* 📝 note preview: each group says where it sits in the prompt; the direction for this reply stands out, the standing
+   baseline stays quiet */
+.mb3-pv .mb3-pvpos { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 18px; vertical-align: 1px; background: color-mix(in srgb, currentColor 12%, transparent); }
+.mb3-pv .mb3-pvr.mb3-pv-dir { background: color-mix(in srgb, var(--SmartThemeQuoteColor, #e0a040) 13%, transparent); box-shadow: inset 3px 0 0 var(--SmartThemeQuoteColor, #e0a040); }
+.mb3-pv .mb3-pvr.mb3-pv-keep { background: color-mix(in srgb, currentColor 3.5%, transparent); }
+.mb3-pv .mb3-pvr.mb3-pv-keep .mb3-pvt { opacity: .85; }
+.mb3-pv .mb3-pvr { transition: background .15s ease; }
+.mb3-pv .mb3-pvt { line-height: 1.5; }

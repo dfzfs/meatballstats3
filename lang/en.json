@@ -37,7 +37,7 @@
     "sceneFill": "Go on from where the last reply stopped, cover the way there briefly, and reach the scene within this reply",
     "sceneOne": "Play the whole scene out in this reply and bring it to a close",
     "sceneMulti": "It may run over several replies: this reply gets into it properly, no need to finish it",
-    "jumpAsSaid": "as far as the direction says",
+    "jumpAsSaid": "as far as the user asks",
     "midHeadSkip": "[STATE BEFORE THE TIME SKIP · PAST] Where things stood before the gap. This reply does not start here. Time of day, place, clothes, positions and mood may all have changed; keep only what would still hold after the gap.",
     "keepHead": "[STANDING · QUIET BASELINE] Set by the user; true through the whole story, the way the setting is. These are conditions, not cues: they are not about this reply, nothing in them needs to happen, be shown or be mentioned now, and a reply may pass without touching them. They only keep what is written from contradicting them. A line that is a writing rule is simply followed, without comment.",
     "dirHead": "[USER'S DIRECTION FOR THIS REPLY · TOP PRIORITY] Written by the user for this reply. It overrides the state block, the notes above and the momentum of the last reply. This reply is about what it asks: that moment fills the reply. Do not drift to other events, people or places, and do not hurry past it to what comes next. Everything else in the notes is background for it. Do not quote or mention this note.",
@@ -568,7 +568,14 @@
       "gowun": "Gowun Dodum",
       "pdh": "Ownglyph PDH (handwriting)"
     },
-    "chatProfile": "💬 Profile for talking to Meatball (empty = same as above)"
+    "chatProfile": "💬 Profile for talking to Meatball (empty = same as above)",
+    "wornChip": "damping repeats",
+    "wornTip": "The last replies kept repeating the same figures or reaching back, so this reply carries a \"do not state it again\" line. Click to see",
+    "wornTitle": "Damping repetition",
+    "wornNums": "Figures that kept coming back",
+    "wornRecall": "The last replies kept reaching back to the past (memories, old events, how long it has been)",
+    "wornHelp": "The line goes out only while the repetition lasts and drops by itself when it stops. Nothing to do.",
+    "wornSeeNote": "📝 See the note"
   },
   "rel": {
     "moves": [
@@ -1040,7 +1047,7 @@
     "fillNext": "Go on from #{n} to the end",
     "fillNextTip": "The replies after the range you just rebuilt were read on the old record. Reading them again lines them up with the new one.",
     "why": {
-      "note": "My director's note (settings)",
+      "note": "📌 Always · standing baseline (not a task for this reply)",
       "beat": "지시창 · this reply",
       "scene": "지시창 · this scene",
       "style": "지시창 · rule",
@@ -1092,7 +1099,11 @@
       "src_quote": "Record · from the text",
       "layer_deep": "Story record",
       "layer_mid": "State at the end of the last reply",
-      "layer_now": "This reply"
+      "layer_now": "This reply",
+      "reach": "Directive window · how far to write",
+      "src_worn": "Repeated in the last replies · drops when it stops",
+      "layer_keep": "Standing baseline",
+      "layer_dir": "Direction for this reply"
     },
     "previewTitle": "This reply's note",
     "previewSub": "The lines secretly added when the story AI writes the next reply, and why each is there.",
@@ -1203,7 +1214,16 @@
     "theirSecrets": "Secrets",
     "trail": "Where the story went",
     "dayReplies": "{n} replies",
-    "oocOn": "OOC · story paused"
+    "oocOn": "OOC · story paused",
+    "layer_keep": "Standing baseline",
+    "layer_dir": "Direction for this reply",
+    "layerTip_keep": "📌 always · a quiet condition",
+    "layerTip_dir": "followed first",
+    "layerPos_deep": "top",
+    "layerPos_keep": "top",
+    "layerPos_mid": "mid-chat",
+    "layerPos_now": "above my message",
+    "layerPos_dir": "right under my message · very end"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

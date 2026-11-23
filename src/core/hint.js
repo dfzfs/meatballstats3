@@ -24,14 +24,33 @@ export function findSkip(text) {
 // A jump in time asked for in plain words that findSkip has no day count for ("몇 시간 뒤", "a while later", "타임스킵").
 // Only for the wording of the note (the story must open after the gap); the calendar is not touched.
 // text '' = a jump was asked for, without saying how far.
-export function findJump(text) {
-  const s = String(text || '');
+const JUMP_WORD = /타임 ?스킵|시간 ?(?:넘김|넘기|넘겨|건너뛰|스킵)|time[- ]?skip|skip (?:ahead|forward)|fast[- ]forward|jump (?:ahead|forward)/i;
+function jumpAmount(s) {
   let m = s.match(/(?:\d{1,2}|한|두|세|네|몇|반)\s*시간\s*(?:뒤|후|이 지나|이 흐|지나)|잠시 ?후|얼마 ?(?:뒤|후)|한참 ?(?:뒤|후)|시간이 ?(?:흘러|지나|흐른)/);
   if (m) return { text: m[0] };
   m = s.match(/\b(?:(?:an?|one|two|three|four|five|six|a few|several|a couple of|\d{1,2}) hours? later|half an hour later|hours later|later that (?:day|night|evening|afternoon)|some time later|a while later)\b/i);
-  if (m) return { text: m[0] };
-  if (/타임 ?스킵|시간 ?(?:넘김|넘기|넘겨|건너뛰|스킵)|time[- ]?skip|skip (?:ahead|forward)|fast[- ]forward|jump (?:ahead|forward)/i.test(s)) return { text: '' };
-  return null;
+  return m ? { text: m[0] } : null;
+}
+export function findJump(text) {
+  const s = String(text || '');
+  return jumpAmount(s) || (JUMP_WORD.test(s) ? { text: '' } : null);
+}
+// v0.29: a time skip written in the person's own message (no 지시창 needed). Only an opening counts — a line or a
+// bracketed aside that starts with it and stops there ("사흘 뒤, …", "(몇 시간 후)", "*the next morning*") — or the plain
+// word (타임스킵). "사흘 뒤에 보자" in the middle of talk, or anything inside quotation marks, is not a skip.
+export function skipInMessage(text) {
+  const s = String(text || '').slice(0, 4000);
+  if (!s.trim()) return null;
+  const segs = [...s.split(/\r?\n/), ...[...s.matchAll(/[(\[（*]([^)\]）*\n]{2,80})[)\]）*]/g)].map((m) => m[1])];
+  for (const raw of segs) {
+    if (/^\s*["'“‘「『]/.test(raw)) continue;
+    const head = raw.replace(/^[\s\-—–~…·.*_>(\[（]+/, '').slice(0, 60);
+    const f = head ? findSkip(head) || jumpAmount(head) : null;
+    if (!f || !f.text || !head.toLowerCase().startsWith(f.text.toLowerCase())) continue;
+    const next = head.charAt(f.text.length);
+    if (!next || /[,.…!~)\]）*:;—–]/.test(next)) return { text: f.text };
+  }
+  return JUMP_WORD.test(s) ? { text: (findSkip(s) || jumpAmount(s) || {}).text || '' } : null;
 }
 
 // Prompt messages the director sees as "this turn": everything after the last assistant message,

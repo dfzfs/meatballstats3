@@ -81,7 +81,7 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
   eventSource.on(E.GENERATION_STARTED, (type, opts, dryRun) => {
     if (dryRun) return;
     if (!Q.busy) Q.generating = true;
-    G.type = opts?.quiet_prompt ? 'quiet' : type || 'normal'; G.dir = null;
+    G.type = opts?.quiet_prompt ? 'quiet' : type || 'normal'; G.dir = null; R.genType = G.type;
     const last = [...(ctx().chat || [])].reverse().find((m) => !m.is_user && !m.is_system);
     G.contFp = G.type === 'continue' && last ? fingerprint(last) : '';
     // v0.26.1: rerolled with SillyTavern's own swipe / regenerate: if the version being replaced had a ⚠, the new one
@@ -106,7 +106,7 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
     try { t = window.toastr?.info(R.ui.waitingSort, '', { timeOut: 0, extendedTimeOut: 0 }); } catch (e) { /* notice is optional */ }
     try { await idle(Math.min(Math.max(+s.waitMax || 20, 1), 60) * 1000); refresh(); G.sent = { ...R.lastSent, on: !!(lastPut.deep || lastPut.mid || lastPut.now || lastPut.dir) }; } finally { try { if (t) window.toastr.clear(t); } catch (e) { /* */ } }
   });
-  for (const ev of [E.GENERATION_ENDED, E.GENERATION_STOPPED]) eventSource.on(ev, () => { Q.generating = false; G.type = ''; R.pieces = null; kick(); });
+  for (const ev of [E.GENERATION_ENDED, E.GENERATION_STOPPED]) eventSource.on(ev, () => { Q.generating = false; G.type = ''; R.genType = ''; R.pieces = null; kick(); });
   eventSource.on(E.MESSAGE_RECEIVED, (id) => {
     try {
       const chat = ctx().chat || [], m = chat[id] && !chat[id].is_user ? chat[id] : [...chat].reverse().find((x) => !x.is_user && !x.is_system);

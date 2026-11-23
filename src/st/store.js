@@ -10,7 +10,7 @@ import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
 import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
 import { estTokens } from '../core/clean.js';
-import { findSkip, findJump } from '../core/hint.js';
+import { findSkip, findJump, skipInMessage } from '../core/hint.js';
 import { wornOf } from '../core/worn.js';
 
 const KEY = 'meatball_status3';   // not 'meatball3': the 1st build (meatballstats3) uses that slot
@@ -72,7 +72,10 @@ function withNote(sp, L) {
   const typed = !R.pieces?.time?.text && R.pieces ? findSkip([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
   // v0.28: a jump with no day count ("몇 시간 뒤", "타임스킵") gets the same line; the calendar is not touched by it
   const jump = !R.pieces?.time?.text && !typed && R.pieces ? findJump([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
-  const tt = R.pieces?.time?.text || typed?.text || (jump ? jump.text || L.sp.jumpAsSaid : ''), time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
+  // v0.29: a skip written at the opening of the person's own message counts too (a reroll looks one message back)
+  const chatNow = ctx().chat || [], endM = chatNow.at(-1), askM = endM && !endM.is_user && ['swipe', 'regenerate'].includes(R.genType) ? chatNow.at(-2) : endM;
+  const said = !R.pieces?.time?.text && !typed && !jump && askM?.is_user && !askM.is_system ? skipInMessage(cleanText(askM.mes)) : null;
+  const tt = R.pieces?.time?.text || typed?.text || (jump ? jump.text || L.sp.jumpAsSaid : '') || (said ? said.text || L.sp.jumpAsSaid : ''), time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
   const lines = noteLines(), style = (R.pieces?.rules || []).map((t) => `${L.sp.style}: ${t}`);
   // v0.26.2 「이 장면 동안」: the story kept writing only the lead-up. The first reply with it gets into the scene;
   // the replies after carry it on from where the last stopped (never set it up again)
@@ -90,13 +93,14 @@ function withNote(sp, L) {
   const worn = [...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...(W.recall && !wantsPast ? [L.sp.recall] : [])];
   const row = (layer, text, src = 'note') => ({ layer, text: `- ${text}`, src });
   // v0.28: three places instead of one.
+  // (row layers 'keep' and 'dir' are for the 📝 preview: it shows each group with where it sits in the prompt)
   //  · 📌 계속 (standing lines) -> background block: a condition that is always true, not something for this reply
   //  · style · how far · worn -> stay with this reply's lines
   //  · time skip · scene · this reply · rewrite -> their own block at the very bottom, after the person's message
-  const keep = lines.map((t) => row('deep', `${L.sp.note}: ${t}`));
+  const keep = lines.map((t) => row('keep', `${L.sp.note}: ${t}`));
   const nowRows = [...worn.map((t) => row('now', t, 'worn')), ...style.map((t) => row('now', t)), ...reach.map((t) => row('now', `${L.sp.reach}: ${t}`))];
-  const dirRows = [...time.map((t) => row('now', t)), ...scene.map((t, k) => row('now', `${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`)),
-    ...beat.map((t) => row('now', `${L.sp.beat}: ${t}`)), ...redo.map((t) => row('now', `${L.sp.redo}: ${t}`))];
+  const dirRows = [...time.map((t) => row('dir', t)), ...scene.map((t, k) => row('dir', `${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`)),
+    ...beat.map((t) => row('dir', `${L.sp.beat}: ${t}`)), ...redo.map((t) => row('dir', `${L.sp.redo}: ${t}`))];
   if (!keep.length && !nowRows.length && !dirRows.length) return sp;
   const text = (cur, head, rows) => (rows.length ? [cur || head, ...rows.map((r) => r.text)].join('\n') : cur || '');
   return { ...sp,

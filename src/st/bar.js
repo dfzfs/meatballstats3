@@ -45,11 +45,14 @@ function draw() {
   const html = parts.map(([k, v]) => `<span class="mb3-bp${glow(k, v) ? ' mb3-bglow' : ''}">${h(v)}</span>`).join('<span class="mb3-sep">·</span>').replace(/^<span class="mb3-bp([^"]*)">📅 /, '<span class="mb3-bp$1">');
   PREV.chat = chatId; PREV.v = Object.fromEntries(parts);
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
+  // v0.29: the note is damping a repeated figure or constant reaching back (core/worn.js): say so, quietly
+  const W = R.wornNow, wornOn = !!(W && ((W.nums || []).length || W.recall));
   const face = R.sorting ? 'think' : g ? 'surprise' : fr.length ? 'party' : R.stalled ? 'sad' : 'idle';
-  el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${html}`;
+  el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}${wornOn ? `<span class="mb3-worn" title="${h(U.wornTip || '')}">🔁 ${h(U.wornChip || '')}</span> ` : ''}<span class="mb3-bline"><span>📅</span> ${html}</span>`;
   el.querySelector('.mb3-cat')?.addEventListener('click', (e) => { e.stopPropagation(); poke(e.currentTarget); });
   el.querySelector('.mb3-guard')?.addEventListener('click', (e) => { e.stopPropagation(); guardPopup(); });
   el.querySelector('.mb3-fall')?.addEventListener('click', (e) => { e.stopPropagation(); fallPopup(); });
+  el.querySelector('.mb3-worn')?.addEventListener('click', (e) => { e.stopPropagation(); wornPopup(); });
   el.title = U.ledger;
   el.style.display = '';
   Promise.resolve().then(() => trDom(el)).catch(() => {});   // English values (time of day, place) -> Korean on screen; cached, so usually no request
@@ -128,6 +131,14 @@ export function guardAuto(fp) {
   g.auto = true; save();
   toast(R.ui.guardAutoToast);
   setTimeout(() => redo(fp, g.hits[0]), 800);
+}
+
+// v0.29: what is being damped right now, in plain words (nothing to decide; it stops by itself)
+function wornPopup() {
+  const c = ctx(), U = R.ui, W = R.wornNow || {};
+  const nums = (W.nums || []).length ? `<p><b>${h(U.wornNums || '')}</b><br>${W.nums.map((x) => `<span class="mb3-wchip">${h(x)}</span>`).join(' ')}</p>` : '';
+  const recall = W.recall ? `<p>${h(U.wornRecall || '')}</p>` : '';
+  c.callGenericPopup(`<div class="mb3-wpop"><b>🔁 ${h(U.wornTitle || '')}</b>${nums}${recall}<div class="mb3-dim">${h(U.wornHelp || '')}</div></div>`, c.POPUP_TYPE.TEXT);
 }
 
 // v0.9 step 3: the story has earned it (the person's condition quoted + enough story) — the person decides.
