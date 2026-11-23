@@ -74,8 +74,10 @@ function withNote(sp, L) {
   // v0.26.2 「이 장면 동안」: the story kept writing only the lead-up. The first reply with it gets into the scene;
   // the replies after carry it on from where the last stopped (never set it up again)
   // v0.26.3: the person picks how (지시창): jump to it or get there from here · one reply or several (kept until changed)
-  const SM = R.pieces?.sceneMode;
-  const sceneHow = (R.pieces?.sceneN || 0) > 0 ? L.sp.sceneGoing
+  const SM = R.pieces?.sceneMode, SH = R.pieces?.sceneHow;
+  // v0.26.4: the 지시창 sends the words for the picked kinds (entry · length · focus); they win when present
+  const sceneHow = SH && (SH.start || SH.going) ? [(R.pieces?.sceneN || 0) > 0 ? SH.going || L.sp.sceneGoing : SH.start || L.sp.sceneStart, SH.focus].filter(Boolean).join('. ')
+    : (R.pieces?.sceneN || 0) > 0 ? L.sp.sceneGoing
     : SM ? `${SM.enter === 'fill' ? L.sp.sceneFill : L.sp.sceneSkip}. ${SM.len === 'one' ? L.sp.sceneOne : L.sp.sceneMulti}` : L.sp.sceneStart;
   if (!lines.length && !beat.length && !scene.length && !time.length && !style.length && !redo.length) return sp;
   const rows = [...lines.map((t) => ({ layer: 'now', text: `- ${L.sp.note}: ${t}`, src: 'note' })), ...style.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...scene.map((t, k) => ({ layer: 'now', text: `- ${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`, src: 'note' })),
