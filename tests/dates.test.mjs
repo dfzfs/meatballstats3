@@ -160,3 +160,10 @@ test('the year set for the first reply does not move a year the story wrote late
   const Q = placeReplies(st, 2026, 1523);   // the person's year, then the story's own later year
   assert.deepEqual(Q.list.map((r) => r.y), [1523, 1523, 1524, 1524]);
 });
+
+test('the video: first year 1524, #9 set by hand to 1524년 12월 17일, the year after wraps to 1525', () => {
+  const { chat, ev } = story([['10월 5일', 'date: 10월 5일'], ['11월 25일', 'date: 11월 25일'], ['12월 15일', 'date: 12월 15일'], ['병원', 'date: 1524년 12월 17일'], ['1월 12일', 'date: 1월 12일'], ['1월 20일', 'date: 1월 20일']]);
+  const fp = fingerprint(chat[7]); for (const e of ev[fp] || []) e.by = 'user';
+  const P = placeReplies(fold(chat, ev, V), 2026, 1524);
+  assert.deepEqual(P.list.map((r) => `${r.y}-${r.m}-${r.d}`), ['1524-10-5', '1524-11-25', '1524-12-15', '1524-12-17', '1525-1-12', '1525-1-20']);
+});

@@ -303,15 +303,17 @@ function listHtml(st, L, ui, chs = []) {
 async function setReplyDate(i) {
   const c = ctx(), U2 = R.ui2, L = R.lang[uiLang()];
   const v = await c.Popup.show.input(fill(U2.setDateOf || '#{i}의 날짜', { i }), U2.setDateHint || '예: 2월 24일 · February 24 · 1524년 3월 2일', rfmt(i, L).replace(/^≈ /, ''));
-  if (v == null || v === false || !String(v).trim()) return false;
-  if (!parseDate(String(v), R.V)) { window.toastr?.warning(U2.dateBad || '날짜로 못 읽었어요. 예: 2월 24일'); return false; }
-  return !!applyFixes([{ i, lines: [`date: ${String(v).trim()}`] }], 'date');
+  // the box is a text area: Enter puts a line break in ("1524⏎년 12월 17일"), so line breaks and spaces before 년 · 월 · 일 go
+  const t = String(v ?? '').replace(/\s+/g, ' ').replace(/(\d)\s+(년|월|일)/g, '$1$2').trim();
+  if (v == null || v === false || !t) return false;
+  if (!parseDate(t, R.V)) { window.toastr?.warning(U2.dateBad || '날짜로 못 읽었어요. 예: 2월 24일'); return false; }
+  return !!applyFixes([{ i, lines: [`date: ${t}`] }], 'date');
 }
 async function setYear0() {
   const c = ctx(), U2 = R.ui2, first = PLACE.list[0];
   const v = await c.Popup.show.input(fill(U2.year0Title || '첫 답(#{i})의 연도', { i: first?.i ?? '?' }), U2.year0Hint || '숫자만. 비우면 본문을 따라요.', String(store()?.year0 ?? ''));
   if (v == null || v === false) return false;
-  const S = store(true), n = parseInt(String(v).replace(/[^\d-]/g, ''), 10);
+  const S = store(true), n = parseInt(String(v).replace(/[^\d-]/g, ''), 10);   // line breaks and 년 are dropped too
   if (String(v).trim() === '') delete S.year0; else if (Number.isFinite(n)) S.year0 = n; else return false;
   save(); return true;
 }
