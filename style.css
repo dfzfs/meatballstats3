@@ -771,3 +771,16 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-pv .mb3-pvr.mb3-pv-keep .mb3-pvt { opacity: .85; }
 .mb3-pv .mb3-pvr { transition: background .15s ease; }
 .mb3-pv .mb3-pvt { line-height: 1.5; }
+/* v0.29.1 · chips keep their hue but lean toward the theme's text colour, so they read on light themes too */
+#mb3_bar .mb3-guard, #mb3_bar .mb3-fall, #mb3_bar .mb3-worn { color: color-mix(in srgb, var(--c) 58%, var(--SmartThemeBodyColor, #ddd)); border-color: color-mix(in srgb, var(--c) 55%, transparent); }
+#mb3_bar .mb3-sep { margin: 0 3px; }
+/* overview: what goes with the next reply, at a glance */
+.mb3-nstrip { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 12px; padding: 7px 10px; border-radius: 12px; background: rgba(255,255,255,.34); font-size: 12px; cursor: pointer; transition: background .15s ease; }
+body[data-mb3th="dark"] .mb3-nstrip { background: rgba(255,255,255,.07); }
+.mb3-nstrip:hover { background: rgba(255,255,255,.55); }
+body[data-mb3th="dark"] .mb3-nstrip:hover { background: rgba(255,255,255,.12); }
+.mb3-nstrip .mb3-nlead { font-weight: 700; margin-right: 2px; }
+.mb3-nstrip .mb3-nchip { padding: 1px 9px; border-radius: 999px; background: var(--mbt-card); color: var(--mbt-ink); }
+.mb3-nstrip .mb3-nc-dir { background: var(--mbt-acc); color: var(--mbt-onacc, #fff); font-weight: 600; }
+.mb3-nstrip .mb3-nc-worn { box-shadow: inset 0 0 0 1px var(--mbt-acc); }
+.mb3-nstrip > i { margin-left: auto; font-style: normal; opacity: .5; }

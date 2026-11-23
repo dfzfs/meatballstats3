@@ -120,7 +120,10 @@ export function signpost() {
     for (const k of ['deep', 'mid', 'now', 'dir']) { if (sp[k] == null) continue; const f = firewall(sp[k], b, mine); out[k] = f.text; dropped.push(...f.dropped); } return out; };
   // v0.9 vault firewall, twice: on the text as written (Korean signs and pieces of the secret), and on the English
   // that goes out (the signs' own translations, same cache). The person's own note lines are never dropped.
-  const sp = wall(toEnglish(withNote(wall(signpost0(lg, L)), L)), (x) => x.signs.map((g) => enSign(g)).filter(Boolean));
+  // v0.29.1: if the record part fails, the person's own lines (standing · this reply · time skip) still go out
+  let base;
+  try { base = signpost0(lg, L); } catch (e) { console.error('[meatball3] record part of the note failed; the person\'s own lines still go', e); base = { lg, deep: '', mid: '', now: '', rows: [], tokens: 0 }; }
+  const sp = wall(toEnglish(withNote(wall(base), L)), (x) => x.signs.map((g) => enSign(g)).filter(Boolean));
   R.walled = dropped;
   return sp;
 }

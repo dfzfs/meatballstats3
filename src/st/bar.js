@@ -35,9 +35,11 @@ function draw() {
   if (!st.classified && !lastGuard() && !F && !store()?.ooc) { el.style.display = 'none'; return; }
   const date = nowDate(st.cal, L);
   const MN = nameMerger([...(st.with || []), ...(R.bp?.persons || []).map((p) => p.name), ...Object.keys(st.names?.seen || {})]), ws = [...new Set(st.with.map(MN))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
+  // v0.29.1: the line shows where we are (the room and what it is in); the whole path stays in the log
+  const place = String(st.loc || '').split(/\s*(?:>|→|›)\s*/).filter(Boolean).slice(-2).join(' › ');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   // v0.25: each piece is its own span; a piece whose value changed since the last draw glows once (date · place · who)
-  const parts = [['d', date || '📅 ?'], ['t', st.cal.tod], ['l', st.loc && `📍 ${st.loc}`], ['w', who && `👥 ${who}`], ['p', passed]].filter(([, v]) => v);
+  const parts = [['d', date || '📅 ?'], ['t', st.cal.tod], ['l', place && `📍 ${place}`], ['w', who && `👥 ${who}`], ['p', passed]].filter(([, v]) => v);
   if (store()?.ooc) parts.unshift(['f', `💬 ${R.ui2?.oocOn || 'OOC 중 · 이야기 멈춤'}`]);
   if (F) { const n = fillCount(); parts.unshift(['f', `📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : F.from != null ? R.ui2?.fillRangeRun || '구간 정리 중' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`]); }
   const chatId = ctx().chatId || ctx().getCurrentChatId?.() || '', same = PREV.chat === chatId;

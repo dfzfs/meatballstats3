@@ -8,7 +8,8 @@ import { roll, undoRoll, lastRoll } from './dice.js';
 import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
 import { findEvidence, TIME_MARKS } from '../core/evidence.js';
 import { uiLang, renderBar } from './bar.js';
-import { refresh } from './inject.js';
+import { refresh, lastPut } from './inject.js';
+import { noteLines } from './store.js';
 import { fold2, tieOf, trend } from '../core/ledger2.js';
 import { trWatch, showName, nameMerger } from './tr.js';
 import { mascotImg } from './mascot.js';
@@ -584,6 +585,7 @@ function render(box, ui) {
     const joined = new Set(lastE ? lastE.x.g.filter((e) => e.k === 'with').flatMap((e) => e.add || []).map(M) : []);
     const now = `<div class="mb3-card mb3-hero">${mascotImg('happy')}<div class="mb3-hl">${h(U.now)} <span class="mb3-talk" data-view="chat">💬 ${h(U2.chatShort || '고쳐 달라고 하기')}</span></div><div class="mb3-hd${nb(dNew)}">${h(date)}</div>${st.cal.tod ? `<span class="mb3-htod${nb(dNew)}">${h(st.cal.tod)}</span>` : ''}
       ${st.loc ? `<div class="mb3-hp${nb(lNew)}" data-view="map" style="cursor:pointer">📍 ${h(st.loc)} ›</div>` : ''}<div class="mb3-hw">${withs.map((n) => { const w = [...st.with].filter((x) => M(x) === n).map((x) => st.wear?.[x]?.v).find(Boolean); return `<span class="${nb(joined.has(n)).trim()}">${avOf(n, all)}${h(n)}${w ? ` · ${h(w)}` : ''}</span>`; }).join('')}</div></div>
+      ${noteStrip(U2)}
       ${gapsHtml(st)}
       ${nSecret || nRefuse || nWarn ? `<div class="mb3-glist mb3-tiles2">${nWarn ? `<div class="mb3-grow mb3-warnrow"><span>⚠ ${h(U2.tWarnLong || '이번 답에 경고가 있어요')}</span><b>${nWarn}</b></div>` : ''}${nSecret ? `<div class="mb3-grow mb3-srow" data-view="secret"><span>🔒 ${h(U2.tSecretLong || '지키는 비밀')}${topStage ? ` <em class="mb3-sst mb3-st-${topStage}">${h((U2.stageNames || {})[topStage] || '')}</em>` : ''}</span><b>${nSecret}</b><i>›</i></div>` : ''}${nRefuse ? `<div class="mb3-grow"><span>🚫 ${h(U2.tRefuseLong || '이어지는 거절')}</span><b>${nRefuse}</b></div>` : ''}</div>` : ''}
       ${card(`${h(U2.recent || '최근 일')} ${more('flow', U2.tabFlow)}`, recent.map(({ it, i }, j) => `<div class="mb3-rline${freshD ? ' mb3-rin' : ''}" style="--j:${j}">${it.icon} ${h(it.title)}<i>#${i}</i></div>`).join('') || `<p class="mb3-dim">${h(U.empty)}</p>`)}`;
@@ -607,6 +609,18 @@ function render(box, ui) {
 
 // at = a chat index: open straight at that reply (its record, why, and ✏️ 🔁 🗑), with a link back to all replies
 // view = a tab to open at ('secret', 'flow', …) when no reply is given
+// v0.29.1: what goes with the next reply, at a glance (lines · standing · direction · damping). Opens the 📝 note.
+function noteStrip(U2) {
+  try {
+    if (!settings().on) return '';
+    const n = [lastPut.deep, lastPut.mid, lastPut.now, lastPut.dir].join('\n').split('\n').filter((l) => l.trim() && !l.startsWith('[')).length;
+    const keep = noteLines().length, W = R.wornNow || {}, worn = (W.nums || []).length || W.recall;
+    const chip = (cls, t) => `<span class="mb3-nchip ${cls}">${h(t)}</span>`;
+    return `<div class="mb3-nstrip" title="${h(U2.stripTip || '')}"><span class="mb3-nlead">📝 ${h(U2.stripNote || '')}</span>${chip('', n ? String(U2.stripLines || '{n}').replace('{n}', n) : U2.stripNone || '')}${keep ? chip('', `📌 ${String(U2.stripKeep || '{n}').replace('{n}', keep)}`) : ''}${lastPut.dir ? chip('mb3-nc-dir', `🎯 ${U2.stripDir || ''}`) : ''}${worn ? chip('mb3-nc-worn', `🔁 ${U2.stripWorn || ''}`) : ''}<i>›</i></div>`;
+  } catch (e) { return ''; }
+}
+document.addEventListener?.('click', (e) => { if (e.target.closest?.('.mb3-nstrip')) document.getElementById('mb3_view')?.click(); });
+
 export function openLedger(at = null, view = '') {
   const c = ctx(), box = document.createElement('div');
   const ui = { _enter: true, view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
