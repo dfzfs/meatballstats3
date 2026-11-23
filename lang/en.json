@@ -30,7 +30,9 @@
     "scene": "This scene",
     "timeSkip": "Time skip: {s} since the last reply. Open this reply after that gap and let the passing of time show",
     "style": "Style",
-    "redo": "REWRITE — the version before this one was rejected for this. This version must fix it (the rest may stay as it was)"
+    "redo": "REWRITE — the version before this one was rejected for this. This version must fix it (the rest may stay as it was)",
+    "sceneStart": "Get into it in this reply: a line or two of lead-up at most, then it happens on the page. Do not spend the reply on getting there",
+    "sceneGoing": "This scene is already under way: pick up exactly where the last reply stopped and carry it forward. Do not set it up again, re-describe the place or the mood, or wrap it up"
   },
   "wd": [
     "Sunday",

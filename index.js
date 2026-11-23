@@ -23,7 +23,7 @@ window.MeatballAPI = {
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
   // redo (v0.26.1): why the version being rewritten was thrown away — goes as a strong last line
-  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || (x.redo || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), redo: String(x.redo || '').slice(0, 1000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
+  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || (x.redo || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), redo: String(x.redo || '').slice(0, 1000), sceneN: Number.isInteger(x.sceneN) ? x.sceneN : 0, time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
   setGoals: (l) => { setGoals(l); refresh(); },
   setSecrets: (l) => { setSecrets(l); refresh(); },
   // v0.26: fill in who · give-away words · what may show · cover · when it opens, from the secret alone (6 per call)

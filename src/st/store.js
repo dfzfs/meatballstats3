@@ -71,8 +71,11 @@ function withNote(sp, L) {
   const typed = !R.pieces?.time?.text && R.pieces ? findSkip([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
   const tt = R.pieces?.time?.text || typed?.text || '', time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
   const lines = noteLines(), style = (R.pieces?.rules || []).map((t) => `${L.sp.style}: ${t}`);
+  // v0.26.2 「이 장면 동안」: the story kept writing only the lead-up. The first reply with it gets into the scene;
+  // the replies after carry it on from where the last stopped (never set it up again)
+  const sceneHow = (R.pieces?.sceneN || 0) > 0 ? L.sp.sceneGoing : L.sp.sceneStart;
   if (!lines.length && !beat.length && !scene.length && !time.length && !style.length && !redo.length) return sp;
-  const rows = [...lines.map((t) => ({ layer: 'now', text: `- ${L.sp.note}: ${t}`, src: 'note' })), ...style.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...scene.map((t) => ({ layer: 'now', text: `- ${L.sp.scene}: ${t}`, src: 'note' })),
+  const rows = [...lines.map((t) => ({ layer: 'now', text: `- ${L.sp.note}: ${t}`, src: 'note' })), ...style.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...scene.map((t, k) => ({ layer: 'now', text: `- ${L.sp.scene}: ${t}${k === scene.length - 1 ? ` — ${sceneHow}` : ''}`, src: 'note' })),
     ...time.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...beat.map((t) => ({ layer: 'now', text: `- ${L.sp.beat}: ${t}`, src: 'note' })), ...redo.map((t) => ({ layer: 'now', text: `- ${L.sp.redo}: ${t}`, src: 'note' }))];
   return { ...sp, now: [sp.now || L.sp.nowHead, ...rows.map((r) => r.text)].join('\n'), rows: [...(sp.rows || []), ...rows] };
 }
