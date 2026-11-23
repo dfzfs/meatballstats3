@@ -41,9 +41,9 @@ export function nameMerger(names) {
     if (g !== n) { map.set(n, g); continue; }
     if (/[A-Za-z]/.test(n)) {
       const ro = hans.find((k) => sameName(n, k)); if (ro) { map.set(n, ro); continue; }        // "Seoyeon" next to 서연
-      const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; }   // Google: "Luffy" → 루피
+      const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; }   // Google: "Daniel" → 다니엘
       if (!C.has(n.trim())) ask.push(n.trim());
-      const sp = soundPair(n, hans); if (sp) { map.set(n, sp); continue; }                  // "Law" next to 로우
+      const sp = soundPair(n, hans); if (sp) { map.set(n, sp); continue; }                  // "Leo" next to 레오
     }
     map.set(n, n);
   }

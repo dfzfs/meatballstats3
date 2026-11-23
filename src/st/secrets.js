@@ -20,7 +20,7 @@ export function secretView() {
   chat.forEach((m, i) => { if (!m.is_user && !m.is_system) ai.push({ i, fp: fingerprint(m) }); });
   const idxOf = new Map(ai.map((a) => [a.fp, a.i])), lastIdx = ai.slice(-3).map((a) => a.i);
   const pressure = foldPressure(chat, S, all, fingerprint), letOn = letActive();
-  // one chip per person: the lore name and the name the story wrote ("Luffy" / 루피) are merged first
+  // one chip per person: the lore name and the name the story wrote ("Daniel" / 다니엘) are merged first
   const raw = [...new Set([...(all.persons || []).map((p) => p.name), ...Object.keys(st.names?.seen || {})])].filter(Boolean), M = nameMerger(raw);
   const people = [...new Set(raw.map(M))].slice(0, 12);
   return vaults.map((x) => {

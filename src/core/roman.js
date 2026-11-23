@@ -42,7 +42,7 @@ export function sameName(latin, han) {
   return w.length > 1 && w.some((x) => x.length >= 3 && (fold(x) === fold(g) || fold(x) === fold(g.replace(/eo/g, 'u'))));
 }
 
-// English names written in Korean ("Luffy" = 루피, "Law" = 로우, "Zoro" = 조로): compare the consonants only
+// English names written in Korean ("Daniel" = 다니엘, "Leo" = 레오, "Hunter" = 헌터): compare the consonants only
 // (vowels, w · y · h dropped, sounds Korean does not tell apart folded together). Used only to pair a Latin name with
 // a Korean name of the same list, and only when exactly one Korean name fits.
 const latSk = (s) => String(s || '').toLowerCase().replace(/[^a-z]/g, '')
@@ -52,10 +52,10 @@ const skel = (s) => s.replace(/[gk]/g, 'k').replace(/[dt]/g, 't').replace(/[bp]/
 export const skelLatin = (s) => skel(latSk(s));
 export const skelHan = (s) => skel(romanize(s).replace(/ng/g, 'n').replace(/ch/g, 'j'));
 export function soundPair(latin, hans) {
-  const one = (w) => { const k = skelLatin(w); if (!k) return []; const ks = new Set([k, k.replace(/r$/, '')]);   // "-er" is often dropped (Chopper = 쵸파)
+  const one = (w) => { const k = skelLatin(w); if (!k) return []; const ks = new Set([k, k.replace(/r$/, '')]);   // "-er" is often dropped (Hunter = 헌터)
     return hans.filter((x) => ks.has(skelHan(x))); };
   let hit = one(latin);
-  // "Trafalgar Law", "Monkey D. Luffy": one of the words, when exactly one Korean name fits
+  // "Leo Carter", "Daniel Park": one of the words, when exactly one Korean name fits
   if (!hit.length) { const ws = String(latin).split(/[^A-Za-z]+/).filter((w) => w.length >= 3); if (ws.length > 1) hit = [...new Set(ws.flatMap(one))]; }
   return hit.length === 1 ? hit[0] : null;
 }
