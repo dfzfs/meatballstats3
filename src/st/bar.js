@@ -1,5 +1,5 @@
 // The person's view: one status line above the input, and short notices. Never inside the chat text.
-import { showName } from './tr.js';
+import { showName, nameMerger } from './tr.js';
 import { ctx, settings, store, save, ledger, R, decide, fallState, bpLive } from './store.js';
 import { dateAt, fmtDate, span, nowDate } from '../core/time.js';
 import { refresh } from './inject.js';
@@ -34,7 +34,7 @@ function draw() {
   const F = fillState();
   if (!st.classified && !lastGuard() && !F) { el.style.display = 'none'; return; }
   const date = nowDate(st.cal, L);
-  const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
+  const MN = nameMerger([...(st.with || []), ...(R.bp?.persons || []).map((p) => p.name), ...Object.keys(st.names?.seen || {})]), ws = [...new Set(st.with.map(MN))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
   // v0.25: each piece is its own span; a piece whose value changed since the last draw glows once (date · place · who)
   const parts = [['d', date || '📅 ?'], ['t', st.cal.tod], ['l', st.loc && `📍 ${st.loc}`], ['w', who && `👥 ${who}`], ['p', passed]].filter(([, v]) => v);

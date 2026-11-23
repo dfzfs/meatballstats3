@@ -1,3 +1,4 @@
+import { sameName } from './roman.js';
 // Name dictionary. The story text is the source of names; this is the only place names are matched.
 const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isCJK = (n) => /[぀-ヿ一-鿿가-힣]/.test(n);
@@ -20,6 +21,9 @@ export function resolve(dict, name, V) {
   const keys = Object.keys(dict.seen);
   const ci = keys.find((k) => k.toLowerCase() === low);
   if (ci) return ci;
+  // the same Korean name written in Latin letters, or the other way round ("Seoyeon" = 서연)
+  const ro = keys.find((k) => sameName(n, k) || sameName(k, n));
+  if (ro) return ro;
   if (isCJK(n)) for (const p of V.particles) {
     if (n.endsWith(p) && n.length > p.length + 1) { const r = resolve(dict, n.slice(0, -p.length), V); if (r) return r; }
   } else {

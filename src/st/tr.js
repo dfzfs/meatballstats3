@@ -1,6 +1,7 @@
 // Screen translation (Google, through SillyTavern's own translate endpoint). Everything sent to AI stays English;
 // only what the person reads is turned into Korean. Many lines go in one request; results are cached in this browser.
 import { ctx, settings, R } from './store.js';
+import { sameName } from '../core/roman.js';
 
 const KEY = 'mb3_tr_v1', MAX_CHARS = 3500, MAX_KEEP = 3000;
 let cache = null;
@@ -38,7 +39,9 @@ export function nameMerger(names) {
   for (const n of list) {
     const g = showName(n);
     if (g !== n) { map.set(n, g); continue; }
-    if (/[A-Za-z]/.test(n)) { const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; } }
+    if (/[A-Za-z]/.test(n)) {
+      const ro = [...han].find((k) => sameName(n, k)); if (ro) { map.set(n, ro); continue; }   // "Seoyeon" next to 서연
+      const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; } }
     map.set(n, n);
   }
   return (n) => map.get(n) || showName(n);
