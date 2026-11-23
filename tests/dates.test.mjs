@@ -151,3 +151,12 @@ test('quarantine tells what kind of record went (the lie log counts them)', asyn
   const gone = quarantine(g, ['f1'], { vault: [{ who: 'Seoyeon', v: 'is moving away', signs: ['moving'] }] });
   assert.equal(gone.length, 1); assert.equal(gone[0].k, 'lie'); assert.equal(gone[0].who, 'Seoyeon'); assert.equal(gone[0].fp, 'f1');
 });
+
+test('the year set for the first reply does not move a year the story wrote later (1524 stayed 1524, not 1022)', () => {
+  const { st } = story([['3월 2일 아침', 'date: 3월 2일'], ['며칠 뒤', 'time: +3d'], ['1524년 5월 1일', 'date: 1524년 5월 1일'], ['다음 날', 'time: +1d']]);
+  const P = placeReplies(st, 2026, 1524);
+  assert.deepEqual(P.list.map((r) => r.y), [1524, 1524, 1524, 1524]);
+  assert.equal(P.guessed, false);
+  const Q = placeReplies(st, 2026, 1523);   // the person's year, then the story's own later year
+  assert.deepEqual(Q.list.map((r) => r.y), [1523, 1523, 1524, 1524]);
+});
