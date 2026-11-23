@@ -52,7 +52,8 @@ function lockRow(x, U2) {
 export function secretsHtml(list, locks) {
   const U2 = R.ui2 || {};
   const head = `<p class="mb3-dim mb3-shelp">${h(U2.secretHelp || '비밀마다 지금 얼마나 들킬 것 같은지, 누가 아는지, 무슨 일이 있었는지예요. 내용은 누르고 있을 때만 보여요.')}</p>`;
-  const cards = list.length ? `<div class="mb3-scards">${list.map((v) => card(v, U2)).join('')}</div>` : `<p class="mb3-dim">${h(U2.noSecrets || '아직 비밀이 없어요. 설정집에 「금고:」를 적거나 지시창 비밀 탭에 적으면 카드가 생겨요.')}</p>`;
-  const others = locks.length ? `<div class="mb3-ch mb3-subh">${h(U2.otherLocks || '그 밖의 잠금')}</div><p class="mb3-dim mb3-shelp">${h(U2.otherLocksHelp || '이야기에서 이미 풀렸는데 계속 「거절해도 됨 · 겉 관계로」가 가면 여기서 직접 열어요.')}</p><div class="mb3-glist">${locks.map((x) => lockRow(x, U2)).join('')}</div>` : '';
-  return head + cards + others;
+  // the other locks are one more card in the same flow, so a single secret does not leave half the width empty
+  const others = locks.length ? `<div class="mb3-scard mb3-sother"><div class="mb3-ch mb3-subh">${h(U2.otherLocks || '그 밖의 잠금')}</div><p class="mb3-dim mb3-shelp">${h(U2.otherLocksHelp || '이야기에서 이미 풀렸는데 계속 「거절해도 됨 · 겉 관계로」가 가면 여기서 직접 열어요.')}</p><div class="mb3-glist">${locks.map((x) => lockRow(x, U2)).join('')}</div></div>` : '';
+  const none = list.length ? '' : `<p class="mb3-dim">${h(U2.noSecrets || '아직 비밀이 없어요. 설정집에 「금고:」를 적거나 지시창 비밀 탭에 적으면 카드가 생겨요.')}</p>`;
+  return head + none + (list.length || locks.length ? `<div class="mb3-scards">${list.map((v) => card(v, U2)).join('')}${others}</div>` : '');
 }

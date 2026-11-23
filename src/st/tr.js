@@ -47,16 +47,17 @@ export function nameMerger(names) {
     }
     map.set(n, n);
   }
-  if (ask.length && hans.length) learnNames(ask);
+  if (ask.length && hans.length) learnNames(ask, han);
   return (n) => map.get(n) || showName(n);
 }
 // Bare Latin names are translated once in the background; when that brings a new match the open log redraws.
 const asked = new Set();
-function learnNames(list) {
+function learnNames(list, han) {
   const todo = list.filter((n) => !asked.has(n));
   if (!todo.length || !trOn()) return;
   todo.forEach((n) => asked.add(n));
-  trLines(todo).then(() => window.dispatchEvent(new Event('mb3-names'))).catch(() => { /* stays as it is */ });
+  // redraw only when a translation actually names someone already in the list (otherwise nothing would change)
+  trLines(todo).then((out) => { if (out.some((t) => han.has(String(t).trim()))) window.dispatchEvent(new Event('mb3-names')); }).catch(() => { /* stays as it is */ });
 }
 const escRe = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const unmaskN = (s, map) => map.reduce((t, [tok, n]) => t.split(tok).join(n), s);

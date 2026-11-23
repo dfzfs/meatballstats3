@@ -710,3 +710,23 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 }
 .mb3-log2 small { opacity: 1; }
 @container mb3log (max-width: 520px) { .mb3-seg { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); } }
+/* v0.25.4 · entering a tab: the cards rise in, one after another (every time a tab is opened, not on redraws inside it) */
+@keyframes mb3Rise { from { opacity: 0; transform: translateY(8px); } }
+.mb3-vbody.mb3-venter > .mb3-card, .mb3-vbody.mb3-venter > .mb3-grid > * > *, .mb3-vbody.mb3-venter .mb3-pairs > .mb3-pair2, .mb3-vbody.mb3-venter .mb3-scards > * { animation: mb3Rise .38s cubic-bezier(.2, .8, .2, 1) both; }
+.mb3-vbody.mb3-venter .mb3-pairs > .mb3-pair2:nth-child(2), .mb3-vbody.mb3-venter > .mb3-grid > * > :nth-child(2), .mb3-vbody.mb3-venter .mb3-scards > :nth-child(2) { animation-delay: .06s; }
+.mb3-vbody.mb3-venter .mb3-pairs > .mb3-pair2:nth-child(3), .mb3-vbody.mb3-venter > .mb3-grid > * > :nth-child(3), .mb3-vbody.mb3-venter .mb3-scards > :nth-child(3) { animation-delay: .12s; }
+.mb3-vbody.mb3-venter .mb3-pairs > .mb3-pair2:nth-child(n+4), .mb3-vbody.mb3-venter > .mb3-grid > * > :nth-child(n+4) { animation-delay: .18s; }
+@media (prefers-reduced-motion: reduce) { .mb3-vbody * { animation: none !important; } }
+/* v0.25.4 · no holes between cards of different heights: the person's sheet and the secret cards flow in columns
+   (as many as fit the width, one on a phone); cards in one row of relationships stretch to the same height */
+.mb3-log2 .mb3-psheet { display: block; columns: 2 300px; column-gap: 10px; margin-top: 12px; }
+.mb3-log2 .mb3-psheet > .mb3-pcard { break-inside: avoid; display: block; width: 100%; box-sizing: border-box; margin: 0 0 10px; }
+.mb3-log2 .mb3-scards { display: block; columns: 2 300px; column-gap: 12px; }
+.mb3-log2 .mb3-scards > * { break-inside: avoid; margin: 0 0 12px; }
+.mb3-log2 .mb3-pairs { align-items: stretch; }
+.mb3-sv.mb3-svs { display: inline; padding: 0 2px; border-radius: 4px; background: none; font-size: inherit; filter: blur(4px); transition: filter .2s; }
+.mb3-sv.mb3-svs:hover, .mb3-sv.mb3-svs:focus-visible, .mb3-sv.mb3-svs:active { filter: none; box-shadow: none; }
+/* SillyTavern's blue OK button under the log takes the theme's colour */
+.popup:has(> .popup-body .mb3-log2) .menu_button.popup-button-ok { background: var(--mbt-acc) !important; color: var(--mbt-onacc, #fff) !important; border-color: transparent !important; }
+.mb3-log2 .mb3-scards:has(> :only-child) { columns: 1; max-width: 680px; margin-left: auto; margin-right: auto; }
+.mb3-sother { gap: 4px; } .mb3-sother .mb3-subh { margin: 0; } .mb3-sother .mb3-glist { margin-top: 6px; }

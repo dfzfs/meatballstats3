@@ -398,22 +398,22 @@ function pairsOf(st, st2, bp, M) {
 // 거리 트랙 (v0.25): the two avatars on a line, as far apart as the story has them. When it changed since the card was
 // last seen they slide from where they were. Words, not numbers: the distance is a rough picture.
 const DIST_K = (d) => (d <= 20 ? 0 : d <= 40 ? 1 : d <= 60 ? 2 : d <= 80 ? 3 : 4);
-function trackHtml(ps, P, all, U2) {
-  const half = ps.dist / 2, h0 = ps.fresh.d0 / 2, mv = ps.fresh.moved && Math.abs(ps.fresh.d0 - ps.dist) >= 1;
+function trackHtml(ps, P, all, U2, enter = false) {
+  const half = ps.dist / 2, mv = ps.fresh.moved && Math.abs(ps.fresh.d0 - ps.dist) >= 1, h0 = mv ? ps.fresh.d0 / 2 : 47;
   const words = U2.distWords || ['아주 가까움', '가까움', '보통', '거리 있음', '멂'];
   const delta = mv ? (ps.dist < ps.fresh.d0 ? `<em class="mb3-dclose">↗ ${h(U2.distCloser || '가까워짐')}</em>` : `<em class="mb3-dfar">↘ ${h(U2.distFarther || '멀어짐')}</em>`) : '';
   const warm = 1 - ps.dist / 100;
-  return `<div class="mb3-track${mv ? ' mb3-slide' : ''}" style="--l0:${50 - h0}%;--l1:${50 - half}%;--r0:${50 + h0}%;--r1:${50 + half}%;--warm:${Math.round(warm * 100)}%" title="${h(U2.distTip || '이야기 속 두 사람의 거리 (대략)')}">
+  return `<div class="mb3-track${mv || enter ? ' mb3-slide' : ''}" style="--l0:${50 - h0}%;--l1:${50 - half}%;--r0:${50 + h0}%;--r1:${50 + half}%;--warm:${Math.round(warm * 100)}%" title="${h(U2.distTip || '이야기 속 두 사람의 거리 (대략)')}">
     <i class="mb3-tline"></i><i class="mb3-tgap"></i><span class="mb3-tav mb3-tavl">${avOf(P.A, all)}</span><span class="mb3-tav mb3-tavr">${avOf(P.B, all)}</span></div>
     <div class="mb3-tlabel"><b>${h(words[DIST_K(ps.dist)])}</b>${delta}${ps.together ? `<span class="mb3-dim">· ${h(fill(U2.together || '함께 나온 답 {n}', { n: ps.together }))}</span>` : ''}</div>`;
 }
 // the distance over the story (up = closer), milestones as dots; it draws in once when something new happened
-function sparkHtml(ps) {
+function sparkHtml(ps, enter = false) {
   if (ps.pts.length < 3) return '';
   const n = ps.pts.length - 1, x = (j) => +(j / n * 100).toFixed(2), y = (d) => +(4 + d * 0.92).toFixed(2);
   const line = ps.pts.map((p, j) => `${x(j)},${y(p.d)}`).join(' ');
   const dots = ps.pts.map((p, j) => (p.big ? `<i style="left:${x(j)}%;top:${y(p.d)}%" title="#${p.i}"></i>` : '')).join('');
-  return `<div class="mb3-spark${ps.fresh.moved || ps.fresh.first ? ' mb3-draw' : ''}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="${line}" vector-effect="non-scaling-stroke"/></svg>${dots}</div><div class="mb3-spl"><span>${h(R.ui2.sparkFrom || '처음')}</span><span>${h(R.ui2.sparkNow || '지금')}</span></div>`;
+  return `<div class="mb3-spark${ps.fresh.moved || ps.fresh.first || enter ? ' mb3-draw' : ''}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="${line}" vector-effect="non-scaling-stroke"/></svg>${dots}</div><div class="mb3-spl"><span>${h(R.ui2.sparkFrom || '처음')}</span><span>${h(R.ui2.sparkNow || '지금')}</span></div>`;
 }
 function touchSteps(ps, L) {
   const T = L.touch || [];
@@ -435,8 +435,8 @@ function pairCard(P, st, st2, bp, L, ui, M, all, ps = null, big = false) {
   const open = ui.pair === P.k && big;
   return `<div class="mb3-pair2${open ? ' mb3-on' : ''}${big ? ' mb3-pbig' : ''}" data-pair="${h(P.k)}">${nNew}
     <div class="mb3-ptop">${avOf(P.A, all)}<b>${h(P.A)}</b><span class="mb3-amp">⇄</span><b>${h(P.B)}</b>${avOf(P.B, all)}<span class="mb3-ptie">${tie ? `🤝 ${h(tie)}` : h(U2.relNoTie || '공식 관계 없음')}${wall ? ` · 🚧 ${h(wall.v)}` : ''}</span></div>
-    <div class="mb3-pbody"><div class="mb3-pleft">${ps ? trackHtml(ps, P, all, U2) : ''}${ps && big && (ps.touch || ps.events.some((e) => e.kind === 'touch')) ? touchSteps(ps, L) : ''}</div>
-      <div class="mb3-pright">${row(P.A, P.B)}${row(P.B, P.A)}${ps && big ? sparkHtml(ps) : ''}</div></div>
+    <div class="mb3-pbody"><div class="mb3-pleft">${ps ? trackHtml(ps, P, all, U2, ui._enter) : ''}${ps && big && (ps.touch || ps.events.some((e) => e.kind === 'touch')) ? touchSteps(ps, L) : ''}</div>
+      <div class="mb3-pright">${row(P.A, P.B)}${row(P.B, P.A)}${ps && big ? sparkHtml(ps, ui._enter) : ''}</div></div>
     ${open && ps ? pairDetail(P, ps, st2, L, ui) : ''}</div>`;
 }
 // The pair's timeline: newest first, milestones (tie · new touch · burst · a feeling named first) stand out.
@@ -521,7 +521,7 @@ function personSheet(st, L, who, M, ctxP) {
     return `<div class="mb3-pprow" data-pair="${h(P.k)}">${avOf(other, ctxP.all)}<b>${h(other)}</b><span class="mb3-pbar"><i style="width:${100 - ps.dist}%"></i></span><span class="mb3-dim">${h(words[DIST_K(ps.dist)])}</span></div>`; }).join('');
   // secrets: kept 🗝 or known ✓
   const sv = ctxP.sv || [], keeps = sv.filter((v) => v.keepers.some((k) => M(k) === who)), knows = sv.filter((v) => v.chips.some((x) => x.state === 'knows' && M(x.name) === who));
-  const sec = [...keeps.map((v) => `<span class="mb3-kchip mb3-keeper" data-view="secret">🗝 ${h(fill(U2.keepsOne || '비밀 · {s}', { s: (U2.stageNames || {})[v.stage] || v.stage }))}</span>`), ...knows.map((v) => `<span class="mb3-kchip mb3-k-knows" data-view="secret">✓ ${h(fill(U2.knowsOf || '{w}의 비밀을 앎', { w: v.who }))}</span>`)].join('');
+  const sec = [...keeps.map((v) => `<span class="mb3-kchip mb3-keeper" data-view="secret">🗝 <span class="mb3-sv mb3-svs" tabindex="0">${h(String(v.v).slice(0, 22))}${String(v.v).length > 22 ? '…' : ''}</span> · ${h((U2.stageNames || {})[v.stage] || v.stage)}</span>`), ...knows.map((v) => `<span class="mb3-kchip mb3-k-knows" data-view="secret">✓ ${h(fill(U2.knowsOf || '{w}의 비밀을 앎', { w: v.who }))}</span>`)].join('');
   const LI = { wear: '👕', body: '🩹', mark: '✳', item: '🎒', gone: '🕯' };
   const lookTxt = (e) => e.k === 'body' && e.healed ? R.ui.healed : e.k === 'item' ? `${e.sign || '+'}${e.v}` : e.k === 'gone' ? (L.sp?.[e.v] || e.v) : e.v;
   const fresh = ctxP.whoChanged ? ' mb3-pin' : '';
@@ -535,7 +535,6 @@ function personSheet(st, L, who, M, ctxP) {
     ${settings().maker && locked.length ? locked.map((d) => `<div class="mb3-lrow mb3-locked">🔒 ${h(d.content)} <span class="mb3-dim">— ${h(U2.opensWhen)}: ${h(d.opens || '?')}</span></div>`).join('') : ''}</div></div></div>`;
 }
 
-const MAIN_TABS = new Set(['dash', 'flow', 'rel', 'chat']);
 function render(box, ui) {
   ui._info = null;
   const st0 = ledger();
@@ -593,9 +592,9 @@ function render(box, ui) {
   ui._info = { st, es, nowLine: [fmtDate(dateAt(st.cal), L), st.cal.tod, st.loc].filter(Boolean).join(' · ') || '-', fmt: (e) => [rfmt(e.x.i, L), e.x.tod, roomOf(e.x.loc)].filter(Boolean).join(' · ') || '-' };
   box.innerHTML = `<div class="mb3-log2" data-th="${h(settings().theme || 'gray')}">
     <div class="mb3-top2">${mascotImg('idle')}<div><div class="mb3-tt">${h(U2.logTitle || '미트볼 일지')}</div><div class="mb3-dim">${h(fill(U2.logSub || '답 {n}개 읽음', { n: es.length }))}</div></div>
-    <div class="mb3-seg">${tabs.filter(([k]) => MAIN_TABS.has(k) || ui.moreTabs || ui.view === k).map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}${ui.moreTabs || !MAIN_TABS.has(ui.view) ? '' : `<b class="mb3-segmore" data-moretabs="1" title="${h(U2.moreTabs || '더 보기')}">⋯</b>`}</div></div>
-    ${body}</div>`;
-  ui._picked = false;
+    <div class="mb3-seg">${tabs.map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}</div></div>
+    <div class="mb3-vbody${ui._enter ? ' mb3-venter' : ''}">${body}</div></div>`;
+  ui._picked = false; ui._enter = false;
   { const sg = box.querySelector('.mb3-seg'), on = sg?.querySelector('.mb3-on'); if (sg && on && sg.scrollWidth > sg.clientWidth) sg.scrollLeft = Math.max(0, on.offsetLeft - (sg.clientWidth - on.offsetWidth) / 2); }
   if (ui.view === 'dash') { const li = es.at(-1)?.x.i; if (li != null && store()?.dseen !== li) { const S1 = store(true); if (S1) { S1.dseen = li; save(); } } }
   if (seenNow) try { markSeen(seenNow); } catch (e) { /* only the motion */ }
@@ -608,7 +607,7 @@ function render(box, ui) {
 // view = a tab to open at ('secret', 'flow', …) when no reply is given
 export function openLedger(at = null, view = '') {
   const c = ctx(), box = document.createElement('div');
-  const ui = { view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
+  const ui = { _enter: true, view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
   const m = at != null ? c.chat?.[at] : null;
   if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); }
   else if (view) ui.view = view;
@@ -658,7 +657,7 @@ export function openLedger(at = null, view = '') {
     if (t.dataset.let) { ev.stopPropagation(); setLetOut(t.dataset.let, t.dataset.on !== '1'); draw(); return; }
     if (t.dataset.vopen) { decide('vault', { who: t.dataset.vopen, open: t.dataset.on === '1' }); draw(); return; }
     if (t.dataset.gate) { setGate(t.dataset.gate, t.dataset.on === '1'); draw(); return; }
-    if (t.dataset.view) { ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
+    if (t.dataset.view) { ui._enter = ui.view !== t.dataset.view || ui._enter; ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
     else if (t.dataset.dk) { ui.sel = `d:${t.dataset.dk}`; ui.chap = -1; ui._picked = true; }
     else if (t.dataset.wk) { ui.sel = `w:${t.dataset.wk}`; ui.chap = -1; ui._picked = true; }
     else if (t.dataset.ym) { ui.ym = t.dataset.ym; }
