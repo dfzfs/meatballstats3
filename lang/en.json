@@ -32,7 +32,11 @@
     "style": "Style",
     "redo": "REWRITE — the version before this one was rejected for this. This version must fix it (the rest may stay as it was)",
     "sceneStart": "Get into it in this reply: a line or two of lead-up at most, then it happens on the page. Do not spend the reply on getting there",
-    "sceneGoing": "This scene is already under way: pick up exactly where the last reply stopped and carry it forward. Do not set it up again, re-describe the place or the mood, or wrap it up"
+    "sceneGoing": "This scene is already under way: pick up exactly where the last reply stopped and carry it forward. Do not set it up again, re-describe the place or the mood, or wrap it up",
+    "sceneSkip": "Jump to it: a short line for the time that passes is enough, then open on the scene itself",
+    "sceneFill": "Go on from where the last reply stopped, cover the way there briefly, and reach the scene within this reply",
+    "sceneOne": "Play the whole scene out in this reply and bring it to a close",
+    "sceneMulti": "It may run over several replies: this reply gets into it properly, no need to finish it"
   },
   "wd": [
     "Sunday",
