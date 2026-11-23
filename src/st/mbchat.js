@@ -7,6 +7,7 @@ import { keysBlock } from '../core/keys.js';
 import { request } from './queue.js';
 import { applyFixes, undoFixes } from './fix.js';
 import { roll, forgetRoll } from './dice.js';
+import { mascotImg } from './mascot.js';
 
 const YES = /^\s*(응+|ㅇㅇ+|ㅇ|네|예|그래|바꿔|고쳐|해\s*줘|ok|okay|yes|y)(?=$|[\s!.~ㅋㅎ요줘])/i;
 const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -164,21 +165,30 @@ function human(l) {
   return l;
 }
 const ICON = { feel: '💞', date: '📅', time: '⏩', loc: '📍', with: '👥', wear: '👕', tie: '🤝', texture: '💞', refuse: '🚫', role: '🏷️', gone: '🚪', know: '💡', body: '🩹', item: '🎒', call: '🗣️', touch: '🤲' };
+// v0.25: the cat's face follows each answer (thinking · done · unsure · could not), and only bubbles that are new since
+// the talk was last drawn slide in (opening the tab again does not replay the whole talk).
+let seenAt = -1;
+const doneSeen = new Set();
+const faceOf = (m) => (m.wait ? 'think' : m.prop?.state === 'done' ? 'party' : m.prop?.conflict && m.prop.state === 'ask' ? 'surprise' : m.prop?.state === 'failed' || m.text === R.ui2.chatFail ? 'sad' : 'happy');
 export function chatHtml(mascot) {
-  const U2 = R.ui2, log = chatLog();
+  const U2 = R.ui2, log = chatLog(), first = seenAt < 0, last = Math.max(0, ...log.map((m) => m.at || 0));
+  const isNew = (m) => !first && (m.at || 0) > seenAt;
+  seenAt = last;
+  const markDone = () => { for (const m of log) if (m.prop?.state === 'done') doneSeen.add(m.at); };
   const bubble = (m, k) => {
-    if (m.who === 'me') return `<div class="mb3-cme">${h(m.text)}</div>`;
+    if (m.who === 'me') return `<div class="mb3-cme${isNew(m) ? ' mb3-cnew' : ''}">${h(m.text)}</div>`;
     let p = '';
     if (m.prop) {
       const P = m.prop, lines = P.fixes.map((f) => f.lines.map((l) => { const neg = l.startsWith('-'), key = l.replace(/^-/, '').split(/[:|]/)[0].trim().toLowerCase();
         return `<div class="mb3-fx${neg ? ' mb3-fxdel' : ''}"><span class="mb3-fxi">${neg ? '🗑' : ICON[key] || '✏️'}</span><span class="mb3-fxn">#${f.i}</span> ${h(human(l.replace(/^-/, '')))}</div>`; }).join('')).join('');
       const btns = P.state === 'ask' ? `<div class="mb3-cbtns"><b class="mb3-cyes" data-cm="${k}">${h(U2.chatApply || '바꾸기')} <i>✋ ${h(U2.chatMine || '내 요청')}</i></b><b class="mb3-cno" data-cm="${k}">${h(U2.chatKeep || '그대로 두기')}</b></div>`
-        : P.state === 'done' ? `<div class="mb3-cstate">✋ ${h(U2.chatApplied || '바뀜 · 내 요청으로')} <b class="mb3-cundo" data-cm="${k}">${h(U2.chatUndo || '되돌리기')}</b></div>`
+        : P.state === 'done' ? `<div class="mb3-cstate${!first && !doneSeen.has(m.at) ? ' mb3-cdone' : ''}">✋ ${h(U2.chatApplied || '바뀜 · 내 요청으로')} <b class="mb3-cundo" data-cm="${k}">${h(U2.chatUndo || '되돌리기')}</b></div>`
         : `<div class="mb3-cstate">${h(P.state === 'undone' ? (U2.chatUndone || '되돌렸어요') : P.state === 'kept' ? (U2.chatKept || '그대로 뒀어요') : (U2.chatFailed || '이 답에는 고칠 수 없었어요'))}</div>`;
       p = `<div class="mb3-fix">${P.conflict && P.quote ? `<div class="mb3-fxq">📜 ${h(P.quote)}</div>` : ''}${P.conflict ? `<div class="mb3-fxw">⚠ ${h(U2.chatConflict || '본문과 달라요. 그래도 바꿀까요?')}</div>` : ''}${lines}</div>${btns}`;
     }
-    return `<div class="mb3-cmb">${mascot}<div class="mb3-cb">${m.wait ? '<span class="mb3-dots3"><i></i><i></i><i></i></span>' : h(m.text)}${p}</div></div>`;
+    return `<div class="mb3-cmb${isNew(m) || m.wait ? ' mb3-cnew' : ''}">${mascotImg(faceOf(m))}<div class="mb3-cb">${m.wait ? '<span class="mb3-dots3"><i></i><i></i><i></i></span>' : h(m.text)}${p}</div></div>`;
   };
-  return `<div class="mb3-chat"><div class="mb3-msgs">${log.length ? log.map(bubble).join('') : `<div class="mb3-cmb">${mascot}<div class="mb3-cb">${h(U2.chatHello || '기록이 틀렸으면 그냥 말해 줘요. 예: 「그 거절, 3일이 아니라 2일이야」 · 「깡통이랑 깡캐 이제 사귀는 사이야」')}</div></div>`}</div>
+  const body = log.map(bubble).join(''); markDone();
+  return `<div class="mb3-chat"><div class="mb3-msgs">${log.length ? body : `<div class="mb3-cmb">${mascot}<div class="mb3-cb">${h(U2.chatHello || '기록이 틀렸으면 그냥 말해 줘요. 예: 「그 거절, 3일이 아니라 2일이야」 · 「깡통이랑 깡캐 이제 사귀는 사이야」')}</div></div>`}</div>
     <div class="mb3-cin"><textarea class="mb3-cta mb3-notr" rows="1" placeholder="${h(U2.chatPh || '고칠 걸 말해 줘요')}"></textarea><b class="mb3-csend">${h(U2.chatSend || '보내기')}</b></div><div class="mb3-cchk"><b class="mb3-ccheck" title="${h(U2.checkTip || '')}">🔍 ${h(U2.checkBtn || '기록 대조')}</b> <span class="mb3-dim">${h(U2.checkTip || '')}</span></div></div>`;
 }

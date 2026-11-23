@@ -17,6 +17,7 @@ export const setOpener = (f) => { openLedger = f; };
 export function renderBar() {
   try { draw(); } catch (e) { console.warn('[meatball3] status line failed', e); }
 }
+const PREV = { chat: null, v: {} };
 function draw() {
   let el = document.getElementById('mb3_bar');
   const s = settings();
@@ -35,11 +36,16 @@ function draw() {
   const date = nowDate(st.cal, L);
   const ws = [...new Set(st.with.map(showName))], who = ws.slice(0, 4).join(', ') + (ws.length > 4 ? ` +${ws.length - 4}` : '');
   const passed = st.fresh?.passed > 0 ? `⏩ ${st.fresh.fuzzy ? L.span.fuzzy[st.fresh.fuzzy] : span(st.fresh.passed, L)}` : '';
-  const parts = [date || '📅 ?', st.cal.tod, st.loc && `📍 ${st.loc}`, who && `👥 ${who}`, passed].filter(Boolean);
-  if (F) { const n = fillCount(); parts.unshift(`📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : F.from != null ? R.ui2?.fillRangeRun || '구간 정리 중' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`); }
+  // v0.25: each piece is its own span; a piece whose value changed since the last draw glows once (date · place · who)
+  const parts = [['d', date || '📅 ?'], ['t', st.cal.tod], ['l', st.loc && `📍 ${st.loc}`], ['w', who && `👥 ${who}`], ['p', passed]].filter(([, v]) => v);
+  if (F) { const n = fillCount(); parts.unshift(['f', `📚 ${F.paused ? R.ui2?.fillPaused || '정리 멈춤' : F.from != null ? R.ui2?.fillRangeRun || '구간 정리 중' : R.ui2?.fillRun || '처음부터 정리 중'} ${n.done}/${n.total}`]); }
+  const chatId = ctx().chatId || ctx().getCurrentChatId?.() || '', same = PREV.chat === chatId;
+  const glow = (k, v) => same && k !== 'f' && PREV.v[k] != null && PREV.v[k] !== v;
+  const html = parts.map(([k, v]) => `<span class="mb3-bp${glow(k, v) ? ' mb3-bglow' : ''}">${h(v)}</span>`).join('<span class="mb3-sep">·</span>').replace(/^<span class="mb3-bp([^"]*)">📅 /, '<span class="mb3-bp$1">');
+  PREV.chat = chatId; PREV.v = Object.fromEntries(parts);
   const g = lastGuard(), fr = settings().human === false ? [] : fallState().filter((f) => f.need);
   const face = R.sorting ? 'think' : g ? 'surprise' : fr.length ? 'party' : R.stalled ? 'sad' : 'idle';
-  el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${parts.map(h).join('<span class="mb3-sep">·</span>').replace(/^📅 /, '')}`;
+  el.innerHTML = `${s.mascot !== false ? mascotImg(face, h(U.mascotTip || '')) : ''}${g ? `<span class="mb3-guard" title="${h(U.guardTip)}">⚠ ${h(U.guardChip)}</span> ` : ''}${fr.length ? `<span class="mb3-fall" title="${h(U.fallTip)}">💗 ${h(U.fallChip)}</span> ` : ''}<span>📅</span> ${html}`;
   el.querySelector('.mb3-cat')?.addEventListener('click', (e) => { e.stopPropagation(); poke(e.currentTarget); });
   el.querySelector('.mb3-guard')?.addEventListener('click', (e) => { e.stopPropagation(); guardPopup(); });
   el.querySelector('.mb3-fall')?.addEventListener('click', (e) => { e.stopPropagation(); fallPopup(); });

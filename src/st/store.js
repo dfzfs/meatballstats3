@@ -6,7 +6,7 @@ import { enLine } from './tr.js';
 import { fingerprint } from '../core/clean.js';
 import { fold2, rows2, tieOf, hideId, touches } from '../core/ledger2.js';
 import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
-import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure } from '../core/vault.js';
+import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
 import { estTokens } from '../core/clean.js';
 import { findSkip } from '../core/hint.js';
@@ -203,8 +203,19 @@ function letNow(cue, bp, here) {
 }
 // a direction whose words showed in the last 6 replies: the story may be there (the 지시창 asks "도착했나요?")
 function goalNear(g) {
-  const t = (ctx().chat || []).filter((m) => !m.is_user && !m.is_system).slice(-6).map((m) => cleanText(m.mes)).join('\n');
+  // only replies after the direction was set (words that were already there before do not count)
+  const ai = (ctx().chat || []).filter((m) => !m.is_user && !m.is_system), t = ai.slice(Math.min(g.from ?? 0, ai.length)).slice(-6).map((m) => cleanText(m.mes)).join('\n');
   return !!t && (g.signs || []).some((w) => hasSign(t, w));
+}
+// v0.25: how a direction is going, for the 지시창 card — replies since it was set, how often a push went, and which
+// replies showed its words. step: 0 far · 1 moving (its words showed once, or pushes went) · 2 near (words in the last 6)
+function goalTrack(g, S) {
+  const ai = (ctx().chat || []).map((m, i) => ({ m, i })).filter(({ m }) => !m.is_user && !m.is_system), from = g.from ?? 0, mk = `goal:${hashOf(g.v)}`;
+  const after = ai.slice(Math.min(from, ai.length));
+  const pushes = after.filter(({ m }) => (S.sent?.[fingerprint(m)]?.marks || []).includes(mk)).map(({ i }) => i);
+  const hits = (g.signs || []).length ? after.filter(({ m }) => (g.signs || []).some((w) => hasSign(cleanText(m.mes), w))).map(({ i }) => i) : [];
+  const near = goalNear(g);
+  return { since: after.length, pushes: pushes.length, lastPush: pushes.at(-1) ?? null, hits: hits.length, lastHit: hits.at(-1) ?? null, step: near ? 2 : hits.length || pushes.length ? 1 : 0 };
 }
 export function keepSent(fp, sent) {
   if (!fp || !sent || (!sent.on && !sent.special && !sent.eased?.length && !sent.marks?.length && !sent.let?.length)) return;
@@ -292,7 +303,7 @@ export function decide(kind, t = {}) {
 export function stateFor() {
   const S = store() || {}, live = bpLive(), fp = lastAiFp(), st = ledger();
   const lastCut = [...(st.hist || [])].reverse().find((x) => x.cut)?.gn ?? 0;
-  return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: (S.goals || []).map((g) => ({ ...g, near: goalNear(g) })),
+  return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: (S.goals || []).map((g) => { let t = {}; try { t = goalTrack(g, S); } catch (e) { /* only the card's details */ } return { ...g, near: goalNear(g), ...t }; }),
     falls: fallState().map((f) => ({ a: f.a, b: f.b, open: f.open, need: f.need })),
     vaults: (bpAll(S).vault || []).map((x) => ({ who: x.who, open: !(live.vault || []).some((y) => y.who === x.who), typed: !!x.typed })),
     secrets: S.secrets || [], names: [...new Set([...(R.bp?.persons || []).map((p) => p.name), ...(st.with || [])])].filter(Boolean),
@@ -300,7 +311,8 @@ export function stateFor() {
     guard: S.guard?.[fp] && !S.guard[fp].done ? S.guard[fp].hits : [], note: S.note || '', habits: S.habit?.[fp] || [], sorted: !!(fp && S.ev?.[fp]) };
 }
 // v0.9 destinations (도착점): where the story should end up. Never sent; they become vault entries the guard watches for "rushed".
-export function setGoals(list) { const S = store(true); S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint && !g.push, push: !!g.push })); save(); }
+export function setGoals(list) { const S = store(true), n = aiCount(), old = new Map((S.goals || []).map((g) => [g.v, g]));
+  S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint && !g.push, push: !!g.push, from: old.get(String(g.v || '').slice(0, 300))?.from ?? (Number.isInteger(g.from) ? g.from : n) })); save(); }
 // secrets typed in 지시창: guarded exactly like a lore vault line (never sent, signs scanned, firewall, classifier guard)
 export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 8).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200) })).filter((x) => x.who && x.v); save(); }
 export function setNote(text) { const S = store(true); S.note = String(text || '').slice(0, 1200); save(); }

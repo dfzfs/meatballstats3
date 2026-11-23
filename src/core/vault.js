@@ -175,7 +175,7 @@ export function threads(chat, st1, st2, bp, S, fingerprint, cleanText, langs, op
 // Note rows for v0.9, each with a kind (the selector grades them). opts: { cue, user (the person's character name),
 // lover(a, b), threads (from threads()), ago (replies since the last special line), jitter (bool), every (spark gap),
 // interrogate (bool: the person's message digs at someone's secret), redo ({ kind, who, v } after a guard rewrite) }
-const hashOf = (t) => { let x = 0; for (const c of String(t)) x = (x * 31 + c.codePointAt(0)) >>> 0; return x.toString(36); };
+export const hashOf = (t) => { let x = 0; for (const c of String(t)) x = (x * 31 + c.codePointAt(0)) >>> 0; return x.toString(36); };
 export function rows3(st1, st2, bp, L, opts = {}) {
   const R = L.rel, here = st1.with || [], now = [], cue = opts.cue || '';
   if (!bp) return now;

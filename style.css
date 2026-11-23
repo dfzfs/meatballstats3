@@ -536,3 +536,120 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-lrow > .mb3-sbtn { flex: 0 0 auto !important; }
 .mb3-gaps { border-color: color-mix(in srgb, #e8a33d 45%, var(--mbt-line)); background: color-mix(in srgb, #e8a33d 7%, var(--mbt-card)); }
 .mb3-gaprow { font-size: 12.5px; cursor: default; } .mb3-gaprow[data-view] { cursor: pointer; }
+
+/* ===================== v0.25 · 💞 관계: distance track, the line over time, touch steps, the pair's timeline =====================
+   Colours stay the theme's: the gap between the two avatars warms toward the accent as they come closer. */
+.mb3-pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 10px; align-items: start; }
+.mb3-pairs > .mb3-pair2 { margin-bottom: 0; }
+.mb3-pairs > .mb3-rdetail { grid-column: 1 / -1; }
+.mb3-pair2 { position: relative; transition: border-color .2s ease, transform .2s ease; }
+.mb3-pair2:hover { transform: translateY(-1px); }
+.mb3-pnew { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--mbt-acc); --sc: var(--mbt-acc); animation: mb3Ping 1.2s ease-out .2s 2; }
+.mb3-track { position: relative; height: 30px; margin: 10px 4px 0; }
+.mb3-tline { position: absolute; left: 0; right: 0; top: 14px; height: 2px; border-radius: 2px; background: var(--mbt-line); }
+.mb3-tgap { position: absolute; top: 13px; height: 4px; border-radius: 4px; left: var(--l1); right: calc(100% - var(--r1)); background: color-mix(in srgb, var(--mbt-acc) var(--warm), var(--mbt-line)); }
+.mb3-tav { position: absolute; top: 3px; transform: translateX(-50%); }
+.mb3-tav .mb3-av { width: 24px; height: 24px; box-shadow: 0 0 0 2px var(--mbt-soft); }
+.mb3-tavl { left: var(--l1); } .mb3-tavr { left: var(--r1); }
+.mb3-tlabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 12px; margin-top: 1px; }
+.mb3-tlabel b { font-weight: 700; }
+.mb3-tlabel em { font-style: normal; font-weight: 600; font-size: 11.5px; padding: 0 7px; border-radius: 99px; }
+.mb3-dclose { background: color-mix(in srgb, var(--mbt-acc) 18%, transparent); } .mb3-dfar { background: color-mix(in srgb, var(--mbt-mid) 14%, transparent); }
+@keyframes mb3SlideL { from { left: var(--l0); } } @keyframes mb3SlideR { from { left: var(--r0); } }
+@keyframes mb3SlideGap { from { left: var(--l0); right: calc(100% - var(--r0)); } }
+.mb3-track.mb3-slide .mb3-tavl { animation: mb3SlideL 1.1s cubic-bezier(.3, 1.25, .45, 1) .25s both; }
+.mb3-track.mb3-slide .mb3-tavr { animation: mb3SlideR 1.1s cubic-bezier(.3, 1.25, .45, 1) .25s both; }
+.mb3-track.mb3-slide .mb3-tgap { animation: mb3SlideGap 1.1s cubic-bezier(.3, 1.25, .45, 1) .25s both; }
+.mb3-track.mb3-slide + .mb3-tlabel em { animation: mb3Flip .45s ease-out 1.1s both; }
+/* the line over time: up = closer */
+.mb3-spark { position: relative; height: 46px; margin: 12px 2px 14px; border-radius: 10px; background: linear-gradient(to bottom, color-mix(in srgb, var(--mbt-acc) 9%, transparent), transparent); }
+.mb3-spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.mb3-spark polyline { fill: none; stroke: var(--mbt-acc); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.mb3-spark.mb3-draw polyline { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mb3Draw 1.3s ease-out .2s forwards; }
+@keyframes mb3Draw { to { stroke-dashoffset: 0; } }
+.mb3-spark > i { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--mbt-card); border: 2px solid var(--mbt-acc); box-sizing: border-box; }
+.mb3-sp0, .mb3-sp1 { position: absolute; bottom: -14px; font-size: 10.5px; color: var(--mbt-dim); } .mb3-sp0 { left: 0; } .mb3-sp1 { right: 0; }
+/* touch: five steps */
+.mb3-tsteps { display: flex; gap: 3px; margin-top: 8px; }
+.mb3-tsteps span { flex: 1; text-align: center; font-size: 10.5px; padding: 2px 0; border-radius: 6px; background: var(--mbt-card); color: var(--mbt-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb3-tsteps .mb3-done { background: color-mix(in srgb, var(--mbt-acc) 22%, var(--mbt-card)); color: var(--mbt-ink); }
+.mb3-tsteps .mb3-now { background: var(--mbt-acc); color: #fff; font-weight: 700; }
+@keyframes mb3Pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+.mb3-tsteps .mb3-pop { animation: mb3Pop .5s cubic-bezier(.3, 1.4, .5, 1) .4s both; }
+/* the pair's timeline (same rail as the secret cards) */
+.mb3-rdetail { background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 16px; padding: 12px 14px; animation: mb3Open .28s ease-out; }
+@keyframes mb3Open { from { opacity: 0; transform: translateY(-4px); } }
+.mb3-rdh { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13.5px; }
+.mb3-rdh .mb3-slet { margin-left: auto; }
+.mb3-slet.mb3-small { font-size: 12px; gap: 6px; } .mb3-slet.mb3-small input { width: 32px; height: 18px; } .mb3-slet.mb3-small input::after { width: 14px; height: 14px; } .mb3-slet.mb3-small input:checked::after { transform: translateX(14px); }
+.mb3-sev.mb3-sbig .mb3-sevt b { color: var(--mbt-acc); }
+.mb3-sev:not(.mb3-sbig) .mb3-sevt b { font-weight: 500; }
+.mb3-rev-burst .mb3-sevt b { color: #e0587c !important; }
+@media (prefers-reduced-motion: reduce) { .mb3-pair2, .mb3-pair2 *, .mb3-rdetail, .mb3-spark polyline { animation: none !important; transition: none !important; stroke-dasharray: none !important; } }
+/* ===================== v0.25 · 👤 인물 ===================== */
+.mb3-pwrap.mb3-pin { animation: mb3Open .3s ease-out; }
+.mb3-phead { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.mb3-phead > .mb3-av { width: 44px; height: 44px; font-size: 19px; }
+.mb3-pname2 { font-size: 16px; } .mb3-pname2 b { font-weight: 800; }
+.mb3-herenow { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--mbt-acc) 18%, transparent); margin-left: 4px; }
+.mb3-pstat { font-size: 12px; margin-top: 2px; }
+.mb3-pprow { display: flex; align-items: center; gap: 7px; font-size: 12.5px; padding: 4px 0; cursor: pointer; }
+.mb3-pprow b { font-weight: 600; min-width: 3em; }
+.mb3-pbar { flex: 1; height: 5px; border-radius: 9px; background: var(--mbt-card); overflow: hidden; }
+.mb3-pbar i { display: block; height: 100%; border-radius: 9px; background: var(--mbt-acc); }
+.mb3-pin .mb3-pbar i { animation: mb3Grow .8s cubic-bezier(.2, .8, .2, 1) .15s both; }
+.mb3-pprow:hover b { color: var(--mbt-acc); }
+.mb3-pcard .mb3-stl { margin-top: 2px; }
+.mb3-pcard .mb3-kchip[data-view] { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .mb3-pwrap, .mb3-pwrap * { animation: none !important; } }
+.mb3-psheet { align-items: start; }
+.mb3-pprow > .mb3-dim { flex: 0 0 5.5em; text-align: right; font-size: 11.5px; }
+/* ===================== v0.25 · 🗺️ 지도 ===================== */
+.mb3-log2 .mb3-place { background: color-mix(in srgb, var(--mbt-acc) var(--heat, 0%), var(--mbt-card)); transition: box-shadow .2s ease; }
+.mb3-log2 .mb3-place .mb3-place { background: color-mix(in srgb, var(--mbt-acc) var(--heat, 0%), var(--mbt-soft)); }
+.mb3-pin2 { font-style: normal; display: inline-block; transform-origin: 50% 100%; }
+.mb3-place.mb3-moved > .mb3-pname .mb3-pin2 { animation: mb3Drop .6s cubic-bezier(.3, 1.5, .5, 1) .2s both; }
+.mb3-log2 .mb3-place.mb3-moved { --sc: var(--mbt-acc); animation: mb3Ping 1.2s ease-out .5s 2; }
+@keyframes mb3Drop { from { transform: translateY(-14px) scale(.7); opacity: 0; } }
+.mb3-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0 12px; font-size: 12.5px; }
+.mb3-trail > .mb3-dim { margin-right: 4px; font-size: 12px; }
+.mb3-tstop { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 10px; border-radius: 99px; background: var(--mbt-soft); cursor: pointer; }
+.mb3-tstop b { font-weight: 600; } .mb3-tstop i { font-style: normal; font-size: 10.5px; color: var(--mbt-dim); }
+.mb3-tstop.mb3-tnow { background: var(--mbt-acc); color: #fff; } .mb3-tstop.mb3-tnow i { color: rgba(255,255,255,.8); }
+.mb3-tarr { color: var(--mbt-dim); }
+.mb3-trail.mb3-tin .mb3-tstop { animation: mb3Open .35s ease-out calc(var(--j) * 70ms) both; }
+.mb3-pdet { margin-top: 12px; }
+.mb3-vchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.mb3-vchip { display: inline-flex; gap: 5px; font-size: 11.5px; padding: 2px 9px; border-radius: 99px; background: var(--mbt-soft); color: var(--mbt-ink) !important; text-decoration: none !important; }
+.mb3-vchip b { font-weight: 700; color: var(--mbt-acc); }
+@media (prefers-reduced-motion: reduce) { .mb3-place, .mb3-place *, .mb3-trail * { animation: none !important; } }
+.mb3-log2 .mb3-map { align-items: flex-start; }
+/* ===================== v0.25 · 📖 흐름 ===================== */
+@keyframes mb3CalNext { from { opacity: 0; transform: translateX(14px); } } @keyframes mb3CalPrev { from { opacity: 0; transform: translateX(-14px); } }
+.mb3-cal.mb3-calnext { animation: mb3CalNext .28s ease-out; } .mb3-cal.mb3-calprev { animation: mb3CalPrev .28s ease-out; }
+.mb3-cc.mb3-picked { animation: mb3Pop .35s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes mb3Roll { 0% { transform: translateY(-10px) rotate(-8deg); opacity: 0; } 60% { transform: translateY(2px) rotate(3deg); opacity: 1; } 100% { transform: none; } }
+.mb3-cc.mb3-rolled { animation: mb3Roll .55s cubic-bezier(.3, 1.4, .5, 1) both; z-index: 1; }
+.mb3-cc.mb3-rolled::before { content: "🎲"; position: absolute; left: 3px; top: 2px; font-size: 9px; }
+.mb3-daybox.mb3-dayin { animation: mb3Open .3s ease-out; }
+.mb3-dsum { display: flex; flex-wrap: wrap; gap: 5px; margin: -2px 2px 10px; }
+.mb3-dchip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; background: var(--mbt-soft); color: var(--mbt-mid); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .mb3-cal, .mb3-cc, .mb3-cc::after, .mb3-daybox { animation: none !important; } }
+/* ===================== v0.25 · 💬 미트볼 talk ===================== */
+@keyframes mb3InL { from { opacity: 0; transform: translateX(-10px) scale(.97); } } @keyframes mb3InR { from { opacity: 0; transform: translateX(10px) scale(.97); } }
+.mb3-cmb.mb3-cnew { animation: mb3InL .32s cubic-bezier(.2, .9, .3, 1.15) both; } .mb3-cme.mb3-cnew { animation: mb3InR .28s ease-out both; }
+.mb3-cmb.mb3-cnew .mb3-fx { animation: mb3Open .3s ease-out both; }
+.mb3-cmb.mb3-cnew .mb3-fx:nth-child(2) { animation-delay: .08s; } .mb3-cmb.mb3-cnew .mb3-fx:nth-child(3) { animation-delay: .16s; } .mb3-cmb.mb3-cnew .mb3-fx:nth-child(n+4) { animation-delay: .24s; }
+.mb3-cdone { animation: mb3Pop .45s cubic-bezier(.3, 1.4, .5, 1) both; transform-origin: left center; }
+@media (prefers-reduced-motion: reduce) { .mb3-chat * { animation: none !important; } }
+/* ===================== v0.25 · 한눈에: what the newest reply changed glows once ===================== */
+@keyframes mb3Glow { 0% { background-color: color-mix(in srgb, var(--mbt-acc) 32%, transparent); } 100% { background-color: transparent; } }
+.mb3-hero .mb3-nb { animation: mb3Glow 1.8s ease-out .3s both; border-radius: 8px; }
+.mb3-hw > span.mb3-nb { animation: mb3Pop .5s cubic-bezier(.3, 1.4, .5, 1) .3s both, mb3Glow 1.8s ease-out .5s both; }
+.mb3-rline.mb3-rin { animation: mb3Open .35s ease-out calc(.15s + var(--j) * 80ms) both; }
+@media (prefers-reduced-motion: reduce) { .mb3-hero *, .mb3-rline { animation: none !important; } }
+/* v0.25 · the status line: a piece that changed glows once */
+@keyframes mb3BarGlow { 0% { background: color-mix(in srgb, var(--mbt-acc, #e0a040) 35%, transparent); } 100% { background: transparent; } }
+#mb3_bar .mb3-bp { border-radius: 6px; padding: 0 2px; }
+#mb3_bar .mb3-bglow { animation: mb3BarGlow 2s ease-out .2s both; }
+@media (prefers-reduced-motion: reduce) { #mb3_bar .mb3-bglow { animation: none; } }
