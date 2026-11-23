@@ -681,6 +681,7 @@ export function openLedger(at = null, view = '') {
     if (ev.target.matches?.('.mb3-cta') && ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); const v = ev.target.value; ev.target.value = ''; chatSend(v, ui._info, draw); }
   });
   draw();
+  { const re = () => { if (!box.isConnected) { window.removeEventListener('mb3-names', re); return; } draw(); }; window.addEventListener('mb3-names', re); }
   trWatch(box);   // the log is redrawn on every tab: translate each time (one request per view, cached)
   c.callGenericPopup(box, c.POPUP_TYPE.TEXT, '', { wide: true, large: true, allowVerticalScrolling: true });
 }

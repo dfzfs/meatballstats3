@@ -5,6 +5,7 @@ import { build, BUDGET } from '../core/signpost.js';
 import { enLine } from './tr.js';
 import { fingerprint } from '../core/clean.js';
 import { fold2, rows2, tieOf, hideId, touches } from '../core/ledger2.js';
+import { nameMerger } from './tr.js';
 import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
 import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
@@ -306,7 +307,7 @@ export function stateFor() {
   return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: (S.goals || []).map((g) => { let t = {}; try { t = goalTrack(g, S); } catch (e) { /* only the card's details */ } return { ...g, near: goalNear(g), ...t }; }),
     falls: fallState().map((f) => ({ a: f.a, b: f.b, open: f.open, need: f.need })),
     vaults: (bpAll(S).vault || []).map((x) => ({ who: x.who, open: !(live.vault || []).some((y) => y.who === x.who), typed: !!x.typed })),
-    secrets: S.secrets || [], names: [...new Set([...(R.bp?.persons || []).map((p) => p.name), ...(st.with || [])])].filter(Boolean),
+    secrets: S.secrets || [], names: (() => { const raw = [...new Set([...(R.bp?.persons || []).map((p) => p.name), ...(st.with || [])])].filter(Boolean), M = nameMerger(raw); return [...new Set(raw.map(M))]; })(),
     signs: (live.vault || []).flatMap((x) => x.signs), threads: openThreads().map((t) => ({ a: t.a, b: t.b, v: t.v, mode: t.mode })),
     guard: S.guard?.[fp] && !S.guard[fp].done ? S.guard[fp].hits : [], note: S.note || '', habits: S.habit?.[fp] || [], sorted: !!(fp && S.ev?.[fp]) };
 }

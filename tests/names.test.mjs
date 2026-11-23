@@ -20,3 +20,13 @@ test('the other way round, and no merging of different names', () => {
   assert.equal(sameName('Seoyeon', '서준'), false);
   assert.equal(sameName('Will', '윌'), false);
 });
+import { soundPair } from '../src/core/roman.js';
+test('English names written in Korean pair by sound, only when one fits', () => {
+  const H = ['루피', '로우', '조로', '나미', '쵸파'];
+  assert.equal(soundPair('Luffy', H), '루피');
+  assert.equal(soundPair('Law', H), '로우');
+  assert.equal(soundPair('Trafalgar Law', H), '로우');
+  assert.equal(soundPair('Monkey D. Luffy', H), '루피');
+  assert.equal(soundPair('Chopper', H), '쵸파');
+  assert.equal(soundPair('Grace', H), null);
+});

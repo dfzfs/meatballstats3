@@ -1,7 +1,7 @@
 // Screen translation (Google, through SillyTavern's own translate endpoint). Everything sent to AI stays English;
 // only what the person reads is turned into Korean. Many lines go in one request; results are cached in this browser.
 import { ctx, settings, R } from './store.js';
-import { sameName } from '../core/roman.js';
+import { sameName, soundPair } from '../core/roman.js';
 
 const KEY = 'mb3_tr_v1', MAX_CHARS = 3500, MAX_KEEP = 3000;
 let cache = null;
@@ -35,16 +35,28 @@ export const showName = (n) => glossary().get(String(n || '').trim().toLowerCase
 const HAN = /^[가-힣\s]+$/;
 export function nameMerger(names) {
   const list = [...new Set((names || []).filter(Boolean))], han = new Set(list.filter((n) => HAN.test(n))), C = load();
-  const map = new Map();
+  const map = new Map(), hans = [...han], ask = [];
   for (const n of list) {
     const g = showName(n);
     if (g !== n) { map.set(n, g); continue; }
     if (/[A-Za-z]/.test(n)) {
-      const ro = [...han].find((k) => sameName(n, k)); if (ro) { map.set(n, ro); continue; }   // "Seoyeon" next to 서연
-      const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; } }
+      const ro = hans.find((k) => sameName(n, k)); if (ro) { map.set(n, ro); continue; }        // "Seoyeon" next to 서연
+      const t = String(C.get(n.trim()) || '').trim(); if (t && han.has(t)) { map.set(n, t); continue; }   // Google: "Luffy" → 루피
+      if (!C.has(n.trim())) ask.push(n.trim());
+      const sp = soundPair(n, hans); if (sp) { map.set(n, sp); continue; }                  // "Law" next to 로우
+    }
     map.set(n, n);
   }
+  if (ask.length && hans.length) learnNames(ask);
   return (n) => map.get(n) || showName(n);
+}
+// Bare Latin names are translated once in the background; when that brings a new match the open log redraws.
+const asked = new Set();
+function learnNames(list) {
+  const todo = list.filter((n) => !asked.has(n));
+  if (!todo.length || !trOn()) return;
+  todo.forEach((n) => asked.add(n));
+  trLines(todo).then(() => window.dispatchEvent(new Event('mb3-names'))).catch(() => { /* stays as it is */ });
 }
 const escRe = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const unmaskN = (s, map) => map.reduce((t, [tok, n]) => t.split(tok).join(n), s);

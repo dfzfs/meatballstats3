@@ -8,6 +8,7 @@ import { ctx, store, save, ledger, ledger2, bpLive, bpAll, letActive } from './s
 import { fingerprint } from '../core/clean.js';
 import { foldPressure, hasSign } from '../core/vault.js';
 import { touches, hideId } from '../core/ledger2.js';
+import { nameMerger } from './tr.js';
 
 export const STAGES = ['locked', 'hint', 'suspect', 'close', 'open'];
 
@@ -19,9 +20,11 @@ export function secretView() {
   chat.forEach((m, i) => { if (!m.is_user && !m.is_system) ai.push({ i, fp: fingerprint(m) }); });
   const idxOf = new Map(ai.map((a) => [a.fp, a.i])), lastIdx = ai.slice(-3).map((a) => a.i);
   const pressure = foldPressure(chat, S, all, fingerprint), letOn = letActive();
-  const people = [...new Set([...(all.persons || []).map((p) => p.name), ...Object.keys(st.names?.seen || {})])].filter(Boolean).slice(0, 12);
+  // one chip per person: the lore name and the name the story wrote ("Luffy" / 루피) are merged first
+  const raw = [...new Set([...(all.persons || []).map((p) => p.name), ...Object.keys(st.names?.seen || {})])].filter(Boolean), M = nameMerger(raw);
+  const people = [...new Set(raw.map(M))].slice(0, 12);
   return vaults.map((x) => {
-    const keepers = x.who.split('-').map((n) => n.trim()).filter(Boolean);
+    const keepers = [...new Set(x.who.split('-').map((n) => M(n.trim())).filter(Boolean))];
     const open = !(live.vault || []).some((y) => y.who === x.who);
     const ev = [];
     for (const a of ai) {
@@ -38,7 +41,7 @@ export function secretView() {
     const stage = open ? 'open' : recentSlip ? 'close' : pr >= 2 ? 'suspect' : pr === 1 ? 'hint' : 'locked';
     // who knows: a 'know' record whose content touches the secret (its words or a sign word)
     const knows = new Set();
-    for (const k of st.know || []) if (touches(x.v, k.what) || (x.signs || []).some((g) => hasSign(k.what, g))) for (const n of k.who) knows.add(n);
+    for (const k of st.know || []) if (touches(x.v, k.what) || (x.signs || []).some((g) => hasSign(k.what, g))) for (const n of k.who) knows.add(M(n));
     const chips = people.filter((n) => !keepers.includes(n)).map((n) => ({ name: n, state: knows.has(n) ? 'knows' : 'unknown' }));
     const seen = S.vseen?.[x.who] || null;
     const fresh = { clue: !!seen && clues.length > (seen.clues || 0), open: !!seen && open && !seen.open, first: !seen };
