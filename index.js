@@ -11,6 +11,7 @@ import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
 import { fingerprint, HIDDEN } from './src/core/clean.js';
 import { R } from './src/st/store.js';
+import { fillSecrets } from './src/st/secretfill.js';
 
 // The hidden instruction of the generation in flight. It lives only in the outgoing prompt, so it is caught there
 // and kept per reply (fingerprint) when the reply arrives: rerolls and batched sorting each find their own.
@@ -24,6 +25,8 @@ window.MeatballAPI = {
   pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
   setGoals: (l) => { setGoals(l); refresh(); },
   setSecrets: (l) => { setSecrets(l); refresh(); },
+  // v0.26: fill in who · give-away words · what may show · cover · when it opens, from the secret alone (6 per call)
+  fillSecrets: (l, onStep) => fillSecrets(l, onStep),
   // v0.24: open the log at a tab (the 지시창 opens the secret cards with 'secret')
   open: (view) => openLedger(null, String(view || '')),
   // 지시창 rules for the classifier to judge: [{ id, name, text }]

@@ -104,7 +104,7 @@ export function bpLive() {
 }
 // the lore's vault lines + secrets typed in 지시창 (S.secrets) + destinations, before anything is opened
 export function bpAll(S, goals = []) {
-  const sec = (S?.secrets || []).filter((x) => x.who && x.v).map((x) => ({ who: x.who, v: x.v, signs: x.signs || [], shows: x.shows || '', cover: '', opens: '', typed: true }));
+  const sec = (S?.secrets || []).filter((x) => x.who && x.v).map((x) => ({ who: x.who, v: x.v, signs: x.signs || [], shows: x.shows || '', cover: x.cover || '', opens: x.opens || '', typed: true }));
   return sec.length || goals.length ? { ...R.bp, vault: [...(R.bp.vault || []), ...sec, ...goals] } : R.bp;
 }
 // v0.9 step 3: falling state per lore line (needs the person's confirmation unless "open by itself" is on)
@@ -315,7 +315,7 @@ export function stateFor() {
 export function setGoals(list) { const S = store(true), n = aiCount(), old = new Map((S.goals || []).map((g) => [g.v, g]));
   S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint && !g.push, push: !!g.push, from: old.get(String(g.v || '').slice(0, 300))?.from ?? (Number.isInteger(g.from) ? g.from : n) })); save(); }
 // secrets typed in 지시창: guarded exactly like a lore vault line (never sent, signs scanned, firewall, classifier guard)
-export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 8).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200) })).filter((x) => x.who && x.v); save(); }
+export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 12).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200), cover: String(g.cover || '').slice(0, 200), opens: String(g.opens || '').slice(0, 120), auto: !!g.auto })).filter((x) => x.who && x.v); save(); }
 export function setNote(text) { const S = store(true); S.note = String(text || '').slice(0, 1200); save(); }
 // English preview of a person's instruction (same cache and name masking as the note); onReady when it arrives.
 export function previewEn(text, onReady = () => {}) {
