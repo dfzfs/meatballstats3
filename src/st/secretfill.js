@@ -1,4 +1,5 @@
-// 비밀 자동 채우기 (v0.26): the person writes only the secret; Meatball fills in who keeps it, the give-away words, what
+// 비밀 자동 채우기 (v0.26): everything is stored in English (the secret too, translated and tidied; the person's own
+// words kept as vOrig). The person writes only the secret; Meatball fills in who keeps it, the give-away words, what
 // may show, the cover and when it may come out. Up to 6 secrets in one call (more go in further calls). Uses the
 // Meatball chat connection (or the sorting one) — never the story model, so the secret is never in the story's context.
 import { ctx, ledger, R, settings } from './store.js';
@@ -21,18 +22,20 @@ ${sample || '(no story yet)'}
 """
 
 For each secret below, fill in:
+- secret: the secret rewritten as one clear English sentence (translate it if written in another language): who keeps it, what it is, and why it matters if that is written. Same facts; fix vague words, but invent nothing.
 - who: the person who keeps it (one of the people above when it fits; two keepers as "A-B"). Keep a given name as written.
-- signs: 4 to 8 give-away words or short phrases that would only show up in the story text when the secret is out or nearly out. Write them in the language the story is written in; if the secret is written in another language, add the same words in that language too. Plain words that appear in ordinary scenes are not signs.
+- signs: 4 to 8 give-away words or short phrases that would only show up in the story text when the secret is out or nearly out. Write them in the language the story is written in (the replies are checked for them); if the story is not in English, add the English words too. Plain words that appear in ordinary scenes are not signs.
 - shows: one small outward sign the keeper may show without giving it away (a habit, a mood). Must not contain any sign word.
 - cover: how the keeper looks to the people around (a few words). Must not contain any sign word.
 - opens: when the secret may come out (one short phrase).
-Write shows, cover and opens in the language the secret is written in. Do not invent facts beyond the secret.
+Write secret, shows, cover and opens in English, whatever language the secret was written in (they are stored and sent in English). Keep names as the story writes them. Do not invent facts beyond the secret.
 
 ${items}
 
 Answer only in this form, one block per secret, then </secrets>:
 <secrets>
 #1
+secret: ...
 who: ...
 signs: word, word, word
 shows: ...
@@ -48,7 +51,7 @@ function parseOut(text, n) {
     const m = blk.match(/^(\d+)\s*\n([\s\S]*)$/); if (!m) continue;
     const k = +m[1] - 1; if (k < 0 || k >= n) continue;
     const o = {};
-    for (const line of m[2].split('\n')) { const mm = line.match(/^\s*(who|signs|shows|cover|opens)\s*:\s*(.*)$/i); if (mm) o[mm[1].toLowerCase()] = mm[2].trim(); }
+    for (const line of m[2].split('\n')) { const mm = line.match(/^\s*(secret|who|signs|shows|cover|opens)\s*:\s*(.*)$/i); if (mm) o[mm[1].toLowerCase()] = mm[2].trim(); }
     out[k] = o;
   }
   return out;
@@ -76,6 +79,9 @@ export async function fillSecrets(list, onStep = () => {}) {
       const signs = (o.signs || '').split(/[,，、]/).map((w) => w.trim().replace(/^["'“”]|["'“”]$/g, '')).filter((w) => w.length >= 2).slice(0, 10);
       const clean = (s) => (signs.some((g) => hasSign(s, g)) ? '' : clip(s, 200));   // a sign word in what may show would undo the secret
       x.who ||= clip(o.who, 60);
+      // the secret is stored in English, tidied (the person allowed it); the words as first written are kept for ↩ and shown small
+      const nv = clip(o.secret, 400);
+      if (nv && nv !== x.v.trim()) { x.vOrig ||= x.v; x.v = nv; }
       if (!(x.signs || []).length) x.signs = signs;
       x.shows ||= clean(o.shows);
       x.cover ||= clean(o.cover);

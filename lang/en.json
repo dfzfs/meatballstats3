@@ -29,7 +29,8 @@
     "beat": "This reply",
     "scene": "This scene",
     "timeSkip": "Time skip: {s} since the last reply. Open this reply after that gap and let the passing of time show",
-    "style": "Style"
+    "style": "Style",
+    "redo": "REWRITE — the version before this one was rejected for this. This version must fix it (the rest may stay as it was)"
   },
   "wd": [
     "Sunday",
@@ -1040,7 +1041,7 @@
       "suspect": "Clues piled up · the other is noticing",
       "goalHint": "Direction · hint (slowly)",
       "goalPush": "Direction · nudge slowly (every few replies)",
-      "redo": "After ⚠ rewrite · keep it this time",
+      "redo": "지시창 · rewrite",
       "press": "지시창 push button",
       "refuse": "A refusal still stands",
       "refuseAgain": "Asked again · refusal holds",

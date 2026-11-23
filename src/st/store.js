@@ -66,18 +66,18 @@ export const noteLines = () => String(store()?.note || '').split(/\r?\n/).map((x
 function withNote(sp, L) {
   // v0.9 지시창: the "this reply" piece goes last, after the standing note (nearest the generation point)
   const split = (t) => String(t || '').trim().split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 6);
-  const beat = split(R.pieces?.beat), scene = split(R.pieces?.scene);
+  const beat = split(R.pieces?.beat), scene = split(R.pieces?.scene), redo = split(R.pieces?.redo);   // v0.26.1: a rewrite's reason goes last, nearest the reply
   // a time skip typed in plain words ("사흘 뒤") gets the same strong line as one picked from a menu
   const typed = !R.pieces?.time?.text && R.pieces ? findSkip([R.pieces.scene, R.pieces.beat].filter(Boolean).join('\n')) : null;
   const tt = R.pieces?.time?.text || typed?.text || '', time = tt ? [L.sp.timeSkip.replace('{s}', tt)] : [];
   const lines = noteLines(), style = (R.pieces?.rules || []).map((t) => `${L.sp.style}: ${t}`);
-  if (!lines.length && !beat.length && !scene.length && !time.length && !style.length) return sp;
+  if (!lines.length && !beat.length && !scene.length && !time.length && !style.length && !redo.length) return sp;
   const rows = [...lines.map((t) => ({ layer: 'now', text: `- ${L.sp.note}: ${t}`, src: 'note' })), ...style.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...scene.map((t) => ({ layer: 'now', text: `- ${L.sp.scene}: ${t}`, src: 'note' })),
-    ...time.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...beat.map((t) => ({ layer: 'now', text: `- ${L.sp.beat}: ${t}`, src: 'note' }))];
+    ...time.map((t) => ({ layer: 'now', text: `- ${t}`, src: 'note' })), ...beat.map((t) => ({ layer: 'now', text: `- ${L.sp.beat}: ${t}`, src: 'note' })), ...redo.map((t) => ({ layer: 'now', text: `- ${L.sp.redo}: ${t}`, src: 'note' }))];
   return { ...sp, now: [sp.now || L.sp.nowHead, ...rows.map((r) => r.text)].join('\n'), rows: [...(sp.rows || []), ...rows] };
 }
 export function signpost() {
-  const lg = storyLang(), L = R.lang[lg], bp = bpLive(), mine = (l) => l.startsWith(`- ${L.sp.note}:`) || l.startsWith(`- ${L.sp.beat}:`) || l.startsWith(`- ${L.sp.scene}:`) || l.startsWith(`- ${L.sp.timeSkip.split(':')[0]}:`) || l.startsWith(`- ${L.sp.style}:`) || l.startsWith(`- ${L.rel.goalPushLabel}`), dropped = [];   // the person's own lines (a 밀어주기 direction too) are never walled
+  const lg = storyLang(), L = R.lang[lg], bp = bpLive(), mine = (l) => l.startsWith(`- ${L.sp.note}:`) || l.startsWith(`- ${L.sp.beat}:`) || l.startsWith(`- ${L.sp.scene}:`) || l.startsWith(`- ${L.sp.timeSkip.split(':')[0]}:`) || l.startsWith(`- ${L.sp.style}:`) || l.startsWith(`- ${L.sp.redo}:`) || l.startsWith(`- ${L.rel.goalPushLabel}`), dropped = [];   // the person's own lines (a 밀어주기 direction too) are never walled
   // a direction set to 밀어주기 is told to the story AI on purpose: it does not wall other lines
   const bpW = { ...bp, vault: (bp.vault || []).filter((x) => !x.push) };
   const wall = (sp, extra) => { const b = extra ? { ...bpW, vault: bpW.vault.map((x) => ({ ...x, signs: [...x.signs, ...extra(x)] })) } : bpW, out = { ...sp };
@@ -315,7 +315,7 @@ export function stateFor() {
 export function setGoals(list) { const S = store(true), n = aiCount(), old = new Map((S.goals || []).map((g) => [g.v, g]));
   S.goals = (list || []).slice(0, 6).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 300), signs: (g.signs || []).map(String).slice(0, 20), hint: !!g.hint && !g.push, push: !!g.push, from: old.get(String(g.v || '').slice(0, 300))?.from ?? (Number.isInteger(g.from) ? g.from : n) })); save(); }
 // secrets typed in 지시창: guarded exactly like a lore vault line (never sent, signs scanned, firewall, classifier guard)
-export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 12).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200), cover: String(g.cover || '').slice(0, 200), opens: String(g.opens || '').slice(0, 120), auto: !!g.auto })).filter((x) => x.who && x.v); save(); }
+export function setSecrets(list) { const S = store(true); S.secrets = (list || []).slice(0, 12).map((g) => ({ who: String(g.who || '').slice(0, 60), v: String(g.v || '').slice(0, 400), signs: (g.signs || []).map(String).filter((x) => x.trim().length >= 2).slice(0, 20), shows: String(g.shows || '').slice(0, 200), cover: String(g.cover || '').slice(0, 200), opens: String(g.opens || '').slice(0, 120), auto: !!g.auto, ...(g.vOrig ? { vOrig: String(g.vOrig).slice(0, 400) } : {}) })).filter((x) => x.who && x.v); save(); }
 export function setNote(text) { const S = store(true); S.note = String(text || '').slice(0, 1200); save(); }
 // English preview of a person's instruction (same cache and name masking as the note); onReady when it arrives.
 export function previewEn(text, onReady = () => {}) {

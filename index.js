@@ -9,7 +9,7 @@ import { keepFixes } from './src/st/fix.js';
 import { store as store3 } from './src/st/store.js';
 import { renderBar, guardAuto } from './src/st/bar.js';
 import { findSkip, directorTail, dirClip } from './src/core/hint.js';
-import { fingerprint, HIDDEN } from './src/core/clean.js';
+import { fingerprint, fpOfText, HIDDEN } from './src/core/clean.js';
 import { R } from './src/st/store.js';
 import { fillSecrets } from './src/st/secretfill.js';
 
@@ -22,7 +22,8 @@ const QUIET = new Set(['quiet', 'impersonate']);
 window.MeatballAPI = {
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
-  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
+  // redo (v0.26.1): why the version being rewritten was thrown away — goes as a strong last line
+  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || (x.redo || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), redo: String(x.redo || '').slice(0, 1000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
   setGoals: (l) => { setGoals(l); refresh(); },
   setSecrets: (l) => { setSecrets(l); refresh(); },
   // v0.26: fill in who · give-away words · what may show · cover · when it opens, from the secret alone (6 per call)
@@ -81,6 +82,17 @@ function fixesV2() { try { const S = store3(); if (!S?.ufix || S.ufixV >= 2) ret
     G.type = opts?.quiet_prompt ? 'quiet' : type || 'normal'; G.dir = null;
     const last = [...(ctx().chat || [])].reverse().find((m) => !m.is_user && !m.is_system);
     G.contFp = G.type === 'continue' && last ? fingerprint(last) : '';
+    // v0.26.1: rerolled with SillyTavern's own swipe / regenerate: if the version being replaced had a ⚠, the new one
+    // is told what it did (same strong line as rewriting from the ⚠)
+    if ((type === 'swipe' || type === 'regenerate') && last && !R.redoLine) {
+      // the version being replaced: the text still shown, else the newest swipe that had a ⚠ (SillyTavern may already
+      // have moved to the new, empty swipe when this fires)
+      try { const G3 = store3()?.guard || {}, bad = (fp) => { const g = G3[fp]; return g && !g.false && (g.hits || []).length ? g : null; };
+        const sw = last.swipes || [], sid = Number.isInteger(last.swipe_id) ? last.swipe_id : sw.length - 1;
+        const fps = [fingerprint(last), ...[sw[sid], sw[sid - 1]].filter((t) => t != null).map((t) => fpOfText(false, last.name, t))];
+        const g = fps.map(bad).find(Boolean), hit = g ? g.hits[0] : null;
+        if (hit) R.redoLine = { kind: hit.kind === 'reversal' ? 'refuse' : 'vault', who: hit.who || '', v: hit.v || '', t: Date.now() }; } catch (e) { /* optional */ }
+    }
   });
   // Right before a real generation: rebuild the note with the message just sent (it can touch a sore spot).
   // Optional (off by default): a send made while a sort call runs waits for it (max waitMax s), so the signpost is fresh.
