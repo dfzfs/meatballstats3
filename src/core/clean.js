@@ -22,7 +22,7 @@ const cache = new WeakMap();
 // extra.type, a hidden reply does not. With HIDDEN.read on, hidden replies count as part of the story (record, calendar).
 export const HIDDEN = { read: false };
 export const isHiddenMsg = (m) => !!m?.is_system && !m.extra?.type && !!String(m.mes || '').trim();
-export const skipMsg = (m) => !!m?.is_system && !(HIDDEN.read && isHiddenMsg(m));
+export const skipMsg = (m) => !!m?.extra?.mb_ooc || (!!m?.is_system && !(HIDDEN.read && isHiddenMsg(m)));   // OOC talk is never part of the story
 export function fingerprint(m) {
   const c = cache.get(m);
   if (c && c.mes === m.mes) return c.fp;

@@ -57,6 +57,7 @@ async function tick() {
   if (!s.on || Q.busy || Q.generating || !chat.length || !R.V) return;
   const S0 = store(), F = S0?.fill;
   if (F?.paused) { Q.log.status = 'fill-paused'; return; }
+  if (S0?.ooc) { Q.log.status = 'ooc'; return; }   // OOC: nothing is sorted while the person talks to the AI out of the story
   const b = pending(chat, S0?.ev || {}, F ? { ...DEFAULTS, fill: FILL_N, from: F.from, to: F.to } : undefined, S0?.dir);
   if (!b && F) { if (endFill(true)) { try { window.toastr?.success(R.ui2?.fillDone || '처음부터 정리 끝!'); } catch (e) { /* */ } } return; }
   if (!b || !(b.ready || Q.rush)) return;

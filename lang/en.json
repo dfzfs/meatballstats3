@@ -36,7 +36,8 @@
     "sceneSkip": "Jump to it: a short line for the time that passes is enough, then open on the scene itself",
     "sceneFill": "Go on from where the last reply stopped, cover the way there briefly, and reach the scene within this reply",
     "sceneOne": "Play the whole scene out in this reply and bring it to a close",
-    "sceneMulti": "It may run over several replies: this reply gets into it properly, no need to finish it"
+    "sceneMulti": "It may run over several replies: this reply gets into it properly, no need to finish it",
+    "reach": "How far to write"
   },
   "wd": [
     "Sunday",
@@ -1194,7 +1195,8 @@
     "looksTitle": "When they changed",
     "theirSecrets": "Secrets",
     "trail": "Where the story went",
-    "dayReplies": "{n} replies"
+    "dayReplies": "{n} replies",
+    "oocOn": "OOC · story paused"
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

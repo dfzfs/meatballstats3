@@ -1,5 +1,5 @@
 // Meatball Status 3 — stage 1 (basic signpost) + stage 2 (relationships, same call). Wires SillyTavern events to the core.
-import { ctx, loadResources, tidy, loadBlueprint, settings, keepDir, keepSent, decide, stateFor, setNote, setGoals, setSecrets, previewEn } from './src/st/store.js';
+import { ctx, loadResources, tidy, loadBlueprint, settings, keepDir, keepSent, decide, stateFor, setNote, setGoals, setSecrets, previewEn, setOoc } from './src/st/store.js';
 import { mountRelUI } from './src/st/relview.js';
 import { Q, kick, reset, newReply, idle, guardNow } from './src/st/queue.js';
 import { refresh, lastPut } from './src/st/inject.js';
@@ -23,7 +23,7 @@ window.MeatballAPI = {
   v: 1,
   // for the generation about to start: { beat, scene, time: { days, text }, press: { kind, a, b } }
   // redo (v0.26.1): why the version being rewritten was thrown away — goes as a strong last line
-  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || (x.redo || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), redo: String(x.redo || '').slice(0, 1000), sceneN: Number.isInteger(x.sceneN) ? x.sceneN : 0, sceneHow: x.sceneHow ? { start: String(x.sceneHow.start || '').slice(0, 400), going: String(x.sceneHow.going || '').slice(0, 400), focus: String(x.sceneHow.focus || '').slice(0, 200) } : null, sceneMode: x.sceneMode ? { enter: x.sceneMode.enter === 'fill' ? 'fill' : 'skip', len: x.sceneMode.len === 'one' ? 'one' : 'multi' } : null, time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
+  pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || (x.redo || '').trim() || (x.reach || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), redo: String(x.redo || '').slice(0, 1000), reach: String(x.reach || '').slice(0, 400), sceneN: Number.isInteger(x.sceneN) ? x.sceneN : 0, sceneHow: x.sceneHow ? { start: String(x.sceneHow.start || '').slice(0, 400), going: String(x.sceneHow.going || '').slice(0, 400), focus: String(x.sceneHow.focus || '').slice(0, 200) } : null, sceneMode: x.sceneMode ? { enter: x.sceneMode.enter === 'fill' ? 'fill' : 'skip', len: x.sceneMode.len === 'one' ? 'one' : 'multi' } : null, time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
   setGoals: (l) => { setGoals(l); refresh(); },
   setSecrets: (l) => { setSecrets(l); refresh(); },
   // v0.26: fill in who · give-away words · what may show · cover · when it opens, from the secret alone (6 per call)
@@ -35,6 +35,8 @@ window.MeatballAPI = {
   decide: (kind, t) => { const ok = decide(kind, t); refresh(); renderBar(); return ok; },
   state: () => stateFor(),
   setNote: (t) => { setNote(t); refresh(); },
+  // v0.27: OOC — the story is paused (no note, no sorting) while the person talks to the AI
+  setOoc: (on) => { setOoc(!!on); refresh(); renderBar(); },
   toEnglish: (t, cb) => previewEn(t, cb),
 };
 
