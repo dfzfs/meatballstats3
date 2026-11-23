@@ -202,7 +202,8 @@ body[data-mb3th="dark"] .mb3-feel { filter: brightness(1.45); }
 .mb3-log2 .mb3-raw pre { background: var(--mbt-soft); color: var(--mbt-ink); border: 1px solid var(--mbt-line); }
 .mb3-log2 .mb3-detail { border-top: 1px dashed var(--mbt-line); margin-top: 6px; padding-top: 8px; font-size: 12.5px; }
 .mb3-log2 .menu_button.mb3-apply { background: var(--mbt-card) !important; color: var(--mbt-ink) !important; border: 1px solid var(--mbt-line) !important; border-radius: 999px; }
-@media (max-width: 760px) { .mb3-grid { grid-template-columns: 1fr; } .mb3-seg { margin-left: 0; } .mb3-log2 { padding: 10px; border-radius: 18px; } }
+@media (max-width: 760px) { .mb3-log2 { padding: 10px; border-radius: 18px; } }
+@container mb3log (max-width: 520px) { .mb3-grid { grid-template-columns: 1fr; } .mb3-seg { margin-left: 0; } }
 /* tips and lore window follow the theme too */
 .mb3-bubble { background: var(--mbt-card); color: var(--mbt-ink); border-color: var(--mbt-line); }
 
@@ -269,7 +270,8 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-dots3 i { display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%; background: var(--mbt-dim); animation: mb3-bl 1s infinite; }
 .mb3-dots3 i:nth-child(2) { animation-delay: .2s; } .mb3-dots3 i:nth-child(3) { animation-delay: .4s; }
 @keyframes mb3-bl { 50% { opacity: .25; } }
-@media (max-width: 760px) { .mb3-flow.mb3-big { grid-template-columns: 1fr; } .mb3-cta { font-size: 16px; } }
+@media (max-width: 760px) { .mb3-cta { font-size: 16px; } }
+@container mb3log (max-width: 520px) { .mb3-flow.mb3-big { grid-template-columns: 1fr; } }
 
 .mb3-cclear { margin-left: 10px; font-size: 12px; font-weight: 600; color: var(--mbt-dim); cursor: pointer; }
 .mb3-cclear:hover { color: var(--mbt-acc); }
@@ -310,7 +312,7 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-flow3 > * { min-width: 0; }
 .mb3-flow3 .mb3-daybox { grid-column: 1 / -1; }
 .mb3-flow3 .mb3-rlist { max-height: 470px; }
-@media (max-width: 760px) { .mb3-flow.mb3-big.mb3-flow3 { grid-template-columns: 1fr; } .mb3-flow3 .mb3-rlist { max-height: 300px; } }
+@container mb3log (max-width: 520px) { .mb3-flow.mb3-big.mb3-flow3 { grid-template-columns: 1fr; } .mb3-flow3 .mb3-rlist { max-height: 300px; } }
 .mb3-ry { display: block; font-style: normal; font-size: 10.5px; color: var(--mbt-mid); }
 .mb3-rlist { border: 1px solid var(--mbt-line); border-radius: 12px; padding: 6px; max-height: 560px; overflow-y: auto; background: var(--mbt-card); }
 .mb3-rlh { font-size: 12px; font-weight: 700; color: var(--mbt-mid); padding: 4px 6px 6px; position: sticky; top: -6px; background: var(--mbt-card); }
@@ -460,7 +462,7 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 /* ===================== v0.24 · 🔒 비밀 cards =====================
    Stage colour: locked = the theme's mid tone · hint = amber · suspect / close = rose · open = the theme's accent.
    Motion happens once, only for what changed since the card was last seen. */
-.mb3-scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0 4px; }
+.mb3-scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; margin: 8px 0 4px; }
 .mb3-scard { --sc: var(--mbt-mid); background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 18px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px; position: relative; }
 .mb3-scard.mb3-st-hint { --sc: #e8a33d; } .mb3-scard.mb3-st-suspect { --sc: #e27a7a; } .mb3-scard.mb3-st-close { --sc: #e0587c; } .mb3-scard.mb3-st-open { --sc: var(--mbt-acc); }
 .mb3-scard.mb3-st-close { border-color: color-mix(in srgb, #e0587c 45%, var(--mbt-line)); }
@@ -537,21 +539,30 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-gaps { border-color: color-mix(in srgb, #e8a33d 45%, var(--mbt-line)); background: color-mix(in srgb, #e8a33d 7%, var(--mbt-card)); }
 .mb3-gaprow { font-size: 12.5px; cursor: default; } .mb3-gaprow[data-view] { cursor: pointer; }
 
-/* ===================== v0.25 · 💞 관계: distance track, the line over time, touch steps, the pair's timeline =====================
-   Colours stay the theme's: the gap between the two avatars warms toward the accent as they come closer. */
-.mb3-pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 10px; align-items: start; }
+/* ===================== v0.25 · 💞 관계 (fits its width: one column on a phone, two inside the card when there is room)
+   Each card measures itself (container query), so it reads the same in a narrow popup, a laptop or a wide monitor. */
+.mb3-pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 10px; align-items: start; }
 .mb3-pairs > .mb3-pair2 { margin-bottom: 0; }
-.mb3-pairs > .mb3-rdetail { grid-column: 1 / -1; }
-.mb3-pair2 { position: relative; transition: border-color .2s ease, transform .2s ease; }
-.mb3-pair2:hover { transform: translateY(-1px); }
+.mb3-pairs > .mb3-pair2.mb3-on { grid-column: 1 / -1; }
+.mb3-pair2 { position: relative; container-type: inline-size; min-width: 0; transition: border-color .2s ease; }
 .mb3-pnew { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--mbt-acc); --sc: var(--mbt-acc); animation: mb3Ping 1.2s ease-out .2s 2; }
-.mb3-track { position: relative; height: 30px; margin: 10px 4px 0; }
-.mb3-tline { position: absolute; left: 0; right: 0; top: 14px; height: 2px; border-radius: 2px; background: var(--mbt-line); }
+.mb3-pair2 .mb3-ptop { padding-right: 14px; row-gap: 6px; }
+.mb3-ptop .mb3-ptie { margin: 0 0 0 4px; }
+.mb3-pbody { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 18px; margin-top: 4px; }
+.mb3-pleft, .mb3-pright { min-width: 0; }
+@container (min-width: 560px) {
+  .mb3-pbody { grid-template-columns: minmax(200px, 290px) minmax(0, 1fr); align-items: start; }
+  .mb3-pright > .mb3-prow:first-child { margin-top: 12px; }
+}
+.mb3-prow { min-width: 0; } .mb3-prow > * { min-width: 0; overflow-wrap: anywhere; }
+/* distance track */
+.mb3-track { position: relative; height: 30px; margin: 8px 13px 0; }
+.mb3-tline { position: absolute; left: -13px; right: -13px; top: 14px; height: 2px; border-radius: 2px; background: var(--mbt-line); }
 .mb3-tgap { position: absolute; top: 13px; height: 4px; border-radius: 4px; left: var(--l1); right: calc(100% - var(--r1)); background: color-mix(in srgb, var(--mbt-acc) var(--warm), var(--mbt-line)); }
-.mb3-tav { position: absolute; top: 3px; transform: translateX(-50%); }
+.mb3-tav { position: absolute; top: 3px; transform: translateX(-50%); line-height: 0; }
 .mb3-tav .mb3-av { width: 24px; height: 24px; box-shadow: 0 0 0 2px var(--mbt-soft); }
 .mb3-tavl { left: var(--l1); } .mb3-tavr { left: var(--r1); }
-.mb3-tlabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 12px; margin-top: 1px; }
+.mb3-tlabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 12px; margin-top: 2px; }
 .mb3-tlabel b { font-weight: 700; }
 .mb3-tlabel em { font-style: normal; font-weight: 600; font-size: 11.5px; padding: 0 7px; border-radius: 99px; }
 .mb3-dclose { background: color-mix(in srgb, var(--mbt-acc) 18%, transparent); } .mb3-dfar { background: color-mix(in srgb, var(--mbt-mid) 14%, transparent); }
@@ -561,31 +572,56 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-track.mb3-slide .mb3-tavr { animation: mb3SlideR 1.1s cubic-bezier(.3, 1.25, .45, 1) .25s both; }
 .mb3-track.mb3-slide .mb3-tgap { animation: mb3SlideGap 1.1s cubic-bezier(.3, 1.25, .45, 1) .25s both; }
 .mb3-track.mb3-slide + .mb3-tlabel em { animation: mb3Flip .45s ease-out 1.1s both; }
-/* the line over time: up = closer */
-.mb3-spark { position: relative; height: 46px; margin: 12px 2px 14px; border-radius: 10px; background: linear-gradient(to bottom, color-mix(in srgb, var(--mbt-acc) 9%, transparent), transparent); }
+/* the line over time: up = closer. Labels sit under it in the normal flow (nothing hangs outside the box) */
+.mb3-spark { position: relative; height: 40px; margin: 10px 0 0; border-radius: 10px; background: linear-gradient(to bottom, color-mix(in srgb, var(--mbt-acc) 9%, transparent), transparent); }
 .mb3-spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .mb3-spark polyline { fill: none; stroke: var(--mbt-acc); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .mb3-spark.mb3-draw polyline { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mb3Draw 1.3s ease-out .2s forwards; }
 @keyframes mb3Draw { to { stroke-dashoffset: 0; } }
 .mb3-spark > i { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--mbt-card); border: 2px solid var(--mbt-acc); box-sizing: border-box; }
-.mb3-sp0, .mb3-sp1 { position: absolute; bottom: -14px; font-size: 10.5px; color: var(--mbt-dim); } .mb3-sp0 { left: 0; } .mb3-sp1 { right: 0; }
-/* touch: five steps */
-.mb3-tsteps { display: flex; gap: 3px; margin-top: 8px; }
-.mb3-tsteps span { flex: 1; text-align: center; font-size: 10.5px; padding: 2px 0; border-radius: 6px; background: var(--mbt-card); color: var(--mbt-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb3-sp0, .mb3-sp1 { display: none; }
+.mb3-spark + .mb3-spl { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--mbt-dim); margin-top: 2px; }
+/* touch: five steps that wrap instead of squeezing */
+.mb3-tsteps { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 10px; }
+.mb3-tsteps span { flex: 1 0 auto; min-width: 3.2em; text-align: center; font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--mbt-card); color: var(--mbt-dim); white-space: nowrap; }
 .mb3-tsteps .mb3-done { background: color-mix(in srgb, var(--mbt-acc) 22%, var(--mbt-card)); color: var(--mbt-ink); }
-.mb3-tsteps .mb3-now { background: var(--mbt-acc); color: #fff; font-weight: 700; }
+.mb3-tsteps .mb3-now { background: var(--mbt-acc); color: var(--mbt-onacc); font-weight: 700; }
 @keyframes mb3Pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
 .mb3-tsteps .mb3-pop { animation: mb3Pop .5s cubic-bezier(.3, 1.4, .5, 1) .4s both; }
-/* the pair's timeline (same rail as the secret cards) */
-.mb3-rdetail { background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 16px; padding: 12px 14px; animation: mb3Open .28s ease-out; }
+/* the pair's timeline, inside the opened card */
+.mb3-rdetail { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mbt-line); cursor: default; animation: mb3Open .28s ease-out; }
 @keyframes mb3Open { from { opacity: 0; transform: translateY(-4px); } }
-.mb3-rdh { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13.5px; }
-.mb3-rdh .mb3-slet { margin-left: auto; }
-.mb3-slet.mb3-small { font-size: 12px; gap: 6px; } .mb3-slet.mb3-small input { width: 32px; height: 18px; } .mb3-slet.mb3-small input::after { width: 14px; height: 14px; } .mb3-slet.mb3-small input:checked::after { transform: translateX(14px); }
+.mb3-rdh { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 8px; font-size: 13.5px; }
+.mb3-rdh .mb3-sw { margin-left: auto; }
 .mb3-sev.mb3-sbig .mb3-sevt b { color: var(--mbt-acc); }
 .mb3-sev:not(.mb3-sbig) .mb3-sevt b { font-weight: 500; }
 .mb3-rev-burst .mb3-sevt b { color: #e0587c !important; }
-@media (prefers-reduced-motion: reduce) { .mb3-pair2, .mb3-pair2 *, .mb3-rdetail, .mb3-spark polyline { animation: none !important; transition: none !important; stroke-dasharray: none !important; } }
+@media (prefers-reduced-motion: reduce) { .mb3-pair2, .mb3-pair2 *, .mb3-spark polyline { animation: none !important; transition: none !important; stroke-dasharray: none !important; } }
+
+/* ===================== v0.25.1 · shared pieces that must not break inside SillyTavern =====================
+   SillyTavern styles every checkbox, puts a text shadow on everything and centres popup text; these are ours. */
+.mb3-log2, .mb3-log2 * { text-shadow: none !important; }
+.mb3-log2 { overflow-wrap: anywhere; word-break: keep-all; }
+/* timeline rows: icon · words · #reply in three columns; words wrap, nothing is positioned outside the row */
+.mb3-stl { display: flex; flex-direction: column; gap: 2px; border: 0 !important; margin: 0 !important; padding: 0 !important; }
+.mb3-sev { display: grid !important; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: start; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dashed color-mix(in srgb, var(--mbt-line) 70%, transparent); }
+.mb3-sev:last-child { border-bottom: 0; }
+.mb3-sevi { position: static !important; width: auto !important; background: none !important; text-align: center; line-height: 1.5; }
+.mb3-sevt { min-width: 0; line-height: 1.5; }
+.mb3-q2 { color: var(--mbt-mid); } .mb3-q2::before { content: "“"; } .mb3-q2::after { content: "”"; }
+.mb3-sev .mb3-go { white-space: nowrap; font-size: 11px; padding: 0 7px; border-radius: 99px; background: var(--mbt-soft); color: var(--mbt-mid) !important; text-decoration: none !important; line-height: 1.7; }
+/* a switch that is not a checkbox */
+.mb3-sw { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; cursor: pointer; user-select: none; color: var(--mbt-ink); }
+.mb3-sw > i { position: relative; flex: 0 0 auto; width: 34px; height: 20px; border-radius: 99px; background: var(--mbt-line); transition: background .18s; }
+.mb3-sw > i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .18s; }
+.mb3-sw.on > i { background: var(--mbt-acc); } .mb3-sw.on > i::after { transform: translateX(14px); }
+.mb3-sw:focus-visible { outline: 2px solid var(--mbt-acc); outline-offset: 3px; border-radius: 8px; }
+/* the SillyTavern popup around the log takes the log's colour, so it reads as one sheet (no dark frame) */
+.popup:has(> .popup-body .mb3-log2) { background: var(--mbt-bg) !important; border-color: var(--mbt-line) !important; padding: 0 6px 6px !important; border-radius: 26px !important; box-shadow: 0 10px 40px rgba(0,0,0,.25) !important; }
+.popup:has(> .popup-body .mb3-log2) .popup-content { padding: 0 !important; margin-top: 6px !important; }
+.popup:has(> .popup-body .mb3-log2) .mb3-log2 { border-radius: 20px; }
+.popup:has(> .popup-body .mb3-log2) .popup-controls .menu_button { background: var(--mbt-card) !important; color: var(--mbt-ink) !important; border-color: var(--mbt-line) !important; }
+
 /* ===================== v0.25 · 👤 인물 ===================== */
 .mb3-pwrap.mb3-pin { animation: mb3Open .3s ease-out; }
 .mb3-phead { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
@@ -653,3 +689,24 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 #mb3_bar .mb3-bp { border-radius: 6px; padding: 0 2px; }
 #mb3_bar .mb3-bglow { animation: mb3BarGlow 2s ease-out .2s both; }
 @media (prefers-reduced-motion: reduce) { #mb3_bar .mb3-bglow { animation: none; } }
+.popup:has(> .popup-body .mb3-log2) .popup-content:focus, .popup:has(> .popup-body .mb3-log2) .popup-content:focus-visible, .popup:has(> .popup-body .mb3-log2):focus-visible { outline: none !important; }
+/* two avatars never hide each other: at least one avatar apart */
+.mb3-tavl { left: min(var(--l1), calc(50% - 12px)); } .mb3-tavr { left: max(var(--r1), calc(50% + 12px)); }
+
+/* the log lays itself out by its own width (the popup is half the screen on a laptop, all of it on a phone) */
+.mb3-log2 { container: mb3log / inline-size; box-sizing: border-box; width: 100%; }
+.mb3-log2 .mb3-card, .mb3-log2 .mb3-grid > * { min-width: 0; }
+@container mb3log (max-width: 520px) {
+  .mb3-top2 { padding-bottom: 8px; }
+  .mb3-seg { width: 100%; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+  .mb3-seg::-webkit-scrollbar { display: none; }
+  .mb3-seg b { flex: 0 0 auto; padding: 5px 11px; }
+  .mb3-log2 .mb3-card { padding-left: 11px; padding-right: 11px; }
+}
+/* a wide window: the dashboard uses the width (now · recent on the left, people on the right) instead of a narrow strip */
+@container mb3log (min-width: 900px) {
+  .mb3-log2 .mb3-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 12px; max-width: none; align-items: start; }
+  .mb3-log2 .mb3-grid > .mb3-col2 > :first-child { margin-top: 0; }
+}
+.mb3-log2 small { opacity: 1; }
+@container mb3log (max-width: 520px) { .mb3-seg { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); } }

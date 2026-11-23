@@ -27,7 +27,7 @@ function card(v, U2) {
     ...v.chips.map((c) => `<span class="mb3-kchip mb3-k-${c.state}${c.state === 'knows' && v.fresh.open ? ' mb3-flip' : ''}">${c.state === 'knows' ? '✓' : '·'} ${h(c.name)}</span>`)].join('');
   const evs = v.events.slice(-8).reverse().map((e) => {
     const what = e.kind === 'slip' ? (names[`slip_${e.sub}`] || U2.evSlip || '들킬 뻔') : e.kind === 'open' ? (e.by === 'let' ? U2.evOpenLet || '털어놓음 (허락한 장면)' : e.by === 'user' ? U2.evOpenUser || '열림으로 표시함' : U2.evOpen || '이야기에서 밝혀짐') : (U2[`ev_${e.kind}`] || e.kind);
-    return `<div class="mb3-sev mb3-sev-${e.kind}"><span class="mb3-sevi">${EV_I[e.kind] || '·'}</span><span class="mb3-sevt"><b>${h(what)}</b>${e.q ? ` <q>${h(String(e.q).slice(0, 60))}</q>` : ''}</span><a href="#" class="mb3-go" data-i="${e.i}">#${e.i}</a></div>`;
+    return `<div class="mb3-sev mb3-sev-${e.kind}"><span class="mb3-sevi">${EV_I[e.kind] || '·'}</span><span class="mb3-sevt"><b>${h(what)}</b>${e.q ? ` <span class="mb3-q2">${h(String(e.q).slice(0, 60))}</span>` : ''}</span><a href="#" class="mb3-go" data-i="${e.i}">#${e.i}</a></div>`;
   }).join('');
   const cls = ['mb3-scard', `mb3-st-${v.stage}`, v.open ? 'mb3-open' : '', v.fresh.clue ? 'mb3-wobble' : '', v.fresh.open ? 'mb3-unlock' : '', v.fresh.clue || v.fresh.first ? 'mb3-gfill' : ''].filter(Boolean).join(' ');
   return `<div class="${cls}" data-skey="${h(v.who)}">
@@ -38,7 +38,7 @@ function card(v, U2) {
     <div class="mb3-sgauge"><div class="mb3-sgbar"><i style="--w:${pct}%"></i></div><span>${v.open ? h(U2.gaugeOpen || '밝혀짐') : h(fill(U2.gaugeN || '단서 {n} / 4', { n: nClue }))}${v.lies.length ? ` · 🤥 ${h(fill(U2.lieN || '거짓말 {n}번', { n: v.lies.length }))}` : ''}${v.slips.length ? ` · ⚠️ ${v.slips.length}` : ''}</span></div>
     ${chips ? `<div class="mb3-kchips">${chips}</div>` : ''}
     ${evs ? `<div class="mb3-stl">${evs}</div>` : `<p class="mb3-dim mb3-snone">${h(U2.noEvents || '아직 아무 일도 없었어요. 단서나 들킬 뻔한 순간이 생기면 여기 쌓여요.')}</p>`}
-    <div class="mb3-sctl">${v.open ? '' : `<label class="mb3-slet"><input type="checkbox" data-let="${h(v.who)}"${v.letOn ? ' checked' : ''}/><span>${h(U2.letSwitch || '이번 장면에 털어놔도 돼')}</span></label>`}
+    <div class="mb3-sctl">${v.open ? '' : `<span class="mb3-sw${v.letOn ? ' on' : ''}" data-let="${h(v.who)}" data-on="${v.letOn ? 1 : 0}" role="switch" aria-checked="${v.letOn ? 'true' : 'false'}" tabindex="0"><i></i>${h(U2.letSwitch || '이번 장면에 털어놔도 돼')}</span>`}
       <span class="mb3-sbtn" data-vopen="${h(v.who)}" data-on="${v.open ? 0 : 1}">${v.open ? `🔒 ${h(U2.relock || '다시 잠그기')}` : `🔓 ${h(U2.markOpen || '열림으로 표시')}`}</span></div>
   </div>`;
 }
