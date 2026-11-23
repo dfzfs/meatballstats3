@@ -134,3 +134,20 @@ test('in play, two or three short replies read together are numbered and split b
   const one = pending(chat.slice(0, 2), {}, { ...DEFAULTS, minChars: 0 });
   assert.equal(one.ids, undefined); assert.ok(!one.text.includes('[#'));
 });
+
+test('털어놔도 돼: the hiding lines step aside for one permission line', async () => {
+  const { rows3 } = await import('../src/core/vault.js');
+  const bp = { vault: [{ who: 'Seoyeon', v: 'is moving away next month', signs: ['moving'], shows: 'stares out of windows', cover: 'worried about exams', opens: '' }], persons: [], avoid: [] };
+  const st1 = { with: ['Jiho', 'Seoyeon'], hist: [] };
+  const kinds = (o) => rows3(st1, {}, bp, en, { marks: new Map(), ...o }).map((r) => r.kind);
+  assert.ok(kinds({}).some((k) => k === 'vaultCover' || k === 'vaultPov' || k === 'vaultShows'));
+  const let1 = kinds({ letOut: new Set(['Seoyeon']) });
+  assert.deepEqual(let1.filter((k) => k.startsWith('vault')), ['vaultLet']);
+});
+
+test('quarantine tells what kind of record went (the lie log counts them)', async () => {
+  const { quarantine } = await import('../src/core/vault.js');
+  const g = { f1: [{ k: 'lie', v: 'Seoyeon>Jiho=hides that she is moving' }, { k: 'loc', v: 'library' }] };
+  const gone = quarantine(g, ['f1'], { vault: [{ who: 'Seoyeon', v: 'is moving away', signs: ['moving'] }] });
+  assert.equal(gone.length, 1); assert.equal(gone[0].k, 'lie'); assert.equal(gone[0].who, 'Seoyeon'); assert.equal(gone[0].fp, 'f1');
+});

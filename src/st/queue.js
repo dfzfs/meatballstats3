@@ -120,9 +120,15 @@ function afterAbsorb(S, b, answer, bp, falls, gb, habits = []) {
   let bpNow = bp; try { bpNow = bpLive(); } catch (e) { /* the earlier lore */ }
   const gone = [...quarantine(S.ev, b.fps, bpNow), ...quarantine(S.rel, b.fps, bpNow)];
   if (gone.length) Q.log.dropped = [...(Q.log.dropped || []), ...gone];
+  // 거짓말 장부: a lie told to keep a secret goes from the record (it carries the secret), but THAT it happened stays —
+  // no words, only who and on which reply (the secret card counts them)
+  for (const g of gone) if (g.k === 'lie' && g.fp) { S.lieLog ||= {}; const a = (S.lieLog[g.fp] ||= []); if (!a.includes(g.who)) a.push(g.who); }
+  // 털어놔도 돼 was on for this reply: the secret coming out is what was asked, not a leak
+  const letFor = (fp) => new Set(S.sent?.[fp]?.let || []);
   for (const h of parseGuard(answer, b.text, live, bp, { falls, habits })) {
     if (h.cls === 'H') { if (!h.byUser) { S.habit ||= {}; const a = (S.habit[h.fp] ||= []); if (!a.includes(h.who)) a.push(h.who); } continue; }
     if (h.cls === 'G' && (h.kind === 'clue' || h.kind === 'near')) { if (!h.byUser) { S.clue ||= {}; (S.clue[h.fp] ||= []).push({ who: h.who, kind: h.kind, q: h.q }); } }
+    else if (h.cls === 'G' && letFor(h.fp).has(h.who) && (h.kind === 'revealed' || h.kind === 'rushed' || h.kind === 'sign')) { if (h.kind === 'revealed') { S.vdec ||= {}; (S.vdec[h.fp] ||= []).push({ who: h.who, open: true, let: true }); delete S.letOut?.[h.who]; } }
     else if (h.cls === 'G') addGuard(S, h.fp, { who: h.who, kind: h.byUser && h.kind === 'revealed' ? 'userGuess' : h.kind, q: h.q, src: 'ai' });
     else if (h.cls === 'F') { S.cross ||= {}; (S.cross[h.fp] ||= []).push(h.who); addGuard(S, h.fp, { who: h.who, kind: 'crossed', q: h.q, src: 'ai' }); }
     else if (h.cls === 'K') { S.lost ||= {}; (S.lost[h.fp] ||= []).push(h.who); }
@@ -149,9 +155,10 @@ export function guardNow(m) {
   // v0.9 call early: a sign word, or digging words in a reply where a vault person is named -> sort this reply now
   const ask = [...(R.lang.en.rel.askWords || []), ...(R.lang.ko.rel.askWords || [])].some((w) => hasSign(text, w));
   if (settings().rushCall !== false && (hits.length || (ask && bp.vault.some((x) => x.who.split('-').some((n) => namesOf(n.trim()).some((a) => a && text.includes(a))))))) Q.rush = true;
-  if (!hits.length) return hx ? [hx] : [];
-  const S = store(true), fp = fingerprint(m);
-  for (const h of hits) addGuard(S, fp, { who: h.who, kind: 'sign', q: h.sign, src: 'word' });
+  const S = store(true), fp = fingerprint(m), let0 = new Set(S.sent?.[fp]?.let || []);
+  const warn = hits.filter((h) => !let0.has(h.who));   // its secret was allowed out in this reply: a sign word is no warning
+  if (!warn.length) return hx ? [hx] : [];
+  for (const h of warn) addGuard(S, fp, { who: h.who, kind: 'sign', q: h.sign, src: 'word' });
   save();
-  return hits;
+  return warn;
 }

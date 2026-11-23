@@ -181,7 +181,10 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
   // with others watching it is held tighter; with someone it is hidden from, only the surface.
   // a couple (official tie = lovers) has said it: what the relationship reading notes between them is no longer "held back"
   const said = (a, b) => isLover(st2.tie[key2(a, b)]?.v || '', V) || bp.tie.some((x) => key2(x.a, x.b) === key2(a, b) && isLover(x.v, V) && !st2.tie[key2(a, b)]);
-  const held = Object.values(st2.dir).filter((d) => d.inner && both(d.a, d.b) && !said(d.a, d.b) && (d.innerDay == null || today - d.innerDay >= heldDays)).sort((x, y) => (x.innerDay ?? 0) - (y.innerDay ?? 0))[0];
+  // held back = a recorded FEELING (끌림 · 욕망 · 미련 · 애증 · 금지된 끌림 · 원망), not any note between two people
+  // (a bully's teasing is not a feeling held back)
+  const feels = (d) => (d.tex != null && d.tex <= 5) || !!d.feel?.length;
+  const held = Object.values(st2.dir).filter((d) => d.inner && feels(d) && both(d.a, d.b) && !said(d.a, d.b) && (d.innerDay == null || today - d.innerDay >= heldDays)).sort((x, y) => (x.innerDay ?? 0) - (y.innerDay ?? 0))[0];
   const bpHeld = !held && bp.inner.find((x) => both(x.a, x.b) && !said(x.a, x.b) && !st2.dir[`${x.a}>${x.b}`]?.clashDay);
   const h = held || (bpHeld && { a: bpHeld.a, b: bpHeld.b, inner: bpHeld.v });
   const hSore = h && bp.sore.find((x) => x.a === h.a && x.b === h.b);

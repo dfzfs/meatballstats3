@@ -4,7 +4,7 @@ import { fold, prune } from '../core/fold.js';
 import { build, BUDGET } from '../core/signpost.js';
 import { enLine } from './tr.js';
 import { fingerprint } from '../core/clean.js';
-import { fold2, rows2, tieOf, hideId } from '../core/ledger2.js';
+import { fold2, rows2, tieOf, hideId, touches } from '../core/ledger2.js';
 import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
 import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
@@ -52,7 +52,13 @@ export function storyLang() {
   return last ? langOf(cleanText(last.mes).slice(-4000)) : 'en';
 }
 const isLoverTie = (v) => !!v && (R.V?.loverTie || []).some((w) => String(v).toLowerCase().includes(String(w).toLowerCase()));
-export const ledger2 = (upTo) => { const c = ctx().chat || []; return fold2(upTo == null ? c : c.slice(0, upTo), store()?.rel || {}, fingerprint); };
+export const ledger2 = (upTo) => {
+  const c = ctx().chat || [], S = store(), st2 = fold2(upTo == null ? c : c.slice(0, upTo), S?.rel || {}, fingerprint);
+  // the person's own 열림 / 다시 잠금 for a 선 or 숨김 (v0.24): on top of what the relationship reading marked
+  for (const [id, x] of Object.entries(S?.gopen || {})) { if (x.open) st2.open[id] ||= { q: '✋', day: null, user: true }; else delete st2.open[id]; }
+  return st2;
+};
+export function setGate(id, open) { const S = store(true); (S.gopen ||= {})[id] = { open: !!open, at: Date.now() }; save(); refresh(); }
 // Stage 1 signpost, plus the stage-2 rows when it is on. Any stage-2 error leaves stage 1 exactly as it was.
 // The person's standing director's note for this chat (one line each), added to the shallow layer every reply.
 export const noteLines = () => String(store()?.note || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 6);
@@ -96,7 +102,7 @@ export function bpLive() {
   } catch (e) { return R.bp; }
 }
 // the lore's vault lines + secrets typed in 지시창 (S.secrets) + destinations, before anything is opened
-function bpAll(S, goals = []) {
+export function bpAll(S, goals = []) {
   const sec = (S?.secrets || []).filter((x) => x.who && x.v).map((x) => ({ who: x.who, v: x.v, signs: x.signs || [], shows: x.shows || '', cover: '', opens: '', typed: true }));
   return sec.length || goals.length ? { ...R.bp, vault: [...(R.bp.vault || []), ...sec, ...goals] } : R.bp;
 }
@@ -132,9 +138,10 @@ function signpost0(lg, L) {
       const askW = [...(R.lang.en.rel.askWords || []), ...(R.lang.ko.rel.askWords || [])], tail = lastAi ? cleanText(lastAi.mes).slice(-1500) : '';
       const ask = askW.some((w) => hasSign(cue, w)) || (askW.some((w) => hasSign(tail, w)) && (bp.vault || []).some((x) => x.who.split('-').some((n) => namesOf(n.trim()).some((a) => a && tail.includes(a)))));
       const redo = R.redoLine && Date.now() - R.redoLine.t < 120e3 ? R.redoLine : null;
+      const letOut = letNow(cue, bp, st.with || []);   // 털어놔도 돼: switched on for this scene, or asked for in this message
       const rare = Math.min(3, Math.max(0.5, +s.rarity || 1));
       const fallenNow = new Set(fallState().filter((f) => f.open).map((f) => f.a));
-      y = rows3(st, st2, bp, L, { cue, tail, recent: chat.filter((m) => !m.is_user && !m.is_system).slice(-6).map((m) => cleanText(m.mes).slice(-1500)).join('\n'), goalEvery: Math.round(4 * rare), lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
+      y = rows3(st, st2, bp, L, { cue, tail, recent: chat.filter((m) => !m.is_user && !m.is_system).slice(-6).map((m) => cleanText(m.mes).slice(-1500)).join('\n'), goalEvery: Math.round(4 * rare), letOut, lover, user: ctx().name1 || '', interrogate: ask, redo, pressure: foldPressure(chat, S, bp, fingerprint), marks: sent.marks, fallen: fallenNow, press: R.pieces?.press || null, pov: s.vaultLines !== false, spark: s.spark !== false, every: Math.round(5 * rare), showsEvery: Math.round(4 * rare),
         threads: s.refuseSteps === false ? [] : threads(chat, st, st2, bp, S, fingerprint, cleanText, R.lang, { lover }),
         ago: sent.ago, jitter: lastAi ? parseInt(fingerprint(lastAi).split('.').at(-1), 10) % 3 === 0 : true, seed: sent.ago });
       if (s.vaultLines === false) y = y.filter((r) => !['vaultCover', 'vaultPov', 'vaultAvoid'].includes(r.kind));
@@ -151,13 +158,13 @@ function signpost0(lg, L) {
         rare: Math.min(3, Math.max(0.5, +s.rarity || 1)), jitter: lastAi ? parseInt(lfp.split('.').at(-1), 10) % 4 : 0, busy,
         crossed: new Set(S?.cross?.[lfp] || []), lost: new Set(Object.keys(lostN).filter((w) => lostN[w] >= 2)), falls, lastRel: S?.rel?.[lfp] || [], lastFp: lfp,
         vaultClosed: new Set((bp.vault || []).filter((v) => !v.goal).flatMap((v) => v.who.split('-').map((n) => n.trim()))), threads: [],
-        seedDays: 7, seedReplies: Math.round(40 * Math.min(3, Math.max(0.5, +s.rarity || 1))) });
+        seedDays: 5, seedReplies: Math.round(20 * Math.min(3, Math.max(0.5, +s.rarity || 1))) });   // v0.24: 40 → 20 replies (most scenes never got there)
       if (s.human === false) z = { now: [], deep: [] };
       // a fallen direction's base line takes the place of its leak line
       for (const f of falls.filter((f) => f.open)) x.now = x.now.filter((r) => !(r.kind === 'leak' && r.text.startsWith(`- ${f.a} → ${f.b}:`)));
     } catch (e) { console.warn('[meatball3] v0.9 step 2-3 rows failed', e); }
     const c = compose([...x.now, ...y, ...z.now], { lastSpecial: foldSent(chat, S, fingerprint).ago === 0 }, (t) => estTokens(t, lg));
-    R.lastSent = { special: c.special?.kind || '', eased: c.rows.filter((r) => String(r.src).startsWith('ease:')).map((r) => r.src.slice(5)), marks: c.rows.filter((r) => r.mark).map((r) => r.mark) };
+    R.lastSent = { special: c.special?.kind || '', eased: c.rows.filter((r) => String(r.src).startsWith('ease:')).map((r) => r.src.slice(5)), marks: c.rows.filter((r) => r.mark).map((r) => r.mark), let: [...(R.letLast || [])] };
     const add = (cur, head, rows) => (rows.length ? [cur || head, ...rows.map((r) => r.text)].join('\n') : cur);
     const deepRows = [...x.deep, ...z.deep.filter((r) => r.kind !== 'seedBg' || c.rows.some((q) => q.kind === 'seed'))];   // a seed's content only with its line
     return { lg, ...sp, deep: add(sp.deep, L.sp.deepHead, deepRows), now: add(sp.now, L.sp.nowHead, c.rows), rows: [...sp.rows, ...deepRows, ...c.rows] };
@@ -168,10 +175,41 @@ export function openThreads() {
   try { const st2 = ledger2(), bp = bpLive(); return threads(ctx().chat || [], ledger(), st2, bp, store(), fingerprint, cleanText, R.lang, { lover: (a, b) => isLoverTie(tieOf({ a, b, tie: '' }, st2, bp, R.V)) }); } catch (e) { return []; }
 }
 // v0.9: what special line went out with a reply (and which refusal threads got their "eased" line), kept per reply.
+// ---- 털어놔도 돼 (v0.24): a secret may come out in this scene. S.letOut[who] = { from: AI replies so far } lasts for the
+// scene (6 replies at most) or until the secret is open; a message asking for it ("털어놔", "confess" + the person or
+// the secret) turns it on for that one reply. R.letLast = who it was on for in the note just built (kept with the reply).
+const aiCount = () => (ctx().chat || []).filter((m) => !m.is_user && !m.is_system).length;
+export function letActive() {
+  const S = store(), n = aiCount(), out = new Set();
+  for (const [who, x] of Object.entries(S?.letOut || {})) if (n - (x.from ?? n) < 6) out.add(who);
+  return out;
+}
+export function setLetOut(who, on) {
+  const S = store(true); S.letOut ||= {};
+  if (on) S.letOut[who] = { from: aiCount(), at: Date.now() }; else delete S.letOut[who];
+  save(); refresh();
+}
+function letNow(cue, bp, here) {
+  const out = letActive(), words = [...(R.lang.en.rel.letWords || []), ...(R.lang.ko.rel.letWords || [])];
+  if (cue && words.some((w) => hasSign(cue, w))) {
+    const keepers = (bp.vault || []).filter((x) => !x.goal && x.who.split('-').every((n) => here.includes(n.trim())));
+    for (const x of keepers) {
+      const named = x.who.split('-').some((n) => namesOf(n.trim()).some((a) => a && cue.includes(a)));
+      if (named || keepers.length === 1 || touches(x.v, cue)) out.add(x.who);
+    }
+  }
+  R.letLast = [...out];
+  return out;
+}
+// a direction whose words showed in the last 6 replies: the story may be there (the 지시창 asks "도착했나요?")
+function goalNear(g) {
+  const t = (ctx().chat || []).filter((m) => !m.is_user && !m.is_system).slice(-6).map((m) => cleanText(m.mes)).join('\n');
+  return !!t && (g.signs || []).some((w) => hasSign(t, w));
+}
 export function keepSent(fp, sent) {
-  if (!fp || !sent || (!sent.on && !sent.special && !sent.eased?.length && !sent.marks?.length)) return;
+  if (!fp || !sent || (!sent.on && !sent.special && !sent.eased?.length && !sent.marks?.length && !sent.let?.length)) return;
   // on: a note went with this reply (for the 🛡 note-effect count); the rest only when there is something to keep
-  const S = store(true); S.sent ||= {}; S.sent[fp] = sent.special || sent.eased?.length || sent.marks?.length ? sent : { on: 1 };
+  const S = store(true); S.sent ||= {}; S.sent[fp] = sent.special || sent.eased?.length || sent.marks?.length || sent.let?.length ? sent : { on: 1 };
   const ks = Object.keys(S.sent); if (ks.length > 400) delete S.sent[ks[0]];
   save();
 }
@@ -254,7 +292,7 @@ export function decide(kind, t = {}) {
 export function stateFor() {
   const S = store() || {}, live = bpLive(), fp = lastAiFp(), st = ledger();
   const lastCut = [...(st.hist || [])].reverse().find((x) => x.cut)?.gn ?? 0;
-  return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: S.goals || [],
+  return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: (S.goals || []).map((g) => ({ ...g, near: goalNear(g) })),
     falls: fallState().map((f) => ({ a: f.a, b: f.b, open: f.open, need: f.need })),
     vaults: (bpAll(S).vault || []).map((x) => ({ who: x.who, open: !(live.vault || []).some((y) => y.who === x.who), typed: !!x.typed })),
     secrets: S.secrets || [], names: [...new Set([...(R.bp?.persons || []).map((p) => p.name), ...(st.with || [])])].filter(Boolean),

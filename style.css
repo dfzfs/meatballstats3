@@ -456,3 +456,83 @@ body[data-mb3font="pdh"] .mb3-log2, body[data-mb3font="pdh"] #mbd_panel, body[da
 .mb3-calmenu-b { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--mbt-soft); border: 1px solid var(--mbt-line); color: var(--mbt-mid); font-weight: 800; letter-spacing: 1px; cursor: pointer; }
 .mb3-calmenu-b.mb3-on { background: var(--mbt-acc); border-color: var(--mbt-acc); color: var(--mbt-onacc); }
 .mb3-calmenu .mb3-fillday { background: none; color: inherit; padding: 9px 14px; border-radius: 0; font-size: 13.5px; white-space: normal; }
+
+/* ===================== v0.24 · 🔒 비밀 cards =====================
+   Stage colour: locked = the theme's mid tone · hint = amber · suspect / close = rose · open = the theme's accent.
+   Motion happens once, only for what changed since the card was last seen. */
+.mb3-scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0 4px; }
+.mb3-scard { --sc: var(--mbt-mid); background: var(--mbt-card); border: 1px solid var(--mbt-line); border-radius: 18px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.mb3-scard.mb3-st-hint { --sc: #e8a33d; } .mb3-scard.mb3-st-suspect { --sc: #e27a7a; } .mb3-scard.mb3-st-close { --sc: #e0587c; } .mb3-scard.mb3-st-open { --sc: var(--mbt-acc); }
+.mb3-scard.mb3-st-close { border-color: color-mix(in srgb, #e0587c 45%, var(--mbt-line)); }
+.mb3-stop { display: flex; align-items: center; gap: 12px; }
+.mb3-lock { width: 34px; height: 41px; color: var(--sc); flex: 0 0 auto; transform-origin: 50% 20%; }
+.mb3-shackle { transform-origin: 29px 22px; transition: transform .35s ease; }
+.mb3-scard.mb3-open .mb3-shackle { transform: translate(3px, -5px) rotate(-24deg); }
+.mb3-sname { font-size: 15px; } .mb3-sname b { font-weight: 700; }
+.mb3-sstage { font-size: 12.5px; color: var(--sc); font-weight: 600; margin-top: 2px; }
+.mb3-letbadge { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--mbt-acc) 16%, transparent); color: var(--mbt-ink); font-weight: 600; font-size: 11.5px; }
+/* the secret itself: blurred until held / focused */
+.mb3-sv { position: relative; border-radius: 12px; background: var(--mbt-soft); padding: 9px 12px; font-size: 13.5px; cursor: pointer; outline: none; user-select: none; -webkit-user-select: none; }
+.mb3-sv span { filter: blur(6px); transition: filter .25s ease; display: block; }
+.mb3-sv i { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 12px; color: var(--mbt-mid); transition: opacity .2s ease; pointer-events: none; }
+.mb3-sv:hover span, .mb3-sv:focus-visible span, .mb3-sv:active span { filter: none; }
+.mb3-sv:hover i, .mb3-sv:focus-visible i, .mb3-sv:active i { opacity: 0; }
+.mb3-sv:focus-visible { box-shadow: 0 0 0 2px var(--mbt-acc); }
+/* five steps on one line */
+.mb3-ssteps { display: grid; grid-template-columns: repeat(5, 1fr); position: relative; padding: 2px 0; }
+.mb3-ssteps::before { content: ""; position: absolute; left: 10%; right: 10%; top: 8px; height: 2px; background: var(--mbt-line); border-radius: 2px; }
+.mb3-sstep { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
+.mb3-sstep i { width: 12px; height: 12px; border-radius: 50%; background: var(--mbt-card); border: 2px solid var(--mbt-line); box-sizing: border-box; }
+.mb3-sstep b { font-size: 12px; font-weight: 400; opacity: .45; }
+.mb3-sstep.mb3-done i { background: var(--sc); border-color: var(--sc); opacity: .55; }
+.mb3-sstep.mb3-now i { background: var(--sc); border-color: var(--sc); width: 14px; height: 14px; margin-top: -1px; }
+.mb3-sstep.mb3-now b, .mb3-sstep.mb3-done b { opacity: 1; }
+/* clue gauge */
+.mb3-sgauge { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--mbt-mid); }
+.mb3-sgbar { flex: 1; height: 7px; border-radius: 99px; background: var(--mbt-soft); overflow: hidden; }
+.mb3-sgbar i { display: block; height: 100%; width: var(--w); background: var(--sc); border-radius: 99px; }
+/* who knows */
+.mb3-kchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.mb3-kchip { font-size: 12px; padding: 2px 9px; border-radius: 99px; background: var(--mbt-soft); color: var(--mbt-mid); }
+.mb3-kchip.mb3-keeper { background: color-mix(in srgb, var(--sc) 16%, transparent); color: var(--mbt-ink); font-weight: 600; }
+.mb3-kchip.mb3-k-knows { background: color-mix(in srgb, var(--mbt-acc) 18%, transparent); color: var(--mbt-ink); font-weight: 600; }
+/* timeline: newest first, a thin rail on the left */
+.mb3-stl { display: flex; flex-direction: column; border-left: 2px solid var(--mbt-line); margin-left: 9px; padding-left: 10px; gap: 6px; }
+.mb3-sev { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; position: relative; }
+.mb3-sevi { position: absolute; left: -22px; top: -1px; width: 20px; text-align: center; background: var(--mbt-card); font-size: 12px; }
+.mb3-sevt { flex: 1; min-width: 0; } .mb3-sevt b { font-weight: 600; }
+.mb3-sevt q { color: var(--mbt-mid); font-style: normal; } .mb3-sevt q::before { content: "“"; } .mb3-sevt q::after { content: "”"; }
+.mb3-sev .mb3-go { color: var(--mbt-dim); font-size: 11.5px; text-decoration: none; }
+.mb3-sev-slip .mb3-sevt b { color: #e0587c; } .mb3-sev-open .mb3-sevt b { color: var(--mbt-acc); }
+.mb3-snone { font-size: 12.5px; margin: 0; }
+/* controls */
+.mb3-sctl { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--mbt-line); padding-top: 9px; }
+.mb3-slet { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.mb3-slet input { -webkit-appearance: none; appearance: none; width: 38px; height: 22px; border-radius: 99px; background: var(--mbt-line); position: relative; margin: 0; cursor: pointer; transition: background .18s; flex: 0 0 auto; }
+.mb3-slet input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .18s; }
+.mb3-slet input:checked { background: var(--mbt-acc); } .mb3-slet input:checked::after { transform: translateX(16px); }
+.mb3-slet input:focus-visible { outline: 2px solid var(--mbt-acc); outline-offset: 2px; }
+.mb3-sbtn { cursor: pointer; font-size: 12.5px; padding: 4px 11px; border-radius: 99px; background: var(--mbt-soft); color: var(--mbt-ink); white-space: nowrap; }
+.mb3-sbtn:hover { background: var(--mbt-acc2); }
+.mb3-subh { margin-top: 14px; }
+.mb3-shelp { font-size: 12.5px; margin: 2px 0 8px; }
+.mb3-lrow.mb3-lopen > span:first-child { opacity: .6; }
+/* the dashboard row that opens the tab */
+.mb3-srow { cursor: pointer !important; } .mb3-srow:hover { background: var(--mbt-soft) !important; }
+.mb3-sst { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+.mb3-sst.mb3-st-hint { background: color-mix(in srgb, #e8a33d 18%, transparent); } .mb3-sst.mb3-st-suspect, .mb3-sst.mb3-st-close { background: color-mix(in srgb, #e0587c 16%, transparent); }
+/* motion: once, for what is new */
+@keyframes mb3Wobble { 0%, 100% { transform: rotate(0); } 18% { transform: rotate(-12deg); } 36% { transform: rotate(9deg); } 54% { transform: rotate(-6deg); } 72% { transform: rotate(3deg); } }
+@keyframes mb3Shackle { from { transform: none; } 60% { transform: translate(3px, -7px) rotate(-6deg); } to { transform: translate(3px, -5px) rotate(-24deg); } }
+@keyframes mb3Grow { from { width: 0; } }
+@keyframes mb3Ping { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sc) 55%, transparent); } to { box-shadow: 0 0 0 9px transparent; } }
+@keyframes mb3Flip { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.mb3-scard.mb3-wobble .mb3-lock { animation: mb3Wobble .75s ease-in-out .15s 1; }
+.mb3-scard.mb3-wobble .mb3-sstep.mb3-now i { animation: mb3Ping 1.1s ease-out .3s 2; }
+.mb3-scard.mb3-unlock .mb3-shackle { animation: mb3Shackle .7s cubic-bezier(.3, 1.4, .5, 1) .2s both; }
+.mb3-scard.mb3-gfill .mb3-sgbar i { animation: mb3Grow .9s cubic-bezier(.2, .8, .2, 1) .1s both; }
+.mb3-kchip.mb3-flip { animation: mb3Flip .5s ease-out .5s both; }
+@media (prefers-reduced-motion: reduce) { .mb3-scard *, .mb3-scard { animation: none !important; transition: none !important; } }
+.mb3-lrow > .mb3-sbtn { flex: 0 0 auto !important; }
+.mb3-gaps { border-color: color-mix(in srgb, #e8a33d 45%, var(--mbt-line)); background: color-mix(in srgb, #e8a33d 7%, var(--mbt-card)); }
+.mb3-gaprow { font-size: 12.5px; cursor: default; } .mb3-gaprow[data-view] { cursor: pointer; }

@@ -13,7 +13,9 @@ import { fold2, tieOf, trend } from '../core/ledger2.js';
 import { trWatch, showName, nameMerger } from './tr.js';
 import { mascotImg } from './mascot.js';
 import { chatHtml, chatLog, send as chatSend, decide as chatDecide, undo as chatUndo, clearChat } from './mbchat.js';
-import { settings, ledger2, stateFor } from './store.js';
+import { settings, ledger2, stateFor, decide, setLetOut, setGate } from './store.js';
+import { secretView, otherLocks, markSeen } from './secrets.js';
+import { secretsHtml } from './secretview.js';
 import { absorb, absorbRel } from '../core/bundle.js';
 import { Q, kick } from './queue.js';
 
@@ -329,6 +331,22 @@ export function effectHtml() {
   return `<div class="mb3-card mb3-eff"><div class="mb3-ch">🛡 ${h(U2.effTitle || '쪽지 효과')} <span class="mb3-dim" style="font-weight:500;font-size:11.5px">· ${h(fill(U2.effSub || '최근 답 {n}개', { n: ai.length }))}</span></div>
     ${bar(a, U2.effWith || '쪽지 붙음')}${bar(b, U2.effWithout || '쪽지 없음')}<p class="mb3-dim mb3-effn">${h(U2.effNote || '⚠가 적을수록 선을 잘 지킨 거예요. 장면마다 달라서 참고만 해 주세요.')}</p></div>`;
 }
+// 기록이 비는 구간 (v0.24): the story moves but the record does not — most often the sorting model leaves lines out.
+//   same day for 15+ replies in a row · two people together for 10+ replies with no relationship reading
+function gapsHtml(st) {
+  const U2 = R.ui2, S = store() || {}, chat = ctx().chat || [], out = [];
+  const list = PLACE.list || [];
+  if (list.length >= 15) {
+    const k = list.at(-1).key; let n = 0;
+    for (let j = list.length - 1; j >= 0 && list.at(j).key === k && !list.at(j).approx; j--) n++;
+    if (n >= 15) out.push(`<div class="mb3-grow mb3-gaprow" data-view="flow"><span>🕰 ${h(fill(U2.gapDay || '{n}답째 같은 날이에요. 시간이 흘렀다면 흐름 ⋯에서 날짜를 바꾸거나 🎲', { n }))}</span><i>›</i></div>`);
+  }
+  if (settings().stage2) {
+    const ai = chat.filter((m) => !m.is_user && !m.is_system).slice(-10);
+    if (ai.length === 10 && (st.with || []).length >= 2 && ai.every((m) => !(S.rel?.[fingerprint(m)] || []).some((e) => e.k !== 'drop'))) out.push(`<div class="mb3-grow mb3-gaprow"><span>💤 ${h(U2.gapRel || '10답째 관계 기록이 없어요. 분류 모델이 관계 줄을 안 적고 있을 수 있어요 (🎯 구간 정리로 다시 읽기)')}</span></div>`);
+  }
+  return out.length ? `<div class="mb3-glist mb3-gaps">${out.join('')}</div>` : '';
+}
 function flowCard(st, L, chs, ui, M, big) {
   const U2 = R.ui2, M0 = calModel();
   if (!M0.list.length && !M0.undated.length) return `<p class="mb3-dim">${h(R.ui.empty)}</p>`;
@@ -437,13 +455,15 @@ function render(box, ui) {
   const es = entries(st, U, L), chs = chapters(es, st, L);
   const rawNames = [...Object.keys(st.names?.seen || {}), ...(bp.persons || []).map((p) => p.name), ...(st.with || [])];
   const M = nameMerger(rawNames), all = [...new Set(rawNames.map(M))];
-  const tabs = [['dash', U2.tabDash || '한눈에'], ['flow', U2.tabFlow || '흐름'], ['rel', U2.tabRel || '관계'], ['people', U2.tabPeople || '인물'], ['map', U2.tabMap || '지도'], ['chat', `💬 ${U2.tabChat || '미트볼'}`]];
+  const tabs = [['dash', U2.tabDash || '한눈에'], ['flow', U2.tabFlow || '흐름'], ['rel', U2.tabRel || '관계'], ['people', U2.tabPeople || '인물'], ['map', U2.tabMap || '지도'], ['secret', `🔒 ${U2.tabSecret || '비밀'}`], ['chat', `💬 ${U2.tabChat || '미트볼'}`]];
+  let sv = []; try { sv = secretView(); } catch (e) { console.warn('[meatball3] secrets', e); }
+  const topStage = ['close', 'suspect', 'hint'].find((k) => sv.some((v) => v.stage === k)) || '';
   const S0 = stateFor(), nSecret = (S0.vaults || []).filter((v) => !v.open).length, nRefuse = (st.refused || []).filter((r) => !r.out).length, nWarn = (S0.guard || []).length;
   const pairs = pairsOf(st, st2, bp, M), people = [...new Set([...(bp.persons || []).map((p) => M(p.name)), ...Object.entries(st.names?.seen || {}).sort((a, b) => b[1] - a[1]).map(([n]) => M(n))])].slice(0, 12);
   const who = ui.who && people.includes(M(ui.who)) ? M(ui.who) : people[0];
   const more = (view, t) => `<span class="mb3-more2" data-view="${view}">${h(t || U2.seeAll || '전체')} ›</span>`;
   const card = (title, inner, extra = '') => `<div class="mb3-card ${extra}"><div class="mb3-ch">${title}</div>${inner}</div>`;
-  let body = '';
+  let body = '', seenNow = null;
   if (ui.view === 'reply' && ui.only) {
     const one = es.find((e) => e.fp === ui.only), redoing = !one && store()?.ev && !store().ev[ui.only];
     body = card(`🐾 ${h(U2.oneReply || '이 답의 기록')} <a href="#" class="mb3-all">${h(U.allReplies)} ›</a>`, one ? entryHtml(one, st, L, ui.open) : `<p class="mb3-dim">${h(redoing ? U.notReadYet : U.noChange)}</p>`);
@@ -453,6 +473,9 @@ function render(box, ui) {
     body = card(`💞 ${h(U2.tabRel || '관계')}`, pairs.length ? pairs.slice(0, 20).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('') + (ui.pair ? pairDetail(ui.pair, st, st2, L) : `<p class="mb3-dim">${h(U2.relTap2 || '카드를 누르면 근거가 보여요')}</p>`) : `<p class="mb3-dim">${h(U2.relNone)}</p>`, 'mb3-wide mb3-notitle');
   } else if (ui.view === 'chat') {
     body = card(`💬 ${h(U2.chatTitle || '미트볼에게 말하기')} <span class="mb3-dim" style="margin-left:auto;font-weight:500;font-size:12px">${h(U2.chatSub || '고칠 게 있으면 그냥 말해요')}</span>${chatLog().length ? `<span class="mb3-cclear" title="${h(U2.chatClearTip || '')}">🗑 ${h(U2.chatClear || '대화 지우기')}</span>` : ''}`, chatHtml(mascotImg('happy')), 'mb3-wide');
+  } else if (ui.view === 'secret') {
+    body = card(`🔒 ${h(U2.tabSecret || '비밀')}`, secretsHtml(sv, otherLocks()), 'mb3-wide mb3-notitle');
+    seenNow = sv;
   } else if (ui.view === 'map') {
     body = card(`🗺️ ${h(U2.tabMap || '지도')}`, `<p class="mb3-dim">${h(U2.mapHow || '')}</p>${mapHtml(st, ui)}`, 'mb3-wide mb3-notitle');
   } else if (ui.view === 'people') {
@@ -462,7 +485,8 @@ function render(box, ui) {
     const recent = es.slice(-12).reverse().flatMap((e) => e.its.filter((it) => !it.dim).map((it) => ({ it, i: e.x.i }))).sort((a, b) => (HOT.has(b.it.icon) - HOT.has(a.it.icon)) || b.i - a.i).slice(0, 3);
     const now = `<div class="mb3-card mb3-hero">${mascotImg('happy')}<div class="mb3-hl">${h(U.now)} <span class="mb3-talk" data-view="chat">💬 ${h(U2.chatShort || '고쳐 달라고 하기')}</span></div><div class="mb3-hd">${h(date)}</div>${st.cal.tod ? `<span class="mb3-htod">${h(st.cal.tod)}</span>` : ''}
       ${st.loc ? `<div class="mb3-hp" data-view="map" style="cursor:pointer">📍 ${h(st.loc)} ›</div>` : ''}<div class="mb3-hw">${withs.map((n) => { const w = [...st.with].filter((x) => M(x) === n).map((x) => st.wear?.[x]?.v).find(Boolean); return `<span>${avOf(n, all)}${h(n)}${w ? ` · ${h(w)}` : ''}</span>`; }).join('')}</div></div>
-      ${nSecret || nRefuse || nWarn ? `<div class="mb3-glist mb3-tiles2">${nWarn ? `<div class="mb3-grow mb3-warnrow"><span>⚠ ${h(U2.tWarnLong || '이번 답에 경고가 있어요')}</span><b>${nWarn}</b></div>` : ''}${nSecret ? `<div class="mb3-grow"><span>🔒 ${h(U2.tSecretLong || '지키는 비밀')}</span><b>${nSecret}</b></div>` : ''}${nRefuse ? `<div class="mb3-grow"><span>🚫 ${h(U2.tRefuseLong || '이어지는 거절')}</span><b>${nRefuse}</b></div>` : ''}</div>` : ''}
+      ${gapsHtml(st)}
+      ${nSecret || nRefuse || nWarn ? `<div class="mb3-glist mb3-tiles2">${nWarn ? `<div class="mb3-grow mb3-warnrow"><span>⚠ ${h(U2.tWarnLong || '이번 답에 경고가 있어요')}</span><b>${nWarn}</b></div>` : ''}${nSecret ? `<div class="mb3-grow mb3-srow" data-view="secret"><span>🔒 ${h(U2.tSecretLong || '지키는 비밀')}${topStage ? ` <em class="mb3-sst mb3-st-${topStage}">${h((U2.stageNames || {})[topStage] || '')}</em>` : ''}</span><b>${nSecret}</b><i>›</i></div>` : ''}${nRefuse ? `<div class="mb3-grow"><span>🚫 ${h(U2.tRefuseLong || '이어지는 거절')}</span><b>${nRefuse}</b></div>` : ''}</div>` : ''}
       ${card(`${h(U2.recent || '최근 일')} ${more('flow', U2.tabFlow)}`, recent.map(({ it, i }) => `<div class="mb3-rline">${it.icon} ${h(it.title)}<i>#${i}</i></div>`).join('') || `<p class="mb3-dim">${h(U.empty)}</p>`)}`;
     body = `<div class="mb3-grid"><div class="mb3-col1">${now}</div><div class="mb3-col2">
       ${pairs.length ? card(`💞 ${h(U2.tabRel || '관계')} ${more('rel')}`, pairs.slice(0, 2).map((P) => pairCard(P, st, st2, bp, L, ui, M, all)).join('')) : ''}
@@ -473,14 +497,17 @@ function render(box, ui) {
     <div class="mb3-top2">${mascotImg('idle')}<div><div class="mb3-tt">${h(U2.logTitle || '미트볼 일지')}</div><div class="mb3-dim">${h(fill(U2.logSub || '답 {n}개 읽음', { n: es.length }))}</div></div>
     <div class="mb3-seg">${tabs.filter(([k]) => MAIN_TABS.has(k) || ui.moreTabs || ui.view === k).map(([k, t]) => `<b class="${ui.view === k || (k === 'dash' && ui.view === 'reply') ? 'mb3-on' : ''}" data-view="${k}">${h(t)}</b>`).join('')}${ui.moreTabs || !MAIN_TABS.has(ui.view) ? '' : `<b class="mb3-segmore" data-moretabs="1" title="${h(U2.moreTabs || '더 보기')}">⋯</b>`}</div></div>
     ${body}</div>`;
+  if (seenNow) try { markSeen(seenNow); } catch (e) { /* only the motion */ }   // the next draw shows them still
 }
 
 // at = a chat index: open straight at that reply (its record, why, and ✏️ 🔁 🗑), with a link back to all replies
-export function openLedger(at = null) {
+// view = a tab to open at ('secret', 'flow', …) when no reply is given
+export function openLedger(at = null, view = '') {
   const c = ctx(), box = document.createElement('div');
   const ui = { view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
   const m = at != null ? c.chat?.[at] : null;
   if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); }
+  else if (view) ui.view = view;
   const draw = () => { const typed = box.querySelector('.mb3-cta')?.value || ''; try { render(box, ui); if (typed) { const ta = box.querySelector('.mb3-cta'); if (ta && !ta.value) ta.value = typed; } const ms = box.querySelector('.mb3-msgs'); if (ms) ms.scrollTop = ms.scrollHeight; if (ui.view === 'chat') box.querySelector('.mb3-cta')?.focus?.(); } catch (e) { console.warn('[meatball3] log view', e); box.innerHTML = `<pre>${h(e.message)}</pre>`; } };
   box.addEventListener('click', (ev) => {
     if (ev.target.matches('.mb3-pickfp')) { ev.stopPropagation(); return; }
@@ -512,7 +539,7 @@ export function openLedger(at = null) {
       if (cb.matches('.mb3-cyes')) chatDecide(m, true); else if (cb.matches('.mb3-cno')) chatDecide(m, false); else chatUndo(m);
       renderBar(); draw(); return;
     }
-    const t = ev.target.closest('[data-view],[data-dk],[data-wk],[data-ym],[data-go],.mb3-fillday,.mb3-diceundo,[data-calmenu],[data-legend],[data-moretabs],[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place]');
+    const t = ev.target.closest('[data-view],[data-dk],[data-wk],[data-ym],[data-go],.mb3-fillday,.mb3-diceundo,[data-calmenu],[data-legend],[data-moretabs],[data-chap],.mb3-more,.mb3-go,.mb3-why,.mb3-apply,[data-pair],[data-who],[data-place],[data-let],[data-vopen],[data-gate]');
     if (!t || !box.contains(t)) return;
     if (t.matches('.mb3-go')) { ev.preventDefault(); document.querySelector(`#chat .mes[mesid="${t.dataset.i}"]`)?.scrollIntoView({ block: 'start' }); return; }
     if (t.matches('.mb3-why')) { ev.preventDefault(); ev.stopPropagation(); ui.open.has(t.dataset.fp) ? ui.open.delete(t.dataset.fp) : ui.open.add(t.dataset.fp); draw(); return; }
@@ -522,6 +549,9 @@ export function openLedger(at = null) {
       if (g) { g.push(t.dataset.fuzzy ? { k: 'time', days: 0, fuzzy: t.dataset.fuzzy, tod: '', by: 'user' } : { k: 'time', days: +t.dataset.days, tod: '', by: 'user' }); save(); refresh(); renderBar(); draw(); }
       return;
     }
+    if (t.dataset.let) { setLetOut(t.dataset.let, t.checked); draw(); return; }
+    if (t.dataset.vopen) { decide('vault', { who: t.dataset.vopen, open: t.dataset.on === '1' }); draw(); return; }
+    if (t.dataset.gate) { setGate(t.dataset.gate, t.dataset.on === '1'); draw(); return; }
     if (t.dataset.view) { ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
     else if (t.dataset.dk) { ui.sel = `d:${t.dataset.dk}`; ui.chap = -1; }
     else if (t.dataset.wk) { ui.sel = `w:${t.dataset.wk}`; ui.chap = -1; }

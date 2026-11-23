@@ -102,7 +102,7 @@ export function quarantine(groups, fps, bp0) {
   for (const fp of fps) {
     const g = groups[fp];
     if (!Array.isArray(g)) continue;
-    groups[fp] = g.filter((e) => { if (e.k === 'drop' || e.k === 'dir') return true; const t = touchesVault(JSON.stringify(e), bp); if (t) gone.push({ raw: `${e.k} (${t.who})`, why: 'vault' }); return !t; });
+    groups[fp] = g.filter((e) => { if (e.k === 'drop' || e.k === 'dir') return true; const t = touchesVault(JSON.stringify(e), bp); if (t) gone.push({ raw: `${e.k} (${t.who})`, why: 'vault', k: e.k, who: t.who, fp }); return !t; });
   }
   return gone;
 }
@@ -197,6 +197,8 @@ export function rows3(st1, st2, bp, L, opts = {}) {
     if (!w.length || !w.every((n) => here.includes(n))) continue;
     const k = runOf(w), other = here.find((n) => !w.includes(n)) || '';
     const pr = opts.pressure?.[x.who] || 0;   // v0.9 step 2: clue pressure — the "may show" line feeds clues, so it stops
+    // 털어놔도 돼 (the person asked for it, or switched it on for this scene): no hiding lines, one permission instead
+    if (opts.letOut?.has(x.who)) { row('vaultLet', fillAll(R.vLet, { who: x.who }), 'vault'); continue; }
     if (x.goal) { if (x.push) goalPush(x, x.who); else if (x.hint) row('goalHint', fillAll(R.goalHint, { who: x.who }), 'vault'); continue; }
     if (x.shows && pr === 0 && onBeat(k, opts.showsEvery || 4)) row('vaultShows', fillAll(R.ordVault, { who: x.who, v: x.shows }), 'vault');
     if (w.length === 1 && other && opts.pov !== false && (pr >= 1 || onBeat(k, 3))) row('vaultPov', fillAll(R.vPov, { who: x.who, other }), 'vault');
@@ -266,11 +268,11 @@ export function rows3(st1, st2, bp, L, opts = {}) {
 //   0 secret (most costly to miss) · 1 what this reply's event calls for · 2 the ground of the relation · 3 one special
 // Caps per grade, one special at most and none right after another, then the whole layer fits maxLines / budget —
 // dropping from the least important grade. Order in the layer: 2, 0, 1, 3 (this reply's own lines nearest the end).
-export const GRADE = { hide: 0, keep: 0, unknown: 0, vaultShows: 0, vaultCover: 0, vaultPov: 0, vaultAvoid: 0, suspect: 0, goalHint: 0,
+export const GRADE = { vaultLet: 0, hide: 0, keep: 0, unknown: 0, vaultShows: 0, vaultCover: 0, vaultPov: 0, vaultAvoid: 0, suspect: 0, goalHint: 0,
   redo: 1, press: 1, goalPush: 1, refuseAgain: 1, refusePress: 1, refuse: 1, burstNow: 1, refuseHold: 1, harshAfter: 1, regroup: 1,
   held: 2, burst: 2, fallBase: 2, tie: 2, leak: 2, channel: 2,
   fallCollapse: 3, fallPull: 3, fallReceive: 3, lead: 3, seed: 3, care: 3, aside: 3, refuseEase: 3, spark: 3, harsh: 3, harshStart: 3 };
-const RANK0 = ['hide', 'keep', 'vaultAvoid', 'suspect', 'unknown', 'vaultCover', 'vaultPov', 'goalHint', 'vaultShows'];   // 모름 ranks high: it was the strongest line in the v0.7 test
+const RANK0 = ['vaultLet', 'hide', 'keep', 'vaultAvoid', 'suspect', 'unknown', 'vaultCover', 'vaultPov', 'goalHint', 'vaultShows'];   // 모름 ranks high: it was the strongest line in the v0.7 test
 const RANK1 = ['redo', 'press', 'goalPush', 'harshAfter', 'refusePress', 'refuseAgain', 'burstNow', 'regroup', 'refuse', 'refuseHold'];
 const RANK2 = ['held', 'burst', 'fallBase', 'tie', 'leak', 'channel'];
 const RANK3 = ['fallCollapse', 'fallPull', 'fallReceive', 'lead', 'seed', 'care', 'aside', 'refuseEase', 'spark', 'harsh', 'harshStart'];   // design 8: one special, this order

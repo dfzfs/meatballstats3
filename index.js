@@ -24,6 +24,8 @@ window.MeatballAPI = {
   pieces: (p) => { const x = p || {}, rules = (Array.isArray(x.rules) ? x.rules : []).map((t) => String(t).slice(0, 400)).filter(Boolean).slice(0, 8); R.pieces = (x.beat || '').trim() || (x.scene || '').trim() || x.time?.text || x.press?.kind || rules.length ? { rules, beat: String(x.beat || '').slice(0, 2000), scene: String(x.scene || '').slice(0, 2000), time: x.time?.text ? { days: +x.time.days || 0, text: String(x.time.text).slice(0, 80), fuzzy: x.time.fuzzy || '' } : null, press: x.press?.kind ? x.press : null } : null; },
   setGoals: (l) => { setGoals(l); refresh(); },
   setSecrets: (l) => { setSecrets(l); refresh(); },
+  // v0.24: open the log at a tab (the 지시창 opens the secret cards with 'secret')
+  open: (view) => openLedger(null, String(view || '')),
   // 지시창 rules for the classifier to judge: [{ id, name, text }]
   setHabits: (l) => { R.habits = (Array.isArray(l) ? l : []).slice(0, 12).map((x) => ({ id: String(x.id || ''), name: String(x.name || '').slice(0, 60), text: String(x.text || '').slice(0, 300) })).filter((x) => x.id && x.text); },
   decide: (kind, t) => { const ok = decide(kind, t); refresh(); renderBar(); return ok; },
