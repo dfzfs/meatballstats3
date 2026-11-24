@@ -33,7 +33,9 @@ export function build(st, L, lg, B = BUDGET) {
   let deep = [];
   for (const [n, g] of Object.entries(st.gone).sort((a, b) => b[1].day - a[1].day).slice(0, 4)) deep.push(row('deep', `- ${n}: ${S[g.v]}${dash(on(g.day))}`, g.q));
   for (const k of st.know.filter((k) => today - k.day <= B.knowDays && k.who.some((n) => here.includes(n))).slice(-2)) deep.push(row('deep', `- ${k.what.replace(/["“”「」]/g, '').slice(0, 80)} — ${S.knownTo}: ${k.who.join(', ')}`, 'know'));
-  for (const p of st.promise.filter((p) => today - p.day <= B.promiseDays).slice(-3)) deep.push(row('deep', `- ${S.promise}: ${p.a} → ${p.b}: ${p.v}`, 'promise'));
+  // v0.30: a promise about "tonight" or "today" is over once the day has changed
+  const dayBound = (v) => /\b(?:tonight|today|this (?:evening|afternoon|morning|night)|for now|right now)\b|오늘|지금 당장|이번 밤/i.test(String(v || '').split('|')[0]);
+  for (const p of st.promise.filter((p) => today - p.day <= B.promiseDays && !(dayBound(p.v) && today - p.day >= 1)).slice(-3)) deep.push(row('deep', `- ${S.promise}: ${p.a} → ${p.b}: ${p.v}`, 'promise'));
   const pairs = Object.values(st.pair).filter((p) => here.includes(p.a) && here.includes(p.b)).slice(-B.pairs);
   for (const p of pairs) {
     const calls = Object.entries(p.call).map(([k, v]) => `${k.replace('>', ' → ')} ${S.calls}: ${v}`);

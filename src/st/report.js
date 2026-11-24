@@ -57,7 +57,7 @@ export function buildReport() {
   for (const x of bp.hide || []) add(`- hide ${x.a}-${x.b} → ${x.c}`);
   add(`- vault entries: ${(bp.vault || []).length} (content not shown) · self: ${(bp.self || []).length} · line: ${(bp.line || []).length} · channel: ${(bp.channel || []).length} · unknown: ${(bp.unknown || []).length}`);
   add(`- vault guard: ${Object.values(S.guard || {}).filter((g) => g.hits?.length).length} replies warned · note lines dropped by the firewall last time: ${(R.walled || []).length}`);
-  add(`- vault entries open now: ${(bp.vault || []).length - (bpLive().vault || []).length} · refusal threads open: ${openThreads().map((t) => `${t.a}>${t.b}${t.mode ? ` (${t.mode})` : ''}`).join(', ') || '-'} · last special line: ${R.lastSent?.special || '-'}`);
+  add(`- guarded now (lore vault + typed secrets + destinations): ${(bpLive().vault || []).length} · damping: figures=${(R.wornNow?.nums || []).join(', ') || '-'} recall=${!!R.wornNow?.recall} dense=${!!R.wornNow?.dense} · refusal threads open: ${openThreads().map((t) => `${t.a}>${t.b}${t.mode ? ` (${t.mode})` : ''}`).join(', ') || '-'} · last special line: ${R.lastSent?.special || '-'}`);
   for (const n of bp.noromance || []) add(`- noromance ${n}`);
   add(`director's note: ${noteLines().join(' / ') || '-'}`, '');
 

@@ -43,8 +43,9 @@
     "dirHead": "[USER'S DIRECTION FOR THIS REPLY · TOP PRIORITY] Written by the user for this reply. It overrides the state block, the notes above and the momentum of the last reply. This reply is about what it asks: that moment fills the reply. Do not drift to other events, people or places, and do not hurry past it to what comes next. Everything else in the notes is background for it. Do not quote or mention this note.",
     "sceneAfterSkip": "It takes place after the time skip: open on it directly",
     "worn": "Written several times in the last replies: {list}. The reader has it. This reply does not state these figures again; if one is needed, a plain word stands in (then, that long, upstairs)",
-    "recall": "The last replies kept reaching back — memories, old events, how long it has been. This reply stays in the present: nobody recalls, cites or sums up the past; what a character knows shows only in what they do now",
-    "reach": "How far to write"
+    "recall": "The last replies kept reaching back — memories, old events, how long it has been, details of shared history. This reply stays in the present: one glance back at most, a single clause; nobody recalls, lists or sums up the past, and the narration does not either. What a character knows shows only in what they do now",
+    "reach": "How far to write",
+    "dense": "The last replies measured and counted nearly everything (seconds, steps, feet, inches, pounds, years). This reply breaks that habit: time, distance, size and amounts are told without figures (a moment, a few steps, close, long ago). Two figures at most in the whole reply, only where the exact number is the point"
   },
   "wd": [
     "Sunday",
@@ -575,7 +576,8 @@
     "wornNums": "Figures that kept coming back",
     "wornRecall": "The last replies kept reaching back to the past (memories, old events, how long it has been)",
     "wornHelp": "The line goes out only while the repetition lasts and drops by itself when it stops. Nothing to do.",
-    "wornSeeNote": "📝 See the note"
+    "wornSeeNote": "📝 See the note",
+    "wornDense": "The last replies measured and counted nearly everything (seconds, steps, distances, weights)"
   },
   "rel": {
     "moves": [
@@ -608,10 +610,10 @@
     "inner": "inner",
     "trendWord": "trend",
     "ordTie": "{a}–{b}: {v} — this tie changes when one says it plainly in the text and the other accepts",
-    "ordLeak": "{a} → {b}: {tex} — alone together: it may show in acts, tone or distance; the closer they get, the more they hesitate; the feeling itself stays unspoken",
+    "ordLeak": "{a} → {b}: {tex} — alone together: it may show once in this reply, in one small act, tone or distance, never in narration that explains or circles it; the closer they get, the more they hesitate; the feeling itself stays unspoken",
     "ordBurst": "{a} → {b}: what is held back (background) — never named or summed up, not even in thought; it presses on what is done. If the sore spot is scratched, the surface may crack; sharp and ugly is fine",
     "ordBurstSore": "{a} → {b}: what is held back (background) — never named or summed up, not even in thought; it presses on what is done. If {sore} is touched, the surface may crack; sharp and ugly is fine",
-    "ordHeld": "{a} → {b}: what is held back (background) — calm on the surface; thoughts may circle it but never name or sum it up",
+    "ordHeld": "{a} → {b}: what is held back (background) — calm on the surface; one passing thought may brush it, never naming or summing it up",
     "ordHide": "With {c} present: {a} and {b} act as their surface relationship",
     "ordLeakWatched": "{a} → {b}: {tex} — with others around: a glance or the edge of a word at most; the feeling stays unspoken",
     "ordHeldWatched": "{a} → {b}: what is held back (background) — others are watching, so the surface holds tighter; if scratched, the words may turn sharp",
@@ -620,7 +622,7 @@
     "ordKeep": "{a} keeps {v} from {b}: it may come close to being seen; it is not seen or told",
     "ordChannel": "Where feelings leak — {list}. Faces give least",
     "unknownBase": "unknown — do not infer or record a cause",
-    "ordVault": "{who}: {v} — this may show; nobody explains why, and it stays closed",
+    "ordVault": "{who}: {v} — this may show once, small; nobody explains why, the narration does not linger on it, and it stays closed",
     "ordRefuse": "{who} may refuse or turn this away — a no that fits {who} (silence, a step back, a question back, a half-yes with a condition) is better than giving in; the refusal may tremble; it does not end what is between them",
     "sparkSelf": "{who}: once, a trace of who {who} used to be may slip ({v}) — covered at once or unnoticed; nobody names it",
     "sparkNotice": "{a} may notice one thing {b} did not say and answer it without words, through {ch}",
@@ -727,7 +729,9 @@
       "spill",
       "let it out",
       "own up"
-    ]
+    ],
+    "ordQuiet": "{a} → {b}: whatever is unspoken between them is not this reply's subject — no thought circles it, nothing in the narration points at it (no covered mark, no almost-said word, no \"if only\"). They deal with what is in front of them; at most the tone carries it",
+    "vQuiet": "{who}: what {who} keeps closed is not on this page — no hint, no near-miss, no object, mark or pause pointing toward it, in thought or narration. {who} is simply busy with what is in front of them"
   },
   "ui2": {
     "burst": "Allow a long-held feeling to break out",
@@ -1103,7 +1107,9 @@
       "reach": "Directive window · how far to write",
       "src_worn": "Repeated in the last replies · drops when it stops",
       "layer_keep": "Standing baseline",
-      "layer_dir": "Direction for this reply"
+      "layer_dir": "Direction for this reply",
+      "quiet": "Between the beats where it may show · kept off the page this reply",
+      "vaultQuiet": "A guarded secret · kept off the page this reply"
     },
     "previewTitle": "This reply's note",
     "previewSub": "The lines secretly added when the story AI writes the next reply, and why each is there.",

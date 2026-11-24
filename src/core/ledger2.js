@@ -190,11 +190,16 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
   const hSore = h && bp.sore.find((x) => x.a === h.a && x.b === h.b);
   // v0.7: what is held back goes to the background layer (know it, don't copy it); the shallow line carries only the
   // order, with no sentence the story could paraphrase (the inner line used to come back as inner monologue).
-  if (h) deep.push({ layer: 'deep', text: `- ${fillAll(R.innerDeep || '{a} → {b}: {inner}', { a: h.a, b: h.b, inner: h.inner })}`, src: h.q || 'blueprint' });
   const leaking = new Set();
   const onB = h && beat(h.a, h.b), cued = h && hSore && touches(hSore.v, cue);
+  // v0.30 quiet beats. A model handed "it may show" does it in every reply, and one that sees the held-back line or the
+  // sore spot in every note keeps pointing at them (a covered mark, a thought that circles). So the held-back line goes
+  // to the background only on the beat (or when the person's message touches the sore spot), the sore spot is named only
+  // when the person touched it, and the replies in between get one line that keeps it off the page.
+  if (h && (onB || cued)) deep.push({ layer: 'deep', text: `- ${fillAll(R.innerDeep || '{a} → {b}: {inner}', { a: h.a, b: h.b, inner: h.inner })}`, src: h.q || 'blueprint' });
+  let quietFor = h && !(onB || cued) ? [h.a, h.b] : null;
   if (h && (onB || cued)) {
-    const sore = hSore;
+    const sore = cued ? hSore : null;
     const t = hiddenFrom(h.a, h.b) ? R.ordHeld : watched(h.a, h.b) ? R.ordHeldWatched : burst && !rested(h.a, h.b) ? (sore ? R.ordBurstSore.split('{sore}').join(sore.v) : R.ordBurst) : R.ordHeld;
     now.push({ layer: 'now', kind: cued && !onB ? 'burstNow' : t === R.ordHeld || t === R.ordHeldWatched ? 'held' : 'burst', text: `- ${fillAll(t, { a: h.a, b: h.b, inner: h.inner })}`, src: h.q || 'blueprint' });
     leaking.add(h.a); leaking.add(h.b);
@@ -210,7 +215,7 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
     const a = here[i], b = here[j], t = texOf(a, b);
     if (t == null || !romantic(t) || off(a) || (h && h.a === a && h.b === b)) continue;
     const k = key2(a, b);
-    if (!beat(a, b)) continue;
+    if (!beat(a, b)) { quietFor ||= [a, b]; continue; }
     if (!seen.has(k)) {
       seen.add(k);
       const tie = tieOf({ a, b, tie: st1.pair?.[k]?.tie || '' }, st2, bp, V);
@@ -220,6 +225,7 @@ export function rows2(st1, st2, bp, L, lg, budget = 260, heldDays = 7, burst = t
     now.push({ layer: 'now', kind: 'leak', text: `- ${fillAll(tpl, { a, b, tex: st2.dir[`${a}>${b}`]?.feel?.length ? st2.dir[`${a}>${b}`].feel.join(', ') : name(t) })}`, src: st2.dir[`${a}>${b}`]?.q || 'blueprint' });
     leaking.add(a); leaking.add(b);
   }
+  if (quietFor && R.ordQuiet && !(leaking.has(quietFor[0]) && leaking.has(quietFor[1]))) now.push({ layer: 'now', kind: 'quiet', text: `- ${fillAll(R.ordQuiet, { a: quietFor[0], b: quietFor[1] })}`, src: 'blueprint' });
   // where each person's feeling leaks (lore sheet), only when a held or leak line came this reply
   const ch = (bp.channel || []).filter((x) => leaking.has(x.who));
   if (ch.length && R.ordChannel) now.push({ layer: 'now', kind: 'channel', text: `- ${R.ordChannel.replace('{list}', ch.map((x) => `${x.who}: ${x.v}`).join('; '))}`, src: 'blueprint' });

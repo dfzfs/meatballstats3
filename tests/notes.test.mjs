@@ -46,3 +46,19 @@ test('skipInMessage: an opening counts, talk does not', () => {
   assert.equal(skipInMessage('그는 3일 뒤 돌아오겠다고 했다.'), null);
   assert.equal(skipInMessage(''), null);
 });
+
+test('dense: replies that measure and count nearly everything', () => {
+  const tic = 'He paused three seconds, crossed eleven paces, stood two yards off. Thirty minutes later she moved seven inches. Seventeen boxes, nine jars, four bundles.';
+  const calm = 'She crossed the room and sat by the window. Rain kept falling. He said nothing for a while, then set the cup down and looked at her. '.repeat(4);
+  assert.equal(wornOf([calm, tic, tic]).dense, true);
+  assert.equal(wornOf([tic, calm, calm]).dense, false);
+  assert.equal(wornOf([calm, calm, calm]).dense, false);
+});
+test('compound numbers stay whole', () => {
+  const r = wornOf(['Thirty-six hours on the road.', 'After thirty-six hours they stopped.']);
+  assert.deepEqual(r.nums, ['thirty-six hours']);
+});
+test('reaching back: shared-history details count too', () => {
+  const back = 'Five summers of long voyages. She hummed the tune by memory, back when they lived by the coast.';
+  assert.equal(wornOf(['Rain fell.', back, back]).recall, true);
+});

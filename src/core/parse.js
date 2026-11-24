@@ -84,6 +84,8 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
     else if (k === 'weather' || k === 'mood') ev.push({ k, v });
     else if (k === 'wear' || k === 'body' || k === 'know') {
       if (!rhs) dropped.push({ raw, why: 'form' });
+      // v0.30: "know: A, B, C=…" is one fact known by several people, not one person with a long name
+      else if (k === 'know' && /[,،、]/.test(lhs)) { const names = lhs.split(/\s*[,،、]\s*/).map((n) => n.trim()).filter(Boolean); for (const n of names) if (ok(n, raw)) ev.push({ k, who: bare(n), v: rhs }); }
       else if (ok(lhs, raw)) ev.push({ k, who: bare(lhs), v: rhs, ...(k === 'wear' && /^[+\-]/.test(rhs) ? { delta: true } : {}), ...(k === 'body' && pick(rhs, [V.healed]) === 0 ? { healed: true } : {}), ...(k === 'body' && pick(rhs.split(/[\s,]/)[0], [V.transient]) === 0 ? { brief: true } : {}) });
     } else if (k === 'gone') {
       const q = (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1], state = ['believed', 'dead', 'left'][pick(rhs, [V.gone.believed, V.gone.dead, V.gone.left])];
