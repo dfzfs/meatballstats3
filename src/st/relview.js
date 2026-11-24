@@ -72,7 +72,7 @@ function vaultsPopup() {
   box.innerHTML = `<b>${h(U.vaultsTitle)}</b><div class="mb3-dim">${h(U.vaultsHelp)}</div>` + (list.length ? `<ul>${list.map((v, i) => `<li><b>${h(v.who)}</b> · ${h(v.open ? U.vaultOpen : U.vaultClosed)} <span class="menu_button mb3-inline" data-i="${i}">${h(v.open ? U.vaultCloseBtn : U.vaultOpenBtn)}</span></li>`).join('')}</ul>` : `<p>${h(U.vaultsNone)}</p>`);
   box.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => {
     const v = list[+b.dataset.i]; if (!v) return;
-    if (decide('vault', { who: v.who, open: !v.open })) { refresh(); b.closest('li').style.opacity = '.4'; b.remove(); }
+    if (decide('vault', { who: v.who, sid: v.sid, open: !v.open })) { refresh(); b.closest('li').style.opacity = '.4'; b.remove(); }
   }));
   c.callGenericPopup(box, c.POPUP_TYPE.TEXT, '', { wide: true, allowVerticalScrolling: true });
 }

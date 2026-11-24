@@ -129,8 +129,8 @@ function afterAbsorb(S, b, answer, bp, falls, gb, habits = []) {
   for (const h of parseGuard(answer, b.text, live, bp, { falls, habits })) {
     if (h.cls === 'H') { if (!h.byUser) { S.habit ||= {}; const a = (S.habit[h.fp] ||= []); if (!a.includes(h.who)) a.push(h.who); } continue; }
     if (h.cls === 'G' && (h.kind === 'clue' || h.kind === 'near')) { if (!h.byUser) { S.clue ||= {}; (S.clue[h.fp] ||= []).push({ who: h.who, kind: h.kind, q: h.q }); } }
-    else if (h.cls === 'G' && letFor(h.fp).has(h.who) && (h.kind === 'revealed' || h.kind === 'rushed' || h.kind === 'sign')) { if (h.kind === 'revealed') { S.vdec ||= {}; (S.vdec[h.fp] ||= []).push({ who: h.who, open: true, let: true }); delete S.letOut?.[h.who]; } }
-    else if (h.cls === 'G') addGuard(S, h.fp, { who: h.who, kind: h.byUser && h.kind === 'revealed' ? 'userGuess' : h.kind, q: h.q, src: 'ai' });
+    else if (h.cls === 'G' && letFor(h.fp).has(h.who) && (h.kind === 'revealed' || h.kind === 'rushed' || h.kind === 'sign')) { if (h.kind === 'revealed') { S.vdec ||= {}; (S.vdec[h.fp] ||= []).push({ who: h.who, ...(h.sid ? { sid: h.sid } : {}), open: true, let: true }); delete S.letOut?.[h.who]; } }
+    else if (h.cls === 'G') addGuard(S, h.fp, { who: h.who, ...(h.sid ? { sid: h.sid } : {}), kind: h.byUser && h.kind === 'revealed' ? 'userGuess' : h.kind, q: h.q, src: 'ai' });
     else if (h.cls === 'F') { S.cross ||= {}; (S.cross[h.fp] ||= []).push(h.who); addGuard(S, h.fp, { who: h.who, kind: 'crossed', q: h.q, src: 'ai' }); }
     else if (h.cls === 'K') { S.lost ||= {}; (S.lost[h.fp] ||= []).push(h.who); }
   }
@@ -141,7 +141,7 @@ function skipped(S, fps, why) { for (const fp of fps) if (!(S.ev[fp] || []).leng
 export function addGuard(S, fp, hit) {
   S.guard ||= {};
   const g = (S.guard[fp] ||= { hits: [], done: false, auto: false });
-  if (!g.hits.some((x) => x.who === hit.who && x.kind === hit.kind)) g.hits.push(hit);
+  if (!g.hits.some((x) => x.who === hit.who && x.kind === hit.kind && (x.sid || '') === (hit.sid || ''))) g.hits.push(hit);
   const ks = Object.keys(S.guard); if (ks.length > 100) delete S.guard[ks[0]];
 }
 // A new reply: sign words are looked for at once (no call).

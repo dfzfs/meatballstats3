@@ -74,7 +74,7 @@ export function parseGuard(answer, bundleText, replies, bp, opts = {}) {
     if (cls === 'K' && kind !== 'lost') continue;
     if ((cls === 'H') !== (kind === 'broke')) continue;
     const r = replies.find((y) => quoteOk(q, y.text, 8));
-    out.push({ cls, who: ent.who || ent.a || ent.id, kind, q: q.slice(0, 160), fp: r ? r.fp : replies.at(-1)?.fp, byUser: !r });
+    out.push({ cls, who: ent.who || ent.a || ent.id, ...(cls === 'G' && ent.v ? { sid: sid(ent) } : {}), kind, q: q.slice(0, 160), fp: r ? r.fp : replies.at(-1)?.fp, byUser: !r });
   }
   return out;
 }
@@ -114,17 +114,30 @@ export function quarantine(groups, fps, bp0) {
 // a reply the guard caught as "revealed" that stays in the chat while two more replies follow it (the story has
 // moved on with the secret out; asking the model to keep hiding what the text already says makes it contradict itself).
 // S.vdec[fp] = [{ who, open }] (the person's buttons) · S.guard[fp].false = the person marked it a false alarm.
+// v0.33: one id per secret. Before, everything was keyed by the person, so one secret coming out opened every secret
+// that person keeps, and the cards could not be locked again one by one.
+export const sid = (x) => `${String(x?.who || '').trim()}|${String(x?.v || '').trim().slice(0, 80)}`;
+// Which secrets an event points at: its own id when it has one; an old event with only a person names that person's
+// secrets — all of them for a person's own lock/unlock, but a leak the reading could not pin down opens one only when
+// that person keeps a single secret (with several, it cannot be told which one came out, so none is opened).
+function targets(bp, ev, strict) {
+  const list = (bp?.vault || []).filter((x) => !x.goal);
+  if (ev.sid) return list.some((x) => sid(x) === ev.sid) ? [ev.sid] : [];
+  const mine = list.filter((x) => x.who === ev.who);
+  return strict && mine.length > 1 ? [] : mine.map(sid);
+}
 export function foldVault(chat, S, bp, st2, fingerprint) {
   const opened = new Set(), ai = (chat || []).filter((m) => !m.is_user && !m.is_system);
-  for (const x of bp?.vault || []) if (st2?.open?.[`vault:${x.who}`]) opened.add(x.who);
+  // the relationship reading's 열림 is for lore lines (L1, L2 …), never for secrets typed in 지시창
+  for (const x of bp?.vault || []) if (!x.typed && !x.goal && st2?.open?.[`vault:${x.who}`]) opened.add(sid(x));
   ai.forEach((m, i) => {
     const fp = fingerprint(m), g = S?.guard?.[fp];
-    if (g && !g.false && ai.length - 1 - i >= 2) for (const h of g.hits || []) if (h.kind === 'revealed') opened.add(h.who);
-    for (const d of S?.vdec?.[fp] || []) d.open ? opened.add(d.who) : opened.delete(d.who);
+    if (g && !g.false && ai.length - 1 - i >= 2) for (const h of g.hits || []) if (h.kind === 'revealed') for (const t of targets(bp, h, true)) opened.add(t);
+    for (const d of S?.vdec?.[fp] || []) for (const t of targets(bp, d, !!d.let)) d.open ? opened.add(t) : opened.delete(t);
   });
   return opened;
 }
-export const liveBp = (bp, opened) => (bp && opened?.size ? { ...bp, vault: (bp.vault || []).filter((x) => !opened.has(x.who)) } : bp);
+export const liveBp = (bp, opened) => (bp && opened?.size ? { ...bp, vault: (bp.vault || []).filter((x) => x.goal || !opened.has(sid(x))) } : bp);
 
 // What was sent with each reply (S.sent[fp] = { special, eased: [thread keys] }): how long since the last special
 // line, and which refusal threads already got their "eased" line.

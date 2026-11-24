@@ -39,7 +39,7 @@ function card(v, U2) {
     ${chips ? `<div class="mb3-kchips">${chips}</div>` : ''}
     ${evs ? `<div class="mb3-stl">${evs}</div>` : `<p class="mb3-dim mb3-snone">${h(U2.noEvents || '아직 아무 일도 없었어요. 단서나 들킬 뻔한 순간이 생기면 여기 쌓여요.')}</p>`}
     <div class="mb3-sctl">${v.open ? '' : `<span class="mb3-sw${v.letOn ? ' on' : ''}" data-let="${h(v.who)}" data-on="${v.letOn ? 1 : 0}" role="switch" aria-checked="${v.letOn ? 'true' : 'false'}" tabindex="0"><i></i>${h(U2.letSwitch || '이번 장면에 털어놔도 돼')}</span>`}
-      <span class="mb3-sbtn" data-vopen="${h(v.who)}" data-on="${v.open ? 0 : 1}">${v.open ? `🔒 ${h(U2.relock || '다시 잠그기')}` : `🔓 ${h(U2.markOpen || '열림으로 표시')}`}</span></div>
+      <span class="mb3-sbtn" data-vopen="${h(v.who)}" data-sid="${h(v.sid || '')}" data-on="${v.open ? 0 : 1}">${v.open ? `🔒 ${h(U2.relock || '다시 잠그기')}` : `🔓 ${h(U2.markOpen || '열림으로 표시')}`}</span></div>
   </div>`;
 }
 

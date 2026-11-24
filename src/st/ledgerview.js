@@ -671,7 +671,7 @@ export function openLedger(at = null, view = '') {
     if (t.dataset.relbig) { ev.stopPropagation(); ui.relBig = !ui.relBig; ui.relShown = 12; draw(); return; }
     if (t.dataset.relmore) { ev.stopPropagation(); ui.relShown = (ui.relShown || 12) + 12; draw(); return; }
     if (t.dataset.let) { ev.stopPropagation(); setLetOut(t.dataset.let, t.dataset.on !== '1'); draw(); return; }
-    if (t.dataset.vopen) { decide('vault', { who: t.dataset.vopen, open: t.dataset.on === '1' }); draw(); return; }
+    if (t.dataset.vopen) { decide('vault', { who: t.dataset.vopen, sid: t.dataset.sid || '', open: t.dataset.on === '1' }); draw(); return; }
     if (t.dataset.gate) { setGate(t.dataset.gate, t.dataset.on === '1'); draw(); return; }
     if (t.dataset.view) { ui._enter = ui.view !== t.dataset.view || ui._enter; ui.view = t.dataset.view; ui.shown = 8; ui.only = ''; }
     else if (t.dataset.dk) { ui.sel = `d:${t.dataset.dk}`; ui.chap = -1; ui._picked = true; }

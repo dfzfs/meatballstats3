@@ -650,7 +650,7 @@
     ],
     "vPov": "On this, the telling stays outside {who}: what {who} does and how it looks from where {other} stands",
     "vCover": "{who}: to those around, {who} is {cover}. Keep that as quiet background: do not narrate it, comment on it, or hint that it may not be true",
-    "vAvoid": "When {other} gets close to asking why, {other} lets it drop — {motive} — and takes up something nearer at hand",
+    "vAvoid": "When {other} gets close to asking why, {other} lets it drop and takes up something nearer at hand. Why (for the writer only; no thought or narration spells it out): {motive}",
     "redoVault": "The version before this settled something the writer keeps open. In this one the reason of {who} stays unsaid; the scene goes on around it",
     "redoRefuse": "In the version before this {a} gave way on {v} with nothing new on the table. In this one the no stands; {a} may be tired of repeating it",
     "refHold": "{a} turned down {v}. That stands: something new in the story could move it, asking again does not",

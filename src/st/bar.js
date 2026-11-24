@@ -106,7 +106,7 @@ async function guardPopup() {
   const guess = x.g.hits.find((t) => t.kind === 'userGuess');
   if (guess) {
     const ok = await c.callGenericPopup(`<b>${h(U.guessTitle)}</b><ul>${rows}</ul><div class="mb3-dim">${h(U.guessHelp)}</div>`, c.POPUP_TYPE.CONFIRM, '', { okButton: U.vaultOpenBtn, cancelButton: U.guardKeep });
-    if (ok) decide('vault', { who: guess.who, open: true });
+    if (ok) decide('vault', { who: guess.who, sid: guess.sid, open: true });
     x.g.done = true; save(); refresh(); renderBar(); return;
   }
   const rev = x.g.hits.find((t) => t.kind === 'reversal');

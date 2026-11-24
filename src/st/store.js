@@ -7,7 +7,7 @@ import { fingerprint } from '../core/clean.js';
 import { fold2, rows2, tieOf, hideId, touches } from '../core/ledger2.js';
 import { nameMerger } from './tr.js';
 import { readBlueprint, emptyBlueprint } from '../core/blueprint.js';
-import { rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
+import { sid, rows3, firewall, foldVault, liveBp, threads, foldSent, compose, hasSign, foldPressure, hashOf } from '../core/vault.js';
 import { rows4, foldArc, foldFall } from '../core/human.js';
 import { estTokens } from '../core/clean.js';
 import { findSkip, findJump, skipInMessage } from '../core/hint.js';
@@ -139,7 +139,9 @@ export function bpLive() {
     const bp = bpAll(S, goals);
     const st2 = ledger2(), live = liveBp(bp, foldVault(ctx().chat || [], S, bp, st2, fingerprint));
     // a 숨김 the story already gave away (marked open by the relationship reading) no longer holds
-    return bpStory(live?.hide?.some((x) => st2.open?.[hideId(x)]) ? { ...live, hide: live.hide.filter((x) => !st2.open?.[hideId(x)]) } : live);
+    // (v0.33: the sheet's own names stay here, so a secret keeps the same id everywhere; the note turns them into the
+    // story's names itself, see bpStory)
+    return live?.hide?.some((x) => st2.open?.[hideId(x)]) ? { ...live, hide: live.hide.filter((x) => !st2.open?.[hideId(x)]) } : live;
   } catch (e) { return R.bp; }
 }
 // v0.32: the lore sheet and typed secrets may name a person one way ("다온 | 별칭: Daon") while the story writes another
@@ -221,7 +223,7 @@ function signpost0(lg, L) {
   const B0 = { ...BUDGET, worn: R.wornNow?.nums || [] };
   if (!settings().stage2) return { lg, ...build(st, L, lg, B0) };
   try {
-    const st2 = ledger2(), bp = bpLive(), sp = build(st, L, lg, { ...B0, tieOf: (p) => tieOf(p, st2, bp, R.V) });
+    const st2 = ledger2(), bp = bpStory(bpLive()), sp = build(st, L, lg, { ...B0, tieOf: (p) => tieOf(p, st2, bp, R.V) });
     if (!st.classified) return { lg, ...sp };
     const chat = ctx().chat || [], S = store(), s = settings();
     const last = chat.at(-1), cue = [last?.is_user ? cleanText(last.mes) : '', String(R.pieces?.beat || ''), String(R.pieces?.scene || '')].filter(Boolean).join('\n');
@@ -299,8 +301,12 @@ function letNow(cue, bp, here) {
       if (named || keepers.length === 1 || touches(x.v, cue)) out.add(x.who);
     }
   }
-  R.letLast = [...out];
-  return out;
+  // v0.33: the switch is stored under the sheet's name, the note works with the story's name: carry both
+  const both = new Set(out);
+  for (const w of out) both.add(storyNames(w));
+  for (const p of R.bp?.persons || []) if (out.has(storyNames(p.name))) both.add(p.name);
+  R.letLast = [...both];
+  return both;
 }
 // a direction whose words showed in the last 6 replies: the story may be there (the 지시창 asks "도착했나요?")
 function goalNear(g) {
@@ -394,7 +400,7 @@ const lastAiFp = () => { const m = [...(ctx().chat || [])].reverse().find((x) =>
 export function decide(kind, t = {}) {
   const fp = lastAiFp(); if (!fp) return false;
   const S = store(true);
-  if (kind === 'vault') { (S.vdec ||= {}); (S.vdec[fp] ||= []).push({ who: t.who, open: !!t.open }); }
+  if (kind === 'vault') { (S.vdec ||= {}); (S.vdec[fp] ||= []).push({ who: t.who, ...(t.sid ? { sid: t.sid } : {}), open: !!t.open }); }
   else if (kind === 'guardFalse') { const g = S.guard?.[fp]; if (!g) return false; g.false = true; g.done = true; }
   else if (kind === 'thread') (S.ev[fp] ||= []).push({ k: 'unrefuse', a: t.a, b: t.b, v: t.v, by: 'user' });
   else if (kind === 'fall') { (S.fdec ||= {}); (S.fdec[fp] ||= []).push({ a: t.a, b: t.b, open: !!t.open }); }
@@ -406,7 +412,7 @@ export function stateFor() {
   const lastCut = [...(st.hist || [])].reverse().find((x) => x.cut)?.gn ?? 0;
   return { version: R.version, present: st.with || [], gn: st.gn || 0, lastCut, goals: (S.goals || []).map((g) => { let t = {}; try { t = goalTrack(g, S); } catch (e) { /* only the card's details */ } return { ...g, near: goalNear(g), ...t }; }),
     falls: fallState().map((f) => ({ a: f.a, b: f.b, open: f.open, need: f.need })),
-    vaults: (bpAll(S).vault || []).map((x) => ({ who: x.who, open: !(live.vault || []).some((y) => y.who === x.who), typed: !!x.typed })),
+    vaults: (bpAll(S).vault || []).filter((x) => !x.goal).map((x) => ({ who: x.who, sid: sid(x), v: x.v, open: !(live.vault || []).some((y) => sid(y) === sid(x)), typed: !!x.typed })),
     secrets: S.secrets || [], names: (() => { const raw = [...new Set([...(R.bp?.persons || []).map((p) => p.name), ...(st.with || [])])].filter(Boolean), M = nameMerger(raw); return [...new Set(raw.map(M))]; })(),
     signs: (live.vault || []).flatMap((x) => x.signs), threads: openThreads().map((t) => ({ a: t.a, b: t.b, v: t.v, mode: t.mode })),
     guard: S.guard?.[fp] && !S.guard[fp].done ? S.guard[fp].hits : [], note: S.note || '', habits: S.habit?.[fp] || [], sorted: !!(fp && S.ev?.[fp]) };

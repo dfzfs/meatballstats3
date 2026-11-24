@@ -6,7 +6,7 @@
 //   fresh    what is new since the card was last looked at (the lock wobbles once / opens once)
 import { ctx, store, save, ledger, ledger2, bpLive, bpAll, letActive } from './store.js';
 import { fingerprint } from '../core/clean.js';
-import { foldPressure, hasSign } from '../core/vault.js';
+import { foldPressure, hasSign, sid } from '../core/vault.js';
 import { touches, hideId } from '../core/ledger2.js';
 import { nameMerger } from './tr.js';
 
@@ -25,14 +25,15 @@ export function secretView() {
   const people = [...new Set(raw.map(M))].slice(0, 12);
   return vaults.map((x) => {
     const keepers = [...new Set(x.who.split('-').map((n) => M(n.trim())).filter(Boolean))];
-    const open = !(live.vault || []).some((y) => y.who === x.who);
+    const id = sid(x);
+    const open = !(live.vault || []).some((y) => sid(y) === id);
     const ev = [];
     for (const a of ai) {
       for (const k of S.clue?.[a.fp] || []) if (k.who === x.who) ev.push({ i: a.i, kind: k.kind === 'near' ? 'near' : 'clue', q: k.q });
       const g = S.guard?.[a.fp];
-      if (g && !g.false) for (const h of g.hits || []) if (h.who === x.who && ['sign', 'revealed', 'rushed', 'userGuess'].includes(h.kind)) ev.push({ i: a.i, kind: 'slip', sub: h.kind, q: h.q });
+      if (g && !g.false) for (const h of g.hits || []) if ((h.sid ? h.sid === id : h.who === x.who) && ['sign', 'revealed', 'rushed', 'userGuess'].includes(h.kind)) ev.push({ i: a.i, kind: 'slip', sub: h.kind, q: h.q });
       if ((S.lieLog?.[a.fp] || []).includes(x.who)) ev.push({ i: a.i, kind: 'lie' });
-      for (const d of S.vdec?.[a.fp] || []) if (d.who === x.who) ev.push({ i: a.i, kind: d.open ? 'open' : 'relock', by: d.let ? 'let' : 'user' });
+      for (const d of S.vdec?.[a.fp] || []) if (d.sid ? d.sid === id : d.who === x.who) ev.push({ i: a.i, kind: d.open ? 'open' : 'relock', by: d.let ? 'let' : 'user' });
       for (const e of S.rel?.[a.fp] || []) if (e.k === 'open' && e.id === `vault:${x.who}`) ev.push({ i: a.i, kind: 'open', by: 'story', q: e.q });
     }
     ev.sort((p, q) => p.i - q.i);
@@ -45,7 +46,7 @@ export function secretView() {
     const chips = people.filter((n) => !keepers.includes(n)).map((n) => ({ name: n, state: knows.has(n) ? 'knows' : 'unknown' }));
     const seen = S.vseen?.[x.who] || null;
     const fresh = { clue: !!seen && clues.length > (seen.clues || 0), open: !!seen && open && !seen.open, first: !seen };
-    return { who: x.who, v: x.v, typed: !!x.typed, signs: x.signs || [], shows: x.shows || '', cover: x.cover || '', opens: x.opens || '',
+    return { who: x.who, sid: id, v: x.v, typed: !!x.typed, signs: x.signs || [], shows: x.shows || '', cover: x.cover || '', opens: x.opens || '',
       open, stage, pressure: pr, clues, slips, lies, events: ev, keepers, chips, letOn: letOn.has(x.who), fresh };
   });
 }
