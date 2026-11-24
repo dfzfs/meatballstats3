@@ -7,6 +7,7 @@ const KEY = { '인물': 'person', person: 'person', '애정끔': 'noromance', no
   '세계': 'world', world: 'world', '장소': 'place', place: 'place', '모름': 'unknown', unknown: 'unknown', '통로': 'channel', channel: 'channel',
   '금고': 'vault', vault: 'vault', '본모습': 'self', self: 'self', '선': 'line', line: 'line', '외면': 'avoid', avoid: 'avoid',
   '태도': 'harsh', '혐성': 'harsh', harsh: 'harsh', '빠짐': 'fall', fall: 'fall' };
+const PRONOUN = /^(?:i|me|my|you|your|he|him|his|she|her|hers|it|its|we|us|our|they|them|their|나|너|그|그녀|그는|그녀는|걔|얘|쟤|당신|우리|그들)$/i;
 const EXTRA = { '별칭': 'alias', alias: 'alias', '열림': 'opens', opens: 'opens', '직위': 'role', '신분': 'role', role: 'role', '특징': 'traits', traits: 'traits',
   '성격': 'pers', personality: 'pers', '배경': 'bg', background: 'bg', '옆': 'near', near: 'near',
   '신호': 'signs', '금지신호': 'signs', signs: 'signs', '보임': 'shows', '보여도됨': 'shows', shows: 'shows',
@@ -27,7 +28,8 @@ export function readBlueprint(text) {
     const bad = () => bp.dropped.push({ raw, why: 'form' });
     const list = (s) => String(s || '').split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (k === 'world') bp.world.push(m[2].trim());
-    else if (k === 'person') bp.persons.push({ name: lhs, alias: list(extra.alias), role: extra.role || '', traits: list(extra.traits), pers: extra.pers || '', bg: extra.bg || '' });
+    // v0.34.1: a pronoun in 별칭 ("she", "그녀") is not a name — taken as one, every "she" in the story became this person
+    else if (k === 'person') bp.persons.push({ name: lhs, alias: list(extra.alias).filter((x) => !PRONOUN.test(x)), role: extra.role || '', traits: list(extra.traits), pers: extra.pers || '', bg: extra.bg || '' });
     else if (k === 'place') bp.places.push({ path: lhs, near: extra.near || '' });
     else if (k === 'noromance') bp.noromance.push(lhs);
     // 숨김 has two forms: "A-B → C" (the pair hides their relationship from C) and "A>B = what" (A keeps what from B)

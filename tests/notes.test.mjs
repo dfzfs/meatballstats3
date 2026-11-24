@@ -75,3 +75,9 @@ test('spar: talk that cites, builds a case and bargains', () => {
   // the same words in narration, outside quotation marks, are not talk
   assert.equal(wornOf(['A minute ago you said nothing, he thought. If you leave, I stay. You always do this.']).spar, false);
 });
+
+test('a pronoun in a lore alias is not a name', async () => {
+  const { readBlueprint } = await import('../src/core/blueprint.js');
+  const bp = readBlueprint('인물: 미라 | 별칭: Mira, she, 그녀');
+  assert.deepEqual(bp.persons[0].alias, ['Mira']);
+});
