@@ -25,7 +25,8 @@ export function readOne(i) {
   const ev = store()?.ev?.[fingerprint(m)];
   const unread = !ev || (ev.length > 0 && ev.every((e) => e.k === 'drop' && String(e.why || '').startsWith('skip:')));
   if (!unread) return false;
-  if (m.extra?.mb_ooc) { delete m.extra.mb_ooc; try { c.saveChatDebounced?.() ?? c.saveChat?.(); } catch (e) { /* the flag is gone in memory either way */ } }
+  // pressed on a reply written during OOC: it is story now — the directive window will not mark it again or hide it
+  if (m.extra?.mb_ooc) { delete m.extra.mb_ooc; m.extra.mb_story = true; try { c.saveChatDebounced?.() ?? c.saveChat?.(); } catch (e) { /* the flag is set in memory either way */ } }
   if (skipMsg(m)) return false;   // a hidden message (and hidden ones are not read): nothing to do
   startFill(i, i, true);
   return true;
