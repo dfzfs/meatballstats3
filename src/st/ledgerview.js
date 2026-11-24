@@ -614,7 +614,7 @@ function noteStrip(U2) {
   try {
     if (!settings().on) return '';
     const n = [lastPut.deep, lastPut.mid, lastPut.now, lastPut.dir].join('\n').split('\n').filter((l) => l.trim() && !l.startsWith('[')).length;
-    const keep = noteLines().length, W = R.wornNow || {}, worn = (W.nums || []).length || W.recall || W.dense;
+    const keep = noteLines().length, W = R.wornNow || {}, worn = (W.nums || []).length || W.recall || W.dense || W.spar;
     const chip = (cls, t) => `<span class="mb3-nchip ${cls}">${h(t)}</span>`;
     return `<div class="mb3-nstrip" title="${h(U2.stripTip || '')}"><span class="mb3-nlead">📝 ${h(U2.stripNote || '')}</span>${chip('', n ? String(U2.stripLines || '{n}').replace('{n}', n) : U2.stripNone || '')}${keep ? chip('', `📌 ${String(U2.stripKeep || '{n}').replace('{n}', keep)}`) : ''}${lastPut.dir ? chip('mb3-nc-dir', `🎯 ${U2.stripDir || ''}`) : ''}${worn ? chip('mb3-nc-worn', `🔁 ${U2.stripWorn || ''}`) : ''}<i>›</i></div>`;
   } catch (e) { return ''; }

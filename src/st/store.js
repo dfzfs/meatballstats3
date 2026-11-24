@@ -90,7 +90,7 @@ function withNote(sp, L) {
   // v0.28 worn figures / reaching back: only while the last replies are doing it (see core/worn.js). A style line that
   // asks for the past to be remembered is the person's own choice: the "stay in the present" line stays out then.
   const W = R.wornNow || { nums: [], recall: false, dense: false }, wantsPast = style.some((t) => /remember|memor|recall|기억|회상/i.test(t));
-  const worn = [...(W.dense ? [L.sp.dense] : []), ...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...(W.recall && !wantsPast ? [L.sp.recall] : [])];
+  const worn = [...(W.spar ? [L.sp.spar] : []), ...(W.dense ? [L.sp.dense] : []), ...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...(W.recall && !wantsPast ? [L.sp.recall] : [])];
   const row = (layer, text, src = 'note') => ({ layer, text: `- ${text}`, src });
   // v0.28: three places instead of one.
   // (row layers 'keep' and 'dir' are for the 📝 preview: it shows each group with where it sits in the prompt)

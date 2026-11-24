@@ -45,7 +45,8 @@
     "worn": "Written several times in the last replies: {list}. The reader has it. This reply does not state these figures again; if one is needed, a plain word stands in (then, that long, upstairs)",
     "recall": "The last replies kept reaching back — memories, old events, how long it has been, details of shared history. This reply stays in the present: one glance back at most, a single clause; nobody recalls, lists or sums up the past, and the narration does not either. What a character knows shows only in what they do now",
     "reach": "How far to write",
-    "dense": "The last replies measured and counted nearly everything (seconds, steps, feet, inches, pounds, years). This reply breaks that habit: time, distance, size and amounts are told without figures (a moment, a few steps, close, long ago). Two figures at most in the whole reply, only where the exact number is the point"
+    "dense": "The last replies measured and counted nearly everything (seconds, steps, feet, inches, pounds, years). This reply breaks that habit: time, distance, size and amounts are told without figures (a moment, a few steps, close, long ago). Two figures at most in the whole reply, only where the exact number is the point",
+    "spar": "The talk in the last replies ran like a debate transcript: people quoted each other's earlier words and acts back as proof, built a case, closed with if-then ultimatums, and the narration kept score. In this reply nobody cites what was said or done before, nobody proves a contradiction or wins a point, and no line is an \"if you …, then …\". People talk the way people do — short and sideways: they answer a different question, drop it, say less than they mean, let a look or a silence carry it, and sometimes simply have no comeback. The narration does not say who landed the hit"
   },
   "wd": [
     "Sunday",
@@ -577,7 +578,8 @@
     "wornRecall": "The last replies kept reaching back to the past (memories, old events, how long it has been)",
     "wornHelp": "The line goes out only while the repetition lasts and drops by itself when it stops. Nothing to do.",
     "wornSeeNote": "📝 See the note",
-    "wornDense": "The last replies measured and counted nearly everything (seconds, steps, distances, weights)"
+    "wornDense": "The last replies measured and counted nearly everything (seconds, steps, distances, weights)",
+    "wornSpar": "The talk kept running like a debate: quoting each other's earlier words as proof, if-then ultimatums"
   },
   "rel": {
     "moves": [

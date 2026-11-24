@@ -35,15 +35,33 @@ function heavy(text) {
   return n >= 6 && (n * 1000) / len >= (ko ? 3.5 : 1.5);
 }
 
+// v0.31 · talk that argues like a transcript. A model keeps the whole exchange in view and is trained to answer the
+// point, so its people quote each other's earlier words and acts back as proof ("a minute ago you said …"), build a
+// case, and close with if-then ultimatums ("if you …, I'll …"). Counted only inside quotation marks.
+const SPEECH = /["“「『]([^"”」』\n]{2,600})["”」』]/g;
+const SPAR = [
+  /\byou (?:just |already )?(?:said|told me|called|promised|swore|claimed)\b|\b(?:seconds?|minutes?|hours?|days?|nights?) ago,? you\b|\byou(?:'re| were) the one\b|\bmake up your mind\b|\bbecause you\b|\byou (?:always|never)\b|\b(?:first|one minute|back (?:in|on|at) [^,.!?]{1,30}) you\b|\b(?:and )?now (?:you|you're|i'm|all you)\b|\bwhich is it\b|\bso which\b/gi,
+  /(?:^|[.!?—]\s*)(?:and |but |so )?if (?:you|you're|i|i'm|we|he|she|they|that)\b[^.!?]{3,120}[,—][^.!?]{2,}/gi,
+  /했잖아|었잖아|았잖아|다고 했|라고 했|다며|라며|말했잖|방금(?:은|엔|까지|도)? |아까(?:는|도|부터)? |네가 먼저|니가 먼저|그래 놓고|해 놓고|이제 와서/g,
+  /만약|(?:하면|으면|다면|라면) [^.!?]{0,24}(?:거야|테니까|줄 알아|겠어|거니까|을걸|ㄹ걸)/g,
+];
+function spars(text) {
+  let n = 0;
+  for (const m of String(text || '').matchAll(SPEECH)) for (const re of SPAR) n += (m[1].match(re) || []).length;
+  return n;
+}
+
 // texts: the last AI replies, oldest first (six are enough).
 // nums: figures written in 3 of the last 6 replies, or in both of the last two (4 at most, as they were written).
 // recall: 2 of the last 3 replies reached back to the past three times or more.
 // dense: 2 of the last 3 replies measured or counted nearly everything (see heavy).
+// spar: one of the last 2 replies had three or more lines of talk that cite, build a case or bargain (see SPAR).
 export function wornOf(texts) {
   const list = (texts || []).slice(-6), n = list.length, count = new Map(), raw = new Map(), late = new Map();
   list.forEach((t, i) => { for (const [k, r] of figures(t)) { count.set(k, (count.get(k) || 0) + 1); if (!raw.has(k)) raw.set(k, r); if (i >= n - 2) late.set(k, (late.get(k) || 0) + 1); } });
   const nums = [...count.keys()].filter((k) => count.get(k) >= 3 || (n >= 2 && late.get(k) >= 2)).sort((a, b) => count.get(b) - count.get(a)).slice(0, 4).map((k) => raw.get(k));
   const recall = list.slice(-3).filter((t) => recalls(t) >= 3).length >= 2;
   const dense = list.slice(-3).filter(heavy).length >= 2;
-  return { nums, recall, dense };
+  const spar = list.slice(-2).some((t) => spars(t) >= 3);
+  return { nums, recall, dense, spar };
 }
