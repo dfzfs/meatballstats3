@@ -280,7 +280,7 @@ const RANK1 = ['redo', 'press', 'goalPush', 'harshAfter', 'refusePress', 'refuse
 const RANK2 = ['held', 'burst', 'fallBase', 'tie', 'leak', 'channel'];
 const RANK3 = ['fallCollapse', 'fallPull', 'fallReceive', 'lead', 'seed', 'care', 'aside', 'refuseEase', 'spark', 'harsh', 'harshStart'];   // design 8: one special, this order
 export function compose(rows, opts = {}, est = (t) => Math.ceil(t.length / 4)) {
-  const caps = { 0: 3, 1: 2, 2: 3, 3: 1, ...(opts.caps || {}) }, maxLines = opts.maxLines || 7, budget = opts.budget || 260;
+  const caps = { 0: 4, 1: 2, 2: 3, 3: 1, ...(opts.caps || {}) }, maxLines = opts.maxLines || 8, budget = opts.budget || 260;
   const by = { 0: [], 1: [], 2: [], 3: [] }, seen = new Set();
   for (const r of rows) { if (seen.has(r.text)) continue; seen.add(r.text); const g = GRADE[r.kind] ?? 2; by[g].push(r); }
   const order = (list, rank) => list.sort((x, y) => (rank.indexOf(x.kind) + 99) % 99 - (rank.indexOf(y.kind) + 99) % 99);

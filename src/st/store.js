@@ -160,12 +160,17 @@ function bpStory(bp) {
       memo.set(key, out); return out;
     };
     const who = (w) => String(w || '').split('-').map((x) => one(x.trim())).join('-');
+    // the sheet's own names inside a line's words ("… 모르는 척하는지") become the story's names too
+    const swaps = persons.map((p) => [p.name, one(p.name)]).filter(([a, b]) => a !== b && a.length >= 2);
+    const inText = (t) => swaps.reduce((s, [a, b]) => s.split(a).join(b), t);
     let changed = false;
     const fix = (x) => {
       if (!x || typeof x !== 'object') return x;
       const y = { ...x };
       for (const k of ['a', 'b', 'c']) if (typeof y[k] === 'string') y[k] = one(y[k]);
       if (typeof y.who === 'string') y.who = who(y.who);
+      for (const k of ['v', 'shows', 'cover', 'opens']) if (typeof y[k] === 'string' && y[k]) y[k] = inText(y[k]);
+      if (x.v !== y.v || x.shows !== y.shows || x.cover !== y.cover || x.opens !== y.opens) changed = true;
       if (x.a !== y.a || x.b !== y.b || x.c !== y.c || x.who !== y.who) { changed = true; if (typeof x.c === 'string' && x.a && x.b) y.hid = hideId(x); }
       return y;
     };
