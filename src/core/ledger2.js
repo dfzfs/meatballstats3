@@ -113,7 +113,7 @@ export function tieOf(p, st2, bp, V) {
 
 // Everything that opens on a quoted event goes through the same hidden-layer list (the classifier answers "open: L#"):
 // locked layers (깊은속), v0.9 a vault's 열림 and a line's 풀림. Line releases are not secret (leakOk).
-export const hideId = (x) => `hide:${x.a}-${x.b}>${x.c}`;
+export const hideId = (x) => x.hid || `hide:${x.a}-${x.b}>${x.c}`;   // hid: the id under the sheet's own names (store.js bpStory)
 export function gates(bp) {
   const out = [...(bp.deep || [])];
   for (const x of bp.vault || []) if (x.opens) out.push({ id: `vault:${x.who}`, who: x.who.split('-')[0].trim(), to: x.who.split('-')[1]?.trim() || '', content: x.v, opens: x.opens });

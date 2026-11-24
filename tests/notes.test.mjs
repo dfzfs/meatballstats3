@@ -52,6 +52,7 @@ test('dense: replies that measure and count nearly everything', () => {
   const calm = 'She crossed the room and sat by the window. Rain kept falling. He said nothing for a while, then set the cup down and looked at her. '.repeat(4);
   assert.equal(wornOf([calm, tic, tic]).dense, true);
   assert.equal(wornOf([tic, calm, calm]).dense, false);
+  assert.equal(wornOf([tic, tic, calm, calm]).dense, true);   // sticky while two heavy replies are still in view
   assert.equal(wornOf([calm, calm, calm]).dense, false);
 });
 test('compound numbers stay whole', () => {
@@ -67,7 +68,9 @@ test('spar: talk that cites, builds a case and bargains', () => {
   const debate = 'She frowned. "A minute ago you said the gate was shut. Now you want it open." He shrugged. "If you had asked, I would have told you." "You always do this."';
   const plain = 'She frowned. "The gate." He shrugged and looked at the hills. "Cold out," he said. "Mm."';
   assert.equal(wornOf([plain, debate]).spar, true);
-  assert.equal(wornOf([debate, plain, plain]).spar, false);
+  // it stays on for a few replies after the habit stops, then drops
+  assert.equal(wornOf([debate, plain, plain]).spar, true);
+  assert.equal(wornOf([debate, plain, plain, plain, plain, plain]).spar, false);
   assert.equal(wornOf(['“아까는 싫다고 했잖아. 이제 와서 왜 그래.” “만약 또 그러면 나 갈 거야.” “네가 먼저 그랬잖아.”']).spar, true);
   // the same words in narration, outside quotation marks, are not talk
   assert.equal(wornOf(['A minute ago you said nothing, he thought. If you leave, I stay. You always do this.']).spar, false);

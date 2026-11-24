@@ -14,8 +14,11 @@ export function refresh() {
   try { if (settings().on && ctx().chat?.length && !fillState() && !store()?.ooc) sp = signpost(); } catch (e) { console.error('[meatball3] signpost failed', e); }
   Object.assign(lastPut, { deep: sp.deep || '', mid: sp.mid || '', now: sp.now || '', dir: sp.dir || '' });
   put('mb3_deep', sp.deep, IN_PROMPT, 0);
-  put('mb3_mid', sp.mid, IN_CHAT, 3);
-  put('mb3_now', sp.now, IN_CHAT, 1);
-  put('mb3_dir', sp.dir, IN_CHAT, 0);   // after the person's message: the last thing read before the reply
+  put('mb3_mid', sp.mid, IN_CHAT, 2);
+  // v0.32: this reply's lines and the person's direction go out as ONE block at the very end of the chat. At depth 1
+  // they sat above the last message, and in a story the AI writes alone (no user turns) that is above ten thousand
+  // characters of the previous reply: tested on a real chat, the same lines were ignored there and followed at the end.
+  put('mb3_now', [sp.now, sp.dir].filter(Boolean).join('\n\n'), IN_CHAT, 0);
+  put('mb3_dir', '', IN_CHAT, 0);
   return sp;
 }

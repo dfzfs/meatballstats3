@@ -47,7 +47,11 @@ const SPAR = [
 ];
 function spars(text) {
   let n = 0;
-  for (const m of String(text || '').matchAll(SPEECH)) for (const re of SPAR) n += (m[1].match(re) || []).length;
+  for (const m of String(text || '').matchAll(SPEECH)) {
+    for (const re of SPAR) n += (m[1].match(re) || []).length;
+    // a spoken line that runs on is a speech, not talk (Korean packs more into a word)
+    const w = m[1].trim().split(/\s+/).length; if (w > (/[가-힣]/.test(m[1]) ? 16 : 25)) n += 1;
+  }
   return n;
 }
 
@@ -60,8 +64,10 @@ export function wornOf(texts) {
   const list = (texts || []).slice(-6), n = list.length, count = new Map(), raw = new Map(), late = new Map();
   list.forEach((t, i) => { for (const [k, r] of figures(t)) { count.set(k, (count.get(k) || 0) + 1); if (!raw.has(k)) raw.set(k, r); if (i >= n - 2) late.set(k, (late.get(k) || 0) + 1); } });
   const nums = [...count.keys()].filter((k) => count.get(k) >= 3 || (n >= 2 && late.get(k) >= 2)).sort((a, b) => count.get(b) - count.get(a)).slice(0, 4).map((k) => raw.get(k));
-  const recall = list.slice(-3).filter((t) => recalls(t) >= 3).length >= 2;
-  const dense = list.slice(-3).filter(heavy).length >= 2;
-  const spar = list.slice(-2).some((t) => spars(t) >= 3);
+  const recall = list.filter((t) => recalls(t) >= 3).length >= 2;
+  const dense = list.filter(heavy).length >= 2;
+  // v0.32: these stay on for a while after the habit stops (the whole window, not just the newest replies):
+  // dropped the moment a reply comes out clean, the habit came straight back from the older replies still in view
+  const spar = list.slice(-5).some((t) => spars(t) >= 3);
   return { nums, recall, dense, spar };
 }

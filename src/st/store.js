@@ -12,6 +12,7 @@ import { rows4, foldArc, foldFall } from '../core/human.js';
 import { estTokens } from '../core/clean.js';
 import { findSkip, findJump, skipInMessage } from '../core/hint.js';
 import { wornOf } from '../core/worn.js';
+import { resolve } from '../core/names.js';
 
 const KEY = 'meatball_status3';   // not 'meatball3': the 1st build (meatballstats3) uses that slot
 const DEFAULTS = Object.freeze({ mascot: true, on: true, profile: '', bar: true, stage2: true, burst: true, groups: {}, loreByChar: {}, maker: false, waitSort: false, waitMax: 20,
@@ -138,8 +139,41 @@ export function bpLive() {
     const bp = bpAll(S, goals);
     const st2 = ledger2(), live = liveBp(bp, foldVault(ctx().chat || [], S, bp, st2, fingerprint));
     // a 숨김 the story already gave away (marked open by the relationship reading) no longer holds
-    return live?.hide?.some((x) => st2.open?.[hideId(x)]) ? { ...live, hide: live.hide.filter((x) => !st2.open?.[hideId(x)]) } : live;
+    return bpStory(live?.hide?.some((x) => st2.open?.[hideId(x)]) ? { ...live, hide: live.hide.filter((x) => !st2.open?.[hideId(x)]) } : live);
   } catch (e) { return R.bp; }
+}
+// v0.32: the lore sheet and typed secrets may name a person one way ("다온 | 별칭: Daon") while the story writes another
+// ("Daon"). The record keeps the story's names, so without this no lore or secret line ever reached the note for such a
+// sheet. Every name in the sheet is turned into the name the story uses (the sheet's name stays as an alias).
+function bpStory(bp) {
+  try {
+    const persons = bp?.persons || [];
+    if (!persons.length) return bp;
+    const st = ledger(), seen = st.names || { seen: {}, alias: {} }, here = new Set(st.with || []), memo = new Map();
+    const one = (n) => {
+      const key = String(n || '').trim();
+      if (!key) return n;
+      if (memo.has(key)) return memo.get(key);
+      const p = persons.find((x) => x.name === key || (x.alias || []).includes(key)), cands = p ? [p.name, ...(p.alias || [])] : [key];
+      let out = key;
+      for (const c of cands) { const r = here.has(c) ? c : seen.seen?.[c] != null ? c : resolve(seen, c, R.V); if (r) { out = r; break; } }
+      memo.set(key, out); return out;
+    };
+    const who = (w) => String(w || '').split('-').map((x) => one(x.trim())).join('-');
+    let changed = false;
+    const fix = (x) => {
+      if (!x || typeof x !== 'object') return x;
+      const y = { ...x };
+      for (const k of ['a', 'b', 'c']) if (typeof y[k] === 'string') y[k] = one(y[k]);
+      if (typeof y.who === 'string') y.who = who(y.who);
+      if (x.a !== y.a || x.b !== y.b || x.c !== y.c || x.who !== y.who) { changed = true; if (typeof x.c === 'string' && x.a && x.b) y.hid = hideId(x); }
+      return y;
+    };
+    const out = { ...bp };
+    for (const [k, v] of Object.entries(bp)) if (Array.isArray(v) && k !== 'persons' && k !== 'dropped' && k !== 'world' && k !== 'places') out[k] = v.map(fix);
+    out.persons = persons.map((p) => { const n = one(p.name); if (n === p.name) return p; changed = true; return { ...p, name: n, alias: [...new Set([p.name, ...(p.alias || [])])].filter((a) => a !== n) }; });
+    return changed ? out : bp;
+  } catch (e) { return bp; }
 }
 // the lore's vault lines + secrets typed in 지시창 (S.secrets) + destinations, before anything is opened
 export function bpAll(S, goals = []) {
