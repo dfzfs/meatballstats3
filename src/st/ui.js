@@ -122,6 +122,7 @@ ${s.introSeen ? '' : `<div class="mb3-intro" id="mb3_intro"><b>🐱 ${h(R.ui2.in
 <div class="mb3-sec">
 <div class="mb3-row mb3-fill" id="mb3_fill_row"></div>
 <div class="mb3-row"><label class="checkbox_label"><input id="mb3_hidden" type="checkbox"${s.readHidden ? ' checked' : ''} /><span>👁 ${h(R.ui2.readHidden || '숨긴 메시지도 기록에 넣기')}</span></label>${tipQ(R.ui2.readHiddenTip || '', h)}</div>
+<div class="mb3-row"><label class="checkbox_label"><input id="mb3_craft" type="checkbox"${s.craft !== false ? ' checked' : ''} /><span>✍ ${h(R.ui2.craft || '글 버릇 줄 매번 붙이기')}</span></label>${tipQ(R.ui2.craftTip || '', h)}</div>
 </div>
 <div class="mb3-sech">${h(R.ui2.secTools || '함께 쓰기')}</div>
 <div class="mb3-sec">
@@ -179,6 +180,7 @@ ${s.introSeen ? '' : `<div class="mb3-intro" id="mb3_intro"><b>🐱 ${h(R.ui2.in
   drawFillRow(R.ui2);
   document.querySelector('#mb3_intro .mb3-intro-x')?.addEventListener('click', () => { s.introSeen = true; c.saveSettingsDebounced(); document.getElementById('mb3_intro')?.remove(); });
   HIDDEN.read = !!s.readHidden;
+  document.getElementById('mb3_craft')?.addEventListener('change', (e) => { s.craft = e.target.checked; c.saveSettingsDebounced(); refresh(); });
   document.getElementById('mb3_hidden')?.addEventListener('change', (e) => { s.readHidden = HIDDEN.read = e.target.checked; c.saveSettingsDebounced(); refresh(); renderBar(); drawFillRow(R.ui2); });
   setOpener(openLedger);
   document.getElementById('mb3_ledger').addEventListener('click', openLedger);
