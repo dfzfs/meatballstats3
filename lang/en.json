@@ -550,7 +550,7 @@
       "500": "Download failed. Check the internet or git and try again"
     },
     "directorErrAny": "Could not install ({n}). Use Extensions › Install extension with https://github.com/dfzfs/meatballinput",
-    "pawTip": "Meatball record: see, fix, re-read or clear what Meatball noted for this reply",
+    "pawTip": "Meatball record: see, fix, re-read or clear what Meatball noted for this reply (a reply with no record is recorded when pressed)",
     "allReplies": "All replies",
     "notReadYet": "Not read yet. Meatball reads it shortly.",
     "nameMap": "Name spellings (screen translation)",
@@ -1238,7 +1238,8 @@
     "stripKeep": "standing {n}",
     "stripDir": "direction for this reply",
     "stripWorn": "damping repeats",
-    "stripTip": "The note secretly added to the next reply. Click to see why each line is there"
+    "stripTip": "The note secretly added to the next reply. Click to see why each line is there",
+    "pawReading": "Recording it now… a few seconds."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

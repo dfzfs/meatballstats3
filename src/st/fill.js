@@ -17,9 +17,22 @@ export function fillCount(f = fillState()) {
   return { done: ai.filter((m) => S?.ev?.[fingerprint(m)]).length, total: ai.length };
 }
 const redraw = () => { try { refresh(); renderBar(); } catch (e) { /* */ } };
+// v0.34 🐾: a reply with no record (skipped for any reason) is read on the spot when its paw is pressed.
+// Returns true when a read was started. Anything that kept it out of the story record is lifted for this one reply.
+export function readOne(i) {
+  const c = ctx(), m = c.chat?.[i];
+  if (!m || m.is_user || !cleanText(m.mes) || fillState()) return false;
+  const ev = store()?.ev?.[fingerprint(m)];
+  const unread = !ev || (ev.length > 0 && ev.every((e) => e.k === 'drop' && String(e.why || '').startsWith('skip:')));
+  if (!unread) return false;
+  if (m.extra?.mb_ooc) { delete m.extra.mb_ooc; try { c.saveChatDebounced?.() ?? c.saveChat?.(); } catch (e) { /* the flag is gone in memory either way */ } }
+  if (skipMsg(m)) return false;   // a hidden message (and hidden ones are not read): nothing to do
+  startFill(i, i, true);
+  return true;
+}
 // from / to: message numbers (#) as SillyTavern shows them; none = the whole chat
-export function startFill(from = null, to = null) {
-  const S = store(true), whole = from == null && to == null, f = { at: Date.now() };
+export function startFill(from = null, to = null, one = false) {
+  const S = store(true), whole = from == null && to == null, f = { at: Date.now(), ...(one ? { one: true } : {}) };
   if (!whole) { f.from = from ?? 0; f.to = to ?? null; }
   delete S.fillNext;
   if (whole) Object.assign(S, { ev: {}, rel: {}, raw: {}, edited: {}, guard: {} });
@@ -36,7 +49,7 @@ export function endFill(finished = false) {
   const S = store(true); if (!S.fill) return false;
   // a range that ended before the last reply: the replies after it were read on the old state → offer to go on from there
   const F = S.fill, last = (ctx().chat || []).length - 1;
-  if (finished && F.from != null && F.to != null && F.to < last && (ctx().chat || []).some(inRange({ from: F.to + 1 }))) S.fillNext = F.to + 1; else delete S.fillNext;
+  if (finished && !F.one && F.from != null && F.to != null && F.to < last && (ctx().chat || []).some(inRange({ from: F.to + 1 }))) S.fillNext = F.to + 1; else delete S.fillNext;
   delete S.fill; save(); redraw(); return true;
 }
 

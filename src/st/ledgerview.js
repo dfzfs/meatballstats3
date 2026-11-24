@@ -2,7 +2,7 @@
 import { ctx, store, save, ledger, R } from './store.js';
 import { dateAt, fmtDate, span, parseDate } from '../core/time.js';
 import { applyFixes } from './fix.js';
-import { startFill } from './fill.js';
+import { readOne, startFill } from './fill.js';
 import { placeReplies, ranges, keyOf, weekKey, dimOf, wdOf, addDays } from '../core/calendar.js';
 import { roll, undoRoll, lastRoll } from './dice.js';
 import { cleanText, fingerprint, skipMsg } from '../core/clean.js';
@@ -557,7 +557,7 @@ function render(box, ui) {
   let body = '', seenNow = null, seenPairs = null;
   if (ui.view === 'reply' && ui.only) {
     const one = es.find((e) => e.fp === ui.only), redoing = !one && store()?.ev && !store().ev[ui.only];
-    body = card(`🐾 ${h(U2.oneReply || '이 답의 기록')} <a href="#" class="mb3-all">${h(U.allReplies)} ›</a>`, one ? entryHtml(one, st, L, ui.open) : `<p class="mb3-dim">${h(redoing ? U.notReadYet : U.noChange)}</p>`);
+    body = card(`🐾 ${h(U2.oneReply || '이 답의 기록')} <a href="#" class="mb3-all">${h(U.allReplies)} ›</a>`, one ? entryHtml(one, st, L, ui.open) : `<p class="mb3-dim">${h(redoing && ui.reading ? U2.pawReading || U.notReadYet : redoing ? U.notReadYet : U.noChange)}</p>`);
   } else if (ui.view === 'flow') {
     body = card(`📖 ${h(U2.tabFlow || '흐름')}`, flowCard(st, L, chs, ui, M, true), 'mb3-wide mb3-notitle');
   } else if (ui.view === 'rel') {
@@ -625,9 +625,11 @@ export function openLedger(at = null, view = '') {
   const c = ctx(), box = document.createElement('div');
   const ui = { _enter: true, view: 'dash', chap: -1, sel: '', ym: '', shown: 8, open: new Set(), pair: '', place: '', who: '', only: '' };
   const m = at != null ? c.chat?.[at] : null;
-  if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); }
+  if (m && !m.is_user) { ui.view = 'reply'; ui.only = fingerprint(m); ui.open.add(ui.only); ui.reading = readOne(at); }
   else if (view) ui.view = view;
   const draw = () => { const typed = box.querySelector('.mb3-cta')?.value || ''; try { render(box, ui); if (typed) { const ta = box.querySelector('.mb3-cta'); if (ta && !ta.value) ta.value = typed; } const ms = box.querySelector('.mb3-msgs'); if (ms) ms.scrollTop = ms.scrollHeight; if (ui.view === 'chat') box.querySelector('.mb3-cta')?.focus?.(); } catch (e) { console.warn('[meatball3] log view', e); box.innerHTML = `<pre>${h(e.message)}</pre>`; } };
+  // 🐾 started a read: redraw when the record arrives (or give up after a minute)
+  if (ui.reading) { let n = 0; const w = setInterval(() => { if (store()?.ev?.[ui.only] || ++n > 40 || !box.isConnected) { clearInterval(w); ui.reading = false; if (box.isConnected) draw(); } }, 1500); }
   box.addEventListener('click', (ev) => {
     if (ev.target.matches('.mb3-pickfp')) { ev.stopPropagation(); return; }
     const a = ev.target.closest('.mb3-edit,.mb3-redo,.mb3-del,.mb3-delsel,.mb3-redosel,.mb3-delall');
