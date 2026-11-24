@@ -4,7 +4,7 @@
   "js": "index.js",
   "css": "style.css",
   "author": "meatball",
-  "version": "0.35.0",
+  "version": "0.35.1",
   "homePage": "https://github.com/dfzfs/meatballstats3",
   "auto_update": false
 }
