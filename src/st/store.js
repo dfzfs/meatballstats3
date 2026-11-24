@@ -92,7 +92,7 @@ function withNote(sp, L) {
   // asks for the past to be remembered is the person's own choice: the "stay in the present" line stays out then.
   const W = R.wornNow || { nums: [], recall: false, dense: false }, wantsPast = style.some((t) => /remember|memor|recall|기억|회상/i.test(t));
   const worn = [...(W.spar ? [L.sp.spar] : []), ...(W.dense ? [L.sp.dense] : []), ...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...(W.recall && !wantsPast ? [L.sp.recall] : [])];
-  const row = (layer, text, src = 'note') => ({ layer, text: `- ${text}`, src });
+  const row = (layer, text, src = 'note') => ({ layer, text: `- ${src === 'note' ? storyNames(text) : text}`, src });
   // v0.28: three places instead of one.
   // (row layers 'keep' and 'dir' are for the 📝 preview: it shows each group with where it sits in the prompt)
   //  · 📌 계속 (standing lines) -> background block: a condition that is always true, not something for this reply
@@ -145,6 +145,22 @@ export function bpLive() {
 // v0.32: the lore sheet and typed secrets may name a person one way ("다온 | 별칭: Daon") while the story writes another
 // ("Daon"). The record keeps the story's names, so without this no lore or secret line ever reached the note for such a
 // sheet. Every name in the sheet is turned into the name the story uses (the sheet's name stays as an alias).
+// The same turn for the person's own lines (지시창 · 바탕 메모): "다온이 문을 연다" reads "Daon이 문을 연다" before it is put
+// into English, so the story model never meets a name it has not seen.
+export function storyNames(text) {
+  try {
+    const persons = R.bp?.persons || [];
+    if (!persons.length || !text) return text;
+    const st = ledger(), seen = st.names || { seen: {}, alias: {} }, here = new Set(st.with || []);
+    let out = String(text);
+    for (const p of persons) {
+      const cands = [p.name, ...(p.alias || [])];
+      const to = cands.find((c) => here.has(c) || seen.seen?.[c] != null) || cands.map((c) => resolve(seen, c, R.V)).find(Boolean);
+      if (to && to !== p.name && p.name.length >= 2) out = out.split(p.name).join(to);
+    }
+    return out;
+  } catch (e) { return text; }
+}
 function bpStory(bp) {
   try {
     const persons = bp?.persons || [];
