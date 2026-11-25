@@ -1,5 +1,5 @@
 // Reads the classifier's answer line by line, sorts out broken answers, and checks each line against the text.
-import { inText, bare } from './names.js';
+import { notAName, inText, bare } from './names.js';
 import { parseTime, parseDate } from './time.js';
 import { ALL as KEYS } from './keys.js';
 
@@ -64,7 +64,7 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
   // trust: lines the person asked for — no name-in-text or quote checks (they know their story)
   // a name passes when the text has it, or when that person is already in the scene (named earlier, here now)
   const sceneSet = new Set((scene || []).map((n) => bare(n).toLowerCase()));
-  const ok = (n, raw) => (opts.trust ? true : notP.has(bare(n).toLowerCase()) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) || sceneSet.has(bare(n).toLowerCase()) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
+  const ok = (n, raw) => (opts.trust ? true : notP.has(bare(n).toLowerCase()) || notAName(bare(n)) ? (dropped.push({ raw, why: 'not-a-person' }), false) : inText(n, text) || sceneSet.has(bare(n).toLowerCase()) ? true : (dropped.push({ raw, why: 'name-not-in-text' }), false));
   const qok = (q, t, min) => !!opts.trust || (!!q && quoteOk(q, t, min));
   const quoteOf = (v) => (v.match(/["“]([^"”]{4,})["”]?\s*$/) || [])[1];
   let cut = null, hasWith = false, moved = false;
@@ -73,7 +73,7 @@ export function toEvents(parsed, text, V, scene = [], opts = {}) {
     if (active && !active.has(k) && !opts.trust) { dropped.push({ raw, why: 'off' }); continue; }
     if (k === 'cut') { cut = v.split('|')[0].trim(); ev.push({ k }); }
     else if (k === 'with') {
-      const parts = splitNames(v).map((p) => ({ sign: p[0], n: bare(p) })).filter((x) => x.n && !notP.has(x.n.toLowerCase()));   // a title or a director is never "with"
+      const parts = splitNames(v).map((p) => ({ sign: p[0], n: bare(p) })).filter((x) => x.n && !notP.has(x.n.toLowerCase()) && !notAName(x.n));   // a title, a director or an unnamed extra is never "with"
       const full = v.trim().startsWith('=') || !parts.some((p) => /[+\-]/.test(p.sign));
       const good = parts.filter((x) => x.sign === '-' || ok(x.n, raw));
       hasWith = true;

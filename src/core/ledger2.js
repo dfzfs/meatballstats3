@@ -1,5 +1,5 @@
 // Stage 2: relationships. Reads only the "rel" events, never touches the stage-1 ledger.
-import { inText, resolve, bare } from './names.js';
+import { notAName, inText, resolve, bare } from './names.js';
 import { quoteOk } from './parse.js';
 import { estTokens, skipMsg } from './clean.js';
 import { dateAt, fmtDate, span } from './time.js';
@@ -37,7 +37,7 @@ export function toRelEvents(answer, text, V, L, ctx) {
   // a name counts when the text has it, or when that person is already in the scene (a confession in dialogue
   // often never writes the speaker's name; in 1:1 roleplay the user's character is rarely named at all)
   const here = new Set((ctx.here || []).map((n) => String(n)));
-  const who = (n) => { const b = bare(n), r = resolve(names, b, V) || b; return inText(b, text) || here.has(r) || here.has(b) ? r : null; };
+  const who = (n) => { const b = bare(n); if (notAName(b)) return null; const r = resolve(names, b, V) || b; return inText(b, text) || here.has(r) || here.has(b) ? r : null; };
   const lists = (k) => [0, 1, 2, 3, 4, 5, 6, 7].map((i) => [L.en.rel[k][i], L.ko.rel[k][i]].filter(Boolean));
   // Only the part before the quote is checked: a quote that is really in the story text is not a leak.
   const leaks = (raw) => hidden.some((h) => { if (h.leakOk) return false; const c = norm(h.content), r = norm(raw.includes('|') ? raw.slice(0, raw.lastIndexOf('|')) : raw); for (let i = 0; i + 16 <= c.length; i += 4) if (r.includes(c.slice(i, i + 16))) return true; return false; });
@@ -85,6 +85,7 @@ export function fold2(chat, rel, fingerprint) {
         if (e.k === 'tie') { st.tie[key2(e.a, e.b)] = { v: e.v, q: e.q, day: e.day, user: !!e.user }; for (const k of [`${e.a}>${e.b}`, `${e.b}>${e.a}`]) if (st.dir[k]) { st.dir[k].inner = ''; st.dir[k].innerDay = null; } }   // the tie changed: nothing is "held back" any more
         if (e.k === 'open') st.open[e.id] ||= { q: e.q, day: e.day };
         if (e.k !== 'mv' && e.k !== 'tex' && e.k !== 'feel') continue;
+        if (notAName(e.a) || notAName(e.b)) continue;   // an unnamed extra in an old record gets no relationship row
         const d = (st.dir[`${e.a}>${e.b}`] ||= { a: e.a, b: e.b, moves: [], inner: '', innerDay: null, tex: null, cand: null, candAt: 0, clashDay: null, q: '' });
         if (e.k === 'feel') { d.feel = (e.v || []).slice(0, 4); continue; }   // the person's own words for this feeling (shown and sent as they are)
         if (e.k === 'mv') {

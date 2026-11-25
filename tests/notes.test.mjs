@@ -81,3 +81,9 @@ test('a pronoun in a lore alias is not a name', async () => {
   const bp = readBlueprint('인물: 미라 | 별칭: Mira, she, 그녀');
   assert.deepEqual(bp.persons[0].alias, ['Mira']);
 });
+
+test('an unnamed extra is not a person', async () => {
+  const { notAName } = await import('../src/core/names.js');
+  for (const n of ['husband', 'orderly', 'scrub nurse', 'Drum resident', 'the guard', 'Old man']) assert.equal(notAName(n), true, n);
+  for (const n of ['Mira', 'Nurse Bell', 'Doctor Hale', '미라', 'Orin Vale']) assert.equal(notAName(n), false, n);
+});

@@ -2,6 +2,11 @@ import { sameName } from './roman.js';
 // Name dictionary. The story text is the source of names; this is the only place names are matched.
 const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isCJK = (n) => /[぀-ヿ一-鿿가-힣]/.test(n);
+// v0.35.2: an unnamed extra ("husband", "orderly", "scrub nurse", "the Drum resident") is not a person to track: written
+// in as one, it got a relationship row of its own ("husband → X: clash") and filled the scene list. A name has a capital
+// letter (or is not Latin at all) and does not end in a role word. "Nurse Bell" or "Doctor Hale" stay names.
+const ROLE = /^(?:the |a |an |that |this |some )?(?:[A-Z][\w'-]* )?(?:husband|wife|man|men|woman|women|boy|girl|kid|child|children|guy|lady|gentleman|stranger|someone|somebody|nurse|nurses|orderly|orderlies|resident|residents|doctor|doctors|surgeon|medic|guard|guards|soldier|soldiers|officer|clerk|clerks|servant|servants|maid|maids|butler|driver|waiter|waitress|bartender|shopkeeper|merchant|vendor|crowd|people|staff|crew|patient|patients|visitor|visitors|student|students|teacher|boss|chief|captain|mother|father|mom|dad|brother|sister|aunt|uncle|grandmother|grandfather|friend|friends|neighbor|neighbour|receptionist|secretary|assistant|intern|janitor|cook|chef|priest|knight|knights)$/i;
+export const notAName = (name) => { const n = String(name || '').trim(); if (!n || !/[A-Za-z]/.test(n)) return false; if (/^[a-z]/.test(n)) return true; return ROLE.test(n); };
 export const bare = (name) => String(name || '').replace(/^[=+\-\s]+/, '').replace(/[\s.,;:]+$/, '').trim();
 export function inText(name, text) {
   const n = bare(name);

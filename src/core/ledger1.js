@@ -1,6 +1,6 @@
 // Stage 1 ledger: how each event changes "now". Pure data in, pure data out.
 import { newCal, applyDate, dateAt, FUZZY_NOM } from './time.js';
-import { newDict, learn, addAlias, resolve } from './names.js';
+import { notAName, newDict, learn, addAlias, resolve } from './names.js';
 
 export const newState = () => ({
   cal: newCal(), loc: '', weather: '', mood: '', with: [], wear: {}, body: {}, gone: {}, pos: {}, items: {}, marks: {}, places: {}, slips: {}, facts: [],
@@ -63,6 +63,7 @@ export function applyGroup(st, events, V) {
         if (e.full) st.with = [];
         for (const n of e.del.map(N)) { st.with = st.with.filter((x) => x !== n); delete st.pos[n]; }
         for (const n of e.add.map(N)) {
+          if (notAName(n)) continue;   // old records may hold an unnamed extra ("orderly"): not a person in the scene
           if (st.gone[n] && st.gone[n].v !== 'believed') { if (!st.fresh.fixes.includes(n)) st.fresh.fixes.push(n); continue; }   // the dead stay dead
           if (!st.with.includes(n)) st.with.push(n);
         }
