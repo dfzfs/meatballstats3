@@ -2,7 +2,7 @@
   "sp": {
     "deepHead": "[STORY RECORD · BACKGROUND] Settled so far; it is here only so that nothing contradicts it. It is not material for this reply: most replies touch none of it. Knowing shows in how characters act — they do not recite it, list shared history or bring up old events to prove they remember. Figures (years, counts, floors, dates) are for accuracy and stay unsaid once the story has stated them. The user's direction can change it. Characters know only what they know.",
     "midHead": "[STATE AT THE END OF THE LAST REPLY · REFERENCE] The starting point for this reply. If the user asks to change the time, place or scene, follow that; otherwise continue from here. Props, numbers and dates already written: use only when needed, do not repeat them.",
-    "nowHead": "[THIS REPLY · READ LAST] Lines for this reply only. They outrank the style of the replies above, which may have drifted into habits this reply drops. The user's direction comes first. Do not turn this note into dialogue or explain it.",
+    "nowHead": "[THIS REPLY · READ LAST] Lines for this reply only, written in English for you; the reply itself stays in the output language the instructions above set. They outrank the style of the replies above, which may have drifted into habits this reply drops. The user's direction comes first. Do not turn this note into dialogue or explain it.",
     "dead": "dead",
     "left": "left the story",
     "believed": "believed dead",
