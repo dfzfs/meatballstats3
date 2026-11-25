@@ -45,7 +45,7 @@
     "worn": "Already written several times: {list}. This reply does not state these again; if one is needed, a plain word stands in (then, that long, upstairs)",
     "recall": "Past: this reply stays in its own present. One brief glance back at most; no listing of old events, no remembered places, no \"how long it has been\". What a character knows shows only in what they do now",
     "reach": "How far to write",
-    "dense": "Figures: no numbers for time, distance, size, weight or counts (a moment, a few steps, close, long ago). Two at most in the whole reply, only where the exact number is the point",
+    "dense": "Do not measure. No inches, feet, steps, breaths, seconds or minutes counted out, no \"two fingers\", \"three inches\", \"half an inch\", \"for three beats\". Say it the way a person would (a little, close, a moment, a few steps). Numbers only where people really use them: a room number, a time on the clock, a price someone says aloud",
     "spar": "Talk: people here do not argue like lawyers. Nobody quotes back what the other said or did earlier, nobody lays out reasons, conditions or consequences (\"if you…, I'll…\"), nobody explains their own motive aloud. This is not about talking less: keep the conversation going, with plenty of back-and-forth. Each line is just short and alive — it answers sideways, trails off, changes the subject, teases, complains, asks something small, or lands on nothing. Now and then a line sits inside a paragraph of action, or waits a beat for a look or a gesture, so it reads like people and not a script. What is not said stays unsaid; the narration does not say it for them, and never keeps score of who won",
     "plain": "Narration shows and does not explain. No sentence spells out why someone did something, what a look or a silence meant, or what they would do if — no \"because\", \"which meant\", \"the way she always\", \"as if to say\". The act, the line or the silence is enough; the reader works it out"
   },
@@ -1242,7 +1242,7 @@
     "stripTip": "The note secretly added to the next reply. Click to see why each line is there",
     "pawReading": "Recording it now… a few seconds.",
     "craft": "Add the writing-habit lines every reply",
-    "craftTip": "On: three lines go with every reply — talk stays alive without lawyering or quoting back, narration does not explain motives, at most one glance at the past. Compared on real chats, recall and explaining nearly vanished and talk grew. Asking for memories in a direction or style drops the past line."
+    "craftTip": "On: four lines go with every reply — talk stays alive without lawyering, narration does not explain motives, nothing is measured or counted out, at most one glance at the past. Over five replies in a row on a real chat, without them figures, recall and lawyering piled up; with them they stayed flat. Asking for memories drops the past line."
   },
   "lore": {
     "head": "[USUAL SETTING] Background outside the story. If the current scene differs, [CURRENT STATE] and [NEW TEXT] win.",

@@ -92,12 +92,13 @@ function withNote(sp, L) {
   // asks for the past to be remembered is the person's own choice: the "stay in the present" line stays out then.
   // v0.35: talk · narration · past go with every reply (tested on real chats: waiting until the habit showed let it
   // build up first; always on, recall and explaining narration nearly vanished and talk got livelier, not shorter).
-  // Figures and repeated words still wait for the habit. The past line stays out when the person asks for the past.
+  // v0.35.3: the measuring line too (five replies in a row with no note: figures climbed from 17 to 45).
+  // Repeated words still wait for the habit. The past line stays out when the person asks for the past.
   const W = R.wornNow || { nums: [], recall: false, dense: false };
   const asked = [...style, R.pieces?.beat, R.pieces?.scene].filter(Boolean).join(' ');
   const wantsPast = /remember|memor|recall|flashback|기억|회상|과거|옛날|그때/i.test(asked);
   const always = settings().craft !== false;
-  const worn = [...(always || W.spar ? [L.sp.spar] : []), ...(always ? [L.sp.plain] : []), ...(W.dense ? [L.sp.dense] : []), ...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...((always || W.recall) && !wantsPast ? [L.sp.recall] : [])];
+  const worn = [...(always || W.spar ? [L.sp.spar] : []), ...(always ? [L.sp.plain] : []), ...(always || W.dense ? [L.sp.dense] : []), ...(W.nums.length ? [L.sp.worn.replace('{list}', W.nums.join(', '))] : []), ...((always || W.recall) && !wantsPast ? [L.sp.recall] : [])];
   const row = (layer, text, src = 'note') => ({ layer, text: `- ${src === 'note' ? storyNames(text) : text}`, src });
   // v0.28: three places instead of one.
   // (row layers 'keep' and 'dir' are for the 📝 preview: it shows each group with where it sits in the prompt)
